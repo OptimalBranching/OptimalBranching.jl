@@ -1,5 +1,11 @@
 module OptimalBranchingMIS
 
-# Write your package code here.
+using EliminateGraphs, GenericTensorNetworks, GenericTensorNetworks.Graphs
+
+export foo
+
+function foo()
+    println("Hello, world!")
+end
 
 end

@@ -2,7 +2,7 @@
 
 julia_version = "1.11.1"
 manifest_format = "2.0"
-project_hash = "fdfdb40414d988cf5d54bc254e3b6408d809082e"
+project_hash = "a7b74b43743ef49fd7afa74ac0d2b147e8798883"
 
 [[deps.ASL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -804,6 +804,12 @@ deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pk
 git-tree-sha1 = "13652491f6856acfd2db29360e1bbcd4565d04f1"
 uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
 version = "0.5.5+0"
+
+[[deps.OptimalBranchingMIS]]
+deps = ["Combinatorics", "EliminateGraphs", "GenericTensorNetworks", "Graphs"]
+path = "lib/OptimalBranchingMIS"
+uuid = "1d45bab8-fbcd-445a-8de2-8d643ff389c2"
+version = "1.0.0-DEV"
 
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]

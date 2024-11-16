@@ -12,6 +12,7 @@ HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
 OMEinsum = "ebe7aa44-baf0-506c-a96f-8464559b3922"
+OptimalBranchingMIS = "1d45bab8-fbcd-445a-8de2-8d643ff389c2"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 SCIP = "82193955-e24f-5292-bf16-6f2c5261a85f"
 

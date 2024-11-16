@@ -3,7 +3,17 @@ uuid = "1d45bab8-fbcd-445a-8de2-8d643ff389c2"
 authors = ["Xuanzhao Gao <gaoxuanzhao@gmail.com> and contributors"]
 version = "1.0.0-DEV"
 
+[deps]
+Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
+EliminateGraphs = "b3ff564c-d3b6-11e9-0ef2-9b4ae9f9cbe1"
+GenericTensorNetworks = "3521c873-ad32-4bb4-b63d-f4f178f42b49"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+
 [compat]
+Combinatorics = "1.0.2"
+EliminateGraphs = "0.2.1"
+GenericTensorNetworks = "2.2.0"
+Graphs = "1.12.0"
 julia = "1.6.7"
 
 [extras]
