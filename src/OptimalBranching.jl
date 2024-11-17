@@ -7,7 +7,6 @@ using AbstractTrees
 using Base.Threads
 using Reexport
 @reexport using BitBasis
-@reexport using OptimalBranchingMIS
-
+@reexport using OptimalBranchingCore, OptimalBranchingMIS
 
 end
