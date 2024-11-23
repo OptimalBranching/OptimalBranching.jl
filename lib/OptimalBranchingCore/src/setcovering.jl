@@ -13,22 +13,40 @@ function max_id(sub_covers::AbstractVector{SubCover{INT}}) where{INT}
     return m0
 end
 
+function γ0(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}) where{INT, TF}
+    n = max_id(sub_covers)
+    max_dict = Dict([i => 0 for i in 1:n])
+    for (i, sub_cover) in enumerate(sub_covers)
+        length(sub_cover.ids) == 1 || continue
+        id = first(sub_cover.ids)
+        max_dict[id] = max(max_dict[id], dns[i])
+    end
+
+    max_rvs = [max_dict[i] for i in 1:n]
+
+    return complexity(max_rvs), n
+end
+
 function dn(p::P, m::M, subcover::SubCover{INT}, vs::Vector{T}) where{P<:AbstractProblem, M<:AbstractMeasure, INT<:Integer, T}
     return measure(p, m) - measure(apply(p, subcover.clause, vs), m)
 end
 
-function cover(sub_covers::AbstractVector{SubCover{INT}}, p::P, m::M, vs::Vector{T}, solver::LPSolver; verbose::Bool = false) where{INT, P<:AbstractProblem, M<:AbstractMeasure, T}
+function cover(sub_covers::AbstractVector{SubCover{INT}}, p::P, m::M, vs::Vector{T}, solver::Union{LPSolver, IPSolver}; verbose::Bool = false) where{INT, P<:AbstractProblem, M<:AbstractMeasure, T}
     dns = [dn(p, m, subcover, vs) for subcover in sub_covers]
+    return cover(sub_covers, dns, solver; verbose)
+end
+
+function cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::LPSolver; verbose::Bool = false) where{INT, TF}
     max_itr = solver.max_itr
-    n = max_id(sub_covers)
-    cx = complexity(dns)
+    cx, n = γ0(sub_covers, dns)
     verbose && (@info "γ0 = $(cx)")
     scs_new = copy(sub_covers)
     cx_old = cx
     for i =1:max_itr
         xs = LP_setcover(cx, scs_new, n, dns, verbose)
-        picked = random_pick(xs, sub_covers, n)
-        cx = complexity(picked)
+        picked_scs = random_pick(xs, sub_covers, n)
+        cx = complexity(dns[picked_scs])
+        picked = sub_covers[picked_scs]
         verbose && (@info "LP Solver, Iteration $i, complexity = $cx")
         if (i == max_itr)  || (cx ≈ cx_old)
             return picked, cx
@@ -84,25 +102,23 @@ function random_pick(xs::Vector{TF}, sub_covers::AbstractVector{SubCover{INT}}, 
         end
     end
 
-    return [sub_covers[i] for i in picked]
+    return [i for i in picked]
 end
 
 function pick(xs::Vector{TF}, sub_covers::AbstractVector{SubCover{INT}}) where{INT, TF}
     return [sub_covers[i] for i in 1:length(xs) if xs[i] ≈ 1.0]
 end
 
-function cover(sub_covers::AbstractVector{SubCover{INT}}, p::P, m::M, vs::Vector{T}, solver::IPSolver; verbose::Bool = false) where{INT, P<:AbstractProblem, M<:AbstractMeasure, T}
-    dns = [dn(p, m, subcover, vs) for subcover in sub_covers]
+function cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::IPSolver; verbose::Bool = false) where{INT, TF}
     max_itr = solver.max_itr
-    n = max_id(sub_covers)
-    cx = complexity(dns)
+    cx, n = γ0(sub_covers, dns)
     verbose && (@info "γ0 = $cx")
     scs_new = copy(sub_covers)
     cx_old = cx
     for i =1:max_itr
         xs = IP_setcover(cx, scs_new, n, dns, verbose)
+        cx = complexity(dns[xs .≈ 1.0])
         picked = pick(xs, sub_covers)
-        cx = complexity(picked)
         verbose && (@info "IP Solver, Iteration $i, complexity = $cx")
         if (i == max_itr) || (cx ≈ cx_old)
             return picked, cx

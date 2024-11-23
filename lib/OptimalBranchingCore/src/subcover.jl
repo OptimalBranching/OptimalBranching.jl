@@ -26,6 +26,10 @@ function subcovers_naive(n::Int, bs::Union{Vector{INT}, AbstractVector{Vector{IN
     return allcovers
 end
 
+function subcovers_naive(tbl::BranchingTable{INT}) where{INT}
+    return subcovers_naive(tbl.bit_length, tbl.table)
+end
+
 function subcovers(n::Int, bss::AbstractVector{Vector{INT}}) where {INT}
     bs = vcat(bss...)
     all_clauses = Set{Clause{INT}}()
