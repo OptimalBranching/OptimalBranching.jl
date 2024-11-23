@@ -4,7 +4,7 @@ using Documenter
 DocMeta.setdocmeta!(OptimalBranching, :DocTestSetup, :(using OptimalBranching); recursive=true)
 
 makedocs(;
-    modules=[OptimalBranching],
+    modules=[OptimalBranching, OptimalBranchingCore, OptimalBranchingMIS],
     authors="Xuanzhao Gao <gaoxuanzhao@gmail.com> and contributors",
     sitename="OptimalBranching.jl",
     format=Documenter.HTML(;
