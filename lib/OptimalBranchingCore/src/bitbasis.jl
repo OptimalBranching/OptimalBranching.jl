@@ -162,9 +162,7 @@ struct BranchingTable{INT <: Integer}
     bit_length::Int
     table::Vector{Vector{INT}}
 end
-function BranchingTable(arr::AbstractArray{<:CountingTropical{<:Real, <:ConfigEnumerator{N}}}) where N
-    return BranchingTable(N, filter(!isempty, vec(map(collect_configs, arr))))
-end
+
 function BranchingTable(n::Int, arr::AbstractVector{<:AbstractVector})
     return BranchingTable(n, [_vec2int.(LongLongUInt, x) for x in arr])
 end
@@ -178,6 +176,7 @@ function Base.show(io::IO, t::BranchingTable{INT}) where INT
     end
 end
 Base.show(io::IO, ::MIME"text/plain", t::BranchingTable) = show(io, t)
+Base.copy(t::BranchingTable) = BranchingTable(t.bit_length, copy(t.table))
 
 struct DNF{INT}
     clauses::Vector{Clause{INT}}

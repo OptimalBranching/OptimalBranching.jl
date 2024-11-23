@@ -13,8 +13,8 @@ export AbstractBranchingStrategy, NoBranchingStrategy, OptimalBranching
 export AbstractProblem, AbstractResult, AbstractMeasure, AbstractReducer, AbstractSelector, AbstractPruner, AbstractTableSolver, AbstractSetCoverSolver
 export NoProblem, NoResult, NoMeasure, NoReducer, NoSelector, NoPruner, NoTableSolver, LPSolver, IPSolver
 
-export apply, measure, reduce!, select, solve_table, prune
-export complexity, cover
+export apply, measure, reduce, select, solve_table, prune
+export complexity, cover, branch
 
 include("bitbasis.jl")
 include("subcover.jl")

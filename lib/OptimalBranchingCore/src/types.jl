@@ -1,9 +1,10 @@
 abstract type AbstractProblem end
-struct NoProblem end
-apply(::NoProblem, ::Clause, ::Vector{T}) where{T} = NoProblem()
-
+struct NoProblem <: AbstractProblem end
 abstract type AbstractResult end
 struct NoResult <: AbstractResult end
+
+apply(::NoProblem, ::Clause, vs) = NoProblem()
+result(::NoProblem, ::Clause, vs, ::Type{R}) where{R<:AbstractResult} = NoResult()
 
 # abstract type AbstractBranching end
 
@@ -13,7 +14,7 @@ function measure(::P, ::NoMeasure) where{P<:AbstractProblem} return 0 end
 
 abstract type AbstractReducer end
 struct NoReducer <: AbstractReducer end
-function reduce!(p::P, ::NoReducer) where{P<:AbstractProblem} return p end
+function reduce(p::P, ::NoReducer, ::Type{R}) where{P<:AbstractProblem, R<:AbstractResult} return nothing end
 
 abstract type AbstractSelector end
 struct NoSelector <: AbstractSelector end
@@ -21,7 +22,7 @@ function select(::P, ::M, ::NoSelector) where{P<:AbstractProblem, M<:AbstractMea
 
 abstract type AbstractPruner end
 struct NoPruner <: AbstractPruner end
-prune(bt::BranchingTable, ::NoPruner, ::M, ::P, vs) where{M<:AbstractMeasure, P<:AbstractProblem} = copy(bt)
+prune(bt::BranchingTable, ::NoPruner, ::M, ::P, vs) where{M<:AbstractMeasure, P<:AbstractProblem} = bt
 
 abstract type AbstractTableSolver end
 struct NoTableSolver <: AbstractTableSolver end
@@ -41,7 +42,7 @@ A struct representing a branching strategy.
 - `mis::Int`: An integer representing the maximum independent set (MIS) size of the branching strategy.
 
 """
-struct Branch{P<:AbstractProblem, R<:AbstractResult}
+struct Branch{P<:AbstractProblem, R}
     problem::P
     result::R
 end
@@ -64,5 +65,5 @@ end
 struct SolverConfig{R<:AbstractReducer, B<:AbstractBranchingStrategy, TR<:AbstractResult}
     reducer::R
     branching_strategy::B
-    table_result::Type{TR}
+    result_type::Type{TR}
 end
