@@ -813,13 +813,13 @@ version = "0.5.5+0"
 
 [[deps.OptimalBranchingCore]]
 deps = ["AbstractTrees", "BitBasis", "GenericTensorNetworks", "HiGHS", "JuMP", "NLsolve", "Reexport", "SCIP"]
-path = "/Users/xzgao/code/OptimalBranching.jl/lib/OptimalBranchingCore/"
+path = "lib/OptimalBranchingCore"
 uuid = "c76e7b22-e1d2-40e8-b0f1-f659837787b8"
 version = "1.0.0-DEV"
 
 [[deps.OptimalBranchingMIS]]
 deps = ["EliminateGraphs", "OptimalBranchingCore", "Reexport"]
-path = "/Users/xzgao/code/OptimalBranching.jl/lib/OptimalBranchingMIS"
+path = "lib/OptimalBranchingMIS"
 uuid = "1d45bab8-fbcd-445a-8de2-8d643ff389c2"
 version = "1.0.0-DEV"
 
