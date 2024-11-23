@@ -2,5 +2,5 @@ using OptimalBranching
 using Test
 
 @testset "OptimalBranching.jl" begin
-    # Write your tests here.
+    include("mis.jl")
 end

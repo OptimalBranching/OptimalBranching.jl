@@ -1,6 +1,6 @@
 struct MISReducer <: AbstractReducer end
 
-function OptimalBranchingCore.reduce(p::MISProblem, ::MISReducer, TR::Type{R}) where R<:AbstractResult
+function OptimalBranchingCore.problem_reduce(p::MISProblem, ::MISReducer, TR::Type{R}) where R<:AbstractResult
     g = p.g
     if nv(g) == 0
         return (NoProblem(), 0)

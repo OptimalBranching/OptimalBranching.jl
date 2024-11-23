@@ -14,7 +14,7 @@ function measure(::P, ::NoMeasure) where{P<:AbstractProblem} return 0 end
 
 abstract type AbstractReducer end
 struct NoReducer <: AbstractReducer end
-function reduce(p::P, ::NoReducer, ::Type{R}) where{P<:AbstractProblem, R<:AbstractResult} return nothing end
+function problem_reduce(p::P, ::NoReducer, ::Type{R}) where{P<:AbstractProblem, R<:AbstractResult} return nothing end
 
 abstract type AbstractSelector end
 struct NoSelector <: AbstractSelector end
@@ -29,8 +29,19 @@ struct NoTableSolver <: AbstractTableSolver end
 solve_table(::P, ::NoTableSolver, vs) where{P<:AbstractProblem} = nothing
 
 abstract type AbstractSetCoverSolver end
-struct LPSolver <: AbstractSetCoverSolver max_itr::Int end
-struct IPSolver <: AbstractSetCoverSolver max_itr::Int end
+struct LPSolver <: AbstractSetCoverSolver 
+    max_itr::Int 
+
+    LPSolver(max_itr::Int) = new(max_itr)
+    LPSolver() = new(10)
+end
+
+struct IPSolver <: AbstractSetCoverSolver 
+    max_itr::Int 
+
+    IPSolver(max_itr::Int) = new(max_itr)
+    IPSolver() = new(10)
+end
 
 """
     struct Branch
@@ -54,7 +65,7 @@ end
 
 abstract type AbstractBranchingStrategy end
 struct NoBranchingStrategy <: AbstractBranchingStrategy end
-struct OptimalBranching{TS<:AbstractTableSolver, SCS<:AbstractSetCoverSolver, PR<:AbstractPruner, SL<:AbstractSelector, M<:AbstractMeasure} <: AbstractBranchingStrategy 
+struct OptBranchingStrategy{TS<:AbstractTableSolver, SCS<:AbstractSetCoverSolver, PR<:AbstractPruner, SL<:AbstractSelector, M<:AbstractMeasure} <: AbstractBranchingStrategy 
     table_solver::TS
     set_cover_solver::SCS
     pruner::PR

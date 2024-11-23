@@ -10,13 +10,13 @@ function branch(p::P, config::SolverConfig) where{P<:AbstractProblem}
 
     (p isa NoProblem) && return zero(config.result_type)
 
-    reduced = reduce(p, config.reducer, config.result_type)
+    reduced = problem_reduce(p, config.reducer, config.result_type)
     branches = !isnothing(reduced) ? [Branch(reduced[1], reduced[2])] : solve_branches(p, config.branching_strategy, config.result_type)
 
     return maximum([(branch(b.problem, config) + b.result) for b in branches])
 end
 
-function solve_branches(p::P, strategy::OptimalBranching, result_type::Type{R}) where{P<:AbstractProblem, R<:AbstractResult}
+function solve_branches(p::P, strategy::OptBranchingStrategy, result_type::Type{R}) where{P<:AbstractProblem, R<:AbstractResult}
 
     vs = select(p, strategy.measure, strategy.selector)
     tbl = solve_table(p, strategy.table_solver, vs)

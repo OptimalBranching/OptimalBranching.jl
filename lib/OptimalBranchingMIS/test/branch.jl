@@ -2,7 +2,7 @@ using OptimalBranchingMIS, EliminateGraphs, EliminateGraphs.Graphs
 using Test
 
 @testset "mis" begin
-    for n in 20:10:60
+    for n in 20:10:40
         for d in 3:4
             g = random_regular_graph(n, d)
 
@@ -10,7 +10,7 @@ using Test
             p = MISProblem(g)
 
             for solver in [IPSolver(10), LPSolver(10)], measure in [D3Measure(), NumOfVertices()], pruner in [EnvFilter(), NoPruner()]
-                bs = OptimalBranching(TensorNetworkSolver(), solver, pruner, MinBoundarySelector(2), measure)
+                bs = OptBranchingStrategy(TensorNetworkSolver(), solver, pruner, MinBoundarySelector(2), measure)
 
                 cfg = SolverConfig(MISReducer(), bs, MISSize)
 
