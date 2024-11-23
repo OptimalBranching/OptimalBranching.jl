@@ -14,9 +14,9 @@ This package only supply an interface for the core algorithm, and the actual imp
 This package has not been registered yet, so you need to add this repository manually.
 
 ```bash
-git clone https://github.com/ArrogantGao/OptimalBranching.jl
-cd OptimalBranching.jl
-make
+$ git clone https://github.com/ArrogantGao/OptimalBranching.jl
+$ cd OptimalBranching.jl
+$ make
 ```
 
 This will add the submodules `OptimalBranchingCore.jl` and `OptimalBranchingMIS.jl` and install the dependencies, the tests will be run automatically to ensure everything is fine.
@@ -61,3 +61,8 @@ julia> branch(problem, config)
 MISCount(9, 1)
 ```
 which shows that it takes only one branch to find the maximum independent set of size 9.
+
+
+## How to Contribute
+
+If you find any bug or have any suggestion, please open an [issue](https://github.com/ArrogantGao/OptimalBranching.jl/issues).
