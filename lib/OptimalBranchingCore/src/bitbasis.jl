@@ -43,13 +43,14 @@ SubCover{DitStr{2, 4, Int64}}: ids: Set([2, 1]), mask: 1110 ₍₂₎, val: 1000
 
 """
 struct SubCover{INT <: Integer}
+    n::Int # length of bit strings in clause
     ids::Set{Int}
     clause::Clause{INT}
 end
 
-SubCover(ids::Vector{Int}, clause::Clause) = SubCover(Set(ids), clause)
+SubCover(n::Int, ids::Vector{Int}, clause::Clause) = SubCover(n, Set(ids), clause)
 
-Base.show(io::IO, sc::SubCover{INT}) where INT = print(io, "SubCover{$INT}: ids: $(sc.ids), mask: $(sc.clause.mask), val: $(sc.clause.val)")
+Base.show(io::IO, sc::SubCover{INT}) where INT = print(io, "SubCover{$INT}: ids: $(sort([i for i in sc.ids])), mask: $(BitStr{sc.n}(sc.clause.mask)), val: $(BitStr{sc.n}(sc.clause.val))")
 Base.:(==)(sc1::SubCover{INT}, sc2::SubCover{INT}) where {INT} = (sc1.ids == sc2.ids) && (sc1.clause == sc2.clause)
 function Base.in(ids::Set{Int}, subcovers::AbstractVector{SubCover{INT}}) where {INT}
     for sc in subcovers

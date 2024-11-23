@@ -9,7 +9,9 @@ export subcovers
 
 include("bitbasis.jl")
 include("subcover.jl")
-include("strategy.jl")
+include("types.jl")
 include("setcover.jl")
+include("branch.jl")
+# include("branchingtree.jl")
 
 end

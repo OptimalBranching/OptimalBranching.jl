@@ -21,13 +21,12 @@ function subcovers_naive(n::Int, bs::Union{Vector{INT}, AbstractVector{Vector{IN
     allcovers = Vector{SubCover{INT}}()
     for (i, c) in enumerate(allclauses)
         ids = covered_items(bs, c)
-        push!(allcovers, SubCover(ids, c))
+        push!(allcovers, SubCover(n, ids, c))
     end
     return allcovers
 end
 
-function subcovers(bss::AbstractVector{Vector{INT}}) where {INT}
-    n = length(vertices)
+function subcovers(n::Int, bss::AbstractVector{Vector{INT}}) where {INT}
     bs = vcat(bss...)
     all_clauses = Set{Clause{INT}}()
     temp_clauses = [Clause(bmask(INT, 1:n), bs[i]) for i in 1:length(bs)]
@@ -49,11 +48,11 @@ function subcovers(bss::AbstractVector{Vector{INT}}) where {INT}
         end
     end
 
-    allcovers = [SubCover(covered_items(bss, c), c) for c in all_clauses]
+    allcovers = [SubCover(n, covered_items(bss, c), c) for c in all_clauses]
 
     return allcovers
 end
 
 function subcovers(tbl::BranchingTable{INT}) where{INT}
-    return subcovers(tbl.table)
+    return subcovers(tbl.bit_length, tbl.table)
 end
