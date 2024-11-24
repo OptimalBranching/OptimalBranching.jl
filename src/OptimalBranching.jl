@@ -1,6 +1,6 @@
 module OptimalBranching
 
 using Reexport
-@reexport using OptimalBranchingCore, OptimalBranchingMIS
+@reexport using OptimalBranchingMIS
 
 end

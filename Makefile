@@ -4,7 +4,7 @@ default: init test
 
 init:
 	$(JL) -e 'using Pkg; Pkg.activate("lib/OptimalBranchingMIS"); Pkg.develop(path="./lib/OptimalBranchingCore"); Pkg.update()'
-	$(JL) -e 'using Pkg; Pkg.develop([Pkg.PackageSpec(path = joinpath("lib", pkg)) for pkg in ["OptimalBranchingCore", "OptimalBranchingMIS"]]); Pkg.precompile()'
+	$(JL) -e 'using Pkg; Pkg.develop([Pkg.PackageSpec(path = joinpath("lib", pkg)) for pkg in ["OptimalBranchingMIS"]]); Pkg.precompile()'
 
 update:
 	$(JL) -e 'using Pkg; Pkg.update(); Pkg.precompile()'

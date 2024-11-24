@@ -21,6 +21,16 @@ $ make
 
 This will add the submodules `OptimalBranchingCore.jl` and `OptimalBranchingMIS.jl` and install the dependencies, the tests will be run automatically to ensure everything is fine.
 
+## Dependencies
+
+The relation between the submodules and the package is shown in the following diagram:
+```
+                           |-- OptimalBranchingSAT.jl --|
+OptimalBranchingCore.jl -->|                            |--> OptimalBranching.jl
+                           |-- OptimalBranchingMIS.jl --|
+```
+where `OptimalBranching.jl` is only a package interface.
+
 ## Example
 
 This package currently provides an implementation of the branching algorithm for the Maximum Independent Set (MIS) problem, an example is shown below:

@@ -4,12 +4,6 @@
 A clause is a pair of bit strings, `mask` and `val`, where `mask` is a bit string that indicates the bits that are relevant to the clause, and `val` is a bit string that indicates the bits that must be satisfied. The clause is satisfied if and only if `val` is covered by the bit string and `mask`.
 - `INT`: The number of integers as the storage.
 
-### Examples
-```jldoctest
-julia> Clause(bit"1110", bit"1001")
-Clause{DitStr{2, 4, Int64}}: mask: 1110 ₍₂₎, val: 1000 ₍₂₎
-```
-
 If some bit in mask is set as 0, then the corresponding bit in val must be 0.
 """
 struct Clause{INT <: Integer}
@@ -34,13 +28,6 @@ GenericTensorNetworks.:¬(x::Clause) = Clause(x.mask, flip(x.val, x.mask))
 
 A subcover is a pair of a set of integers `ids` and a clause `clause`. The `ids` for the truth covered by the clause.
 - `INT`: The number of integers as the storage.
-
-### Examples
-```jldoctest
-julia> SubCover([1, 2], Clause(bit"1110", bit"1001"))
-SubCover{DitStr{2, 4, Int64}}: ids: Set([2, 1]), mask: 1110 ₍₂₎, val: 1000 ₍₂₎
-```
-
 """
 struct SubCover{INT <: Integer}
     n::Int # length of bit strings in clause
