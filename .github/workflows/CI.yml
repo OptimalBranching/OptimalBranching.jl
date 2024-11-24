@@ -67,7 +67,6 @@ jobs:
           Pkg.activate(".")
           Pkg.develop([Pkg.PackageSpec(path = joinpath(pwd(), "lib", pkg)) for pkg in ["OptimalBranchingMIS"]])
           Pkg.precompile()
-          Pkg.develop(PackageSpec(path=pwd()))
           Pkg.instantiate()
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-docdeploy@v1
