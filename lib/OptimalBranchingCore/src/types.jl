@@ -322,6 +322,15 @@ struct OptBranchingStrategy{TS<:AbstractTableSolver, SCS<:AbstractSetCoverSolver
     selector::SL
     measure::M
 end
+Base.show(io::IO, strategy::OptBranchingStrategy) = print(io, 
+"""
+OptBranchingStrategy
+    ├── table_solver - $(strategy.table_solver)
+    ├── set_cover_solver - $(strategy.set_cover_solver)
+    ├── pruner - $(strategy.pruner)
+    ├── selector - $(strategy.selector)
+    └── measure - $(strategy.measure)
+""")
 
 """
     SolverConfig
@@ -339,3 +348,10 @@ struct SolverConfig{R<:AbstractReducer, B<:AbstractBranchingStrategy, TR<:Abstra
     branching_strategy::B
     result_type::Type{TR}
 end
+Base.show(io::IO, config::SolverConfig) = print(io, 
+"""
+SolverConfig
+├── reducer - $(config.reducer) 
+├── result_type - $(config.result_type)
+└── branching_strategy - $(config.branching_strategy) 
+""")

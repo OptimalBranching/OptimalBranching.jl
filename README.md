@@ -31,47 +31,7 @@ OptimalBranchingCore.jl -->|                            |--> OptimalBranching.jl
 ```
 where `OptimalBranching.jl` is only a package interface.
 
-## Example
-
-This package currently provides an implementation of the branching algorithm for the Maximum Independent Set (MIS) problem, an example is shown below:
-```julia
-julia> using OptimalBranching, Graphs
-
-# define a problem, for MIS the problem is just a graph
-julia> g = random_regular_graph(20, 3)
-{20, 30} undirected simple Int64 graph
-
-julia> problem = MISProblem(g)
-MISProblem(20)
-
-# select the branching strategy
-julia> branching_strategy = OptBranchingStrategy(TensorNetworkSolver(), IPSolver(), EnvFilter(), MinBoundarySelector(2), D3Measure())
-OptBranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}(TensorNetworkSolver(), IPSolver(10), EnvFilter(), MinBoundarySelector(2), D3Measure())
-
-julia> config = SolverConfig(MISReducer(), branching_strategy, MISSize)
-SolverConfig{MISReducer, OptBranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}, MISSize}(MISReducer(), OptBranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}(TensorNetworkSolver(), IPSolver(10), EnvFilter(), MinBoundarySelector(2), D3Measure()), MISSize)
-
-# the result shows that the size of the maximum independent set is 9
-julia> branch(problem, config)
-MISSize(9)
-
-# we can also use the EliminateGraphs package to verify the result
-julia> using OptimalBranchingMIS.EliminateGraphs
-
-julia> mis2(EliminateGraph(g))
-9
-```
-
-Furthermore, one can check the count of branches in the following way:
-```julia
-julia> config = SolverConfig(MISReducer(), branching_strategy, MISCount)
-SolverConfig{MISReducer, OptBranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}, MISCount}(MISReducer(), OptBranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}(TensorNetworkSolver(), IPSolver(10), EnvFilter(), MinBoundarySelector(2), D3Measure()), MISCount)
-
-julia> branch(problem, config)
-MISCount(9, 1)
-```
-which shows that it takes only one branch to find the maximum independent set of size 9.
-
+For more details, please refer to the [documentation](https://ArrogantGao.github.io/OptimalBranching.jl/dev/).
 
 ## How to Contribute
 
