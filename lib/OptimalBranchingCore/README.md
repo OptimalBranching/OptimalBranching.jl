@@ -1,6 +1,17 @@
 # OptimalBranchingCore
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://ArrogantGao.github.io/OptimalBranchingCore.jl/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ArrogantGao.github.io/OptimalBranchingCore.jl/dev/)
-[![Build Status](https://github.com/ArrogantGao/OptimalBranchingCore.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/ArrogantGao/OptimalBranchingCore.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/ArrogantGao/OptimalBranchingCore.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ArrogantGao/OptimalBranchingCore.jl)
+Core functions and types for the optimal branching method. One can use it separately or as part of the `OptimalBranching` package.
+
+## Usage
+
+`OptimalBranchingCore` provides the basis tools for developing a branching algorithm, by dividing the branching process into the following steps:
+* Reduction of the problem
+* Generation of the branches
+* Applying the branching rules on the problem
+
+For the optimal branching method, the generation of the branches is further divided into the following sub-steps:
+* Solving the branching table
+* Pruning the branches
+* Selecting the optimal branching rule via the set covering solver
+
+For more details, please refer to the [docs]().

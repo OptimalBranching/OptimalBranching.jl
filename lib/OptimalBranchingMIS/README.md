@@ -1,6 +1,16 @@
 # OptimalBranchingMIS
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://ArrogantGao.github.io/OptimalBranchingMIS.jl/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ArrogantGao.github.io/OptimalBranchingMIS.jl/dev/)
-[![Build Status](https://github.com/ArrogantGao/OptimalBranchingMIS.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/ArrogantGao/OptimalBranchingMIS.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/ArrogantGao/OptimalBranchingMIS.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ArrogantGao/OptimalBranchingMIS.jl)
+`OptimalBranchingMIS` is a developed based on `OptimalBranchingCore` for the optimal branching method on the maximum independent set (MIS) problem.
+
+## Usage 
+
+In this pacakge a set of tools for MIS problem has been provided, including:
+* `MISProblem`: the problem type for MIS
+* `MISReducer`: the reducer for MIS
+* `MISSize` & `MISCount`: different types for the results, returning the size of the maximum independent set or together with the count of branches
+* `MinBoundarySelector`: the selectors for the minimum boundary size
+* `NumofVertex` & `D3Measure`: different measures for the MIS problem
+
+Additionally, we provide `counting_mis1` and `counting_mis2` functions for counting the maximum independent sets, which are based on the `EliminateGraphs` package.
+
+For more details, please refer to the [docs]().

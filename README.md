@@ -76,3 +76,7 @@ which shows that it takes only one branch to find the maximum independent set of
 ## How to Contribute
 
 If you find any bug or have any suggestion, please open an [issue](https://github.com/ArrogantGao/OptimalBranching.jl/issues).
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
