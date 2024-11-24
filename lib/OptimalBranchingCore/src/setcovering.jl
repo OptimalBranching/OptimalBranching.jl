@@ -165,18 +165,22 @@ end
 """
     cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::IPSolver; verbose::Bool = false) where{INT, TF}
 
-    This function implements a cover selection algorithm using an iterative process. It utilizes an integer programming solver to optimize the selection of sub-covers based on their complexity.
+This function implements a cover selection algorithm using an iterative process. It utilizes an integer programming solver to optimize the selection of sub-covers based on their complexity.
 
-    # Arguments
-    - `sub_covers::AbstractVector{SubCover{INT}}`: A vector of sub-cover objects that represent the available covers.
-    - `dns::Vector{TF}`: A vector of decision variables or parameters that influence the complexity calculation.
-    - `solver::IPSolver`: An object that contains the settings for the integer programming solver, including the maximum number of iterations.
-    - `verbose::Bool`: A flag to control the verbosity of the output. If set to true, additional information will be logged.
+# Arguments
+- `sub_covers::AbstractVector{SubCover{INT}}`: A vector of sub-cover objects that represent the available covers.
+- `dns::Vector{TF}`: A vector of decision variables or parameters that influence the complexity calculation.
+- `solver::IPSolver`: An object that contains the settings for the integer programming solver, including the maximum number of iterations.
+- `verbose::Bool`: A flag to control the verbosity of the output. If set to true, additional information will be logged.
 
-    # Returns
-    - A tuple containing:
-        - `picked`: A vector of selected sub-covers based on the optimization process.
-        - `cx`: The final complexity value after the optimization iterations.
+# Returns
+- A tuple containing:
+  - `picked`: A vector of selected sub-covers based on the optimization process.
+  - `cx`: The final complexity value after the optimization iterations.
+
+# Description
+This function iteratively solves the integer programming problem to find the optimal cover, updating the complexity value until convergence or the maximum number of iterations is reached.
+    
 """
 function cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::IPSolver; verbose::Bool = false) where{INT, TF}
     max_itr = solver.max_itr
