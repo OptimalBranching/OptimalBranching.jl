@@ -61,9 +61,10 @@ jobs:
         shell: julia --project=docs --color=yes {0}
         run: |
           using Pkg
-          Pkg.activate("lib/OptimalBranchingMIS")
+          Pkg.activate(joinpath(pwd(),"lib/OptimalBranchingMIS"))
           Pkg.develop(path=joinpath(pwd(), "lib", "OptimalBranchingCore"))
           Pkg.update()
+          Pkg.activate(".")
           Pkg.develop([Pkg.PackageSpec(path = joinpath(pwd(), "lib", pkg)) for pkg in ["OptimalBranchingMIS"]])
           Pkg.precompile()
           Pkg.develop(PackageSpec(path=pwd()))
