@@ -9,12 +9,12 @@ using Reexport
 
 export Clause, BranchingTable, SubCover, DNF, Branch
 export SolverConfig
-export AbstractBranchingStrategy, NoBranchingStrategy, OptBranchingStrategy
+export AbstractBranchingStrategy, OptBranchingStrategy
 export AbstractProblem, AbstractResult, AbstractMeasure, AbstractReducer, AbstractSelector, AbstractPruner, AbstractTableSolver, AbstractSetCoverSolver
-export NoProblem, NoResult, NoMeasure, NoReducer, NoSelector, NoPruner, NoTableSolver, LPSolver, IPSolver
+export NoProblem, NoResult, NoPruner, LPSolver, IPSolver
 
 export apply, measure, problem_reduce, select, solve_table, prune
-export complexity, cover, branch
+export complexity, cover, branch, solve_branches, optimal_branching
 
 include("bitbasis.jl")
 include("subcover.jl")

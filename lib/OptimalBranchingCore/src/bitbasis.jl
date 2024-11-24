@@ -165,9 +165,18 @@ end
 Base.show(io::IO, ::MIME"text/plain", t::BranchingTable) = show(io, t)
 Base.copy(t::BranchingTable) = BranchingTable(t.bit_length, copy(t.table))
 
+"""
+    DNF{INT}
+
+A data structure representing a Disjunctive Normal Form (DNF) expression. A DNF is a logical formula that is a disjunction of one or more conjunctions of literals. 
+
+# Fields
+- `clauses::Vector{Clause{INT}}`: A vector of `Clause` objects representing the individual clauses in the DNF.
+"""
 struct DNF{INT}
     clauses::Vector{Clause{INT}}
 end
+
 DNF(c::Clause{INT}, cs::Clause{INT}...) where {INT} = DNF([c, cs...])
 Base.:(==)(x::DNF, y::DNF) = x.clauses == y.clauses
 Base.length(x::DNF) = length(x.clauses)

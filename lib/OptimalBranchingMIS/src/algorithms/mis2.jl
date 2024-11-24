@@ -107,4 +107,9 @@ function counting_mis2(eg::EliminateGraph)
     end
 end
 
+"""
+    counting_mis2(g::SimpleGraph)
+
+Calculates the size of the maximum independent set and the count of branches for a given `SimpleGraph`.
+"""
 counting_mis2(g::SimpleGraph) = counting_mis2(EliminateGraph(g))

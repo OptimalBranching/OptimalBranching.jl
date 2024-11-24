@@ -30,6 +30,22 @@ function subcovers_naive(tbl::BranchingTable{INT}) where{INT}
     return subcovers_naive(tbl.bit_length, tbl.table)
 end
 
+"""
+    subcovers(n::Int, bss::AbstractVector{Vector{INT}}) where {INT}
+
+Generates a set of subcovers from the given bit strings.
+
+# Arguments
+- `n::Int`: The length of the bit strings.
+- `bss::AbstractVector{Vector{INT}}`: A collection of vectors containing bit strings.
+
+# Returns
+- `Vector{SubCover{INT}}`: A vector of `SubCover` objects representing the generated subcovers.
+
+# Description
+This function concatenates the input vectors of bit strings and iteratively generates clauses. It maintains a set of all unique clauses and uses a temporary list to explore new clauses formed by combining existing ones. The resulting subcovers are created based on the covered items for each clause.
+
+"""
 function subcovers(n::Int, bss::AbstractVector{Vector{INT}}) where {INT}
     bs = vcat(bss...)
     all_clauses = Set{Clause{INT}}()
@@ -57,6 +73,21 @@ function subcovers(n::Int, bss::AbstractVector{Vector{INT}}) where {INT}
     return allcovers
 end
 
-function subcovers(tbl::BranchingTable{INT}) where{INT}
+"""
+    subcovers(tbl::BranchingTable{INT}) where {INT}
+
+Generates subcovers from a branching table.
+
+# Arguments
+- `tbl::BranchingTable{INT}`: The branching table containing bit strings.
+
+# Returns
+- `Vector{SubCover{INT}}`: A vector of `SubCover` objects generated from the branching table.
+
+# Description
+This function calls the `subcovers` function with the bit length and table from the provided branching table to generate the corresponding subcovers.
+
+"""
+function subcovers(tbl::BranchingTable{INT}) where {INT}
     return subcovers(tbl.bit_length, tbl.table)
 end

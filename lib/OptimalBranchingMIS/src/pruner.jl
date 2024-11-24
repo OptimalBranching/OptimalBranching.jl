@@ -1,3 +1,9 @@
+"""
+    EnvFilter
+
+A struct representing an environment filter used in the context of pruning branching tables. 
+This filter serves as a specific implementation of the `AbstractPruner` type.
+"""
 struct EnvFilter <: AbstractPruner end
 
 # consider two different branching rule (A, and B) applied on the same set of vertices, with open vertices ovs.

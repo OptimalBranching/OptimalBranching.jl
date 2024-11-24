@@ -2,8 +2,8 @@ using OptimalBranchingMIS, EliminateGraphs, EliminateGraphs.Graphs
 using Test
 
 @testset "mis" begin
-    for n in 20:10:40
-        for d in 3:4
+    for n in [20, 30, 40]
+        for d in [3,4]
             g = random_regular_graph(n, d)
 
             mis_exact = mis2(EliminateGraph(g))

@@ -37,8 +37,24 @@ function collect_configs(cfg::CountingTropical{<:Real, <:ConfigEnumerator}, symb
     symbols === nothing ? cs : [String([symbols[i] for (i, v) in enumerate(x) if v == 1]) for x in cs]
 end
 
+"""
+    solve_table(p::MISProblem, solver::TensorNetworkSolver, vs::Vector{Int})
+
+Calculates the reduced alpha configurations for a given Maximum Independent Set (MIS) problem.
+
+# Arguments
+- `p::MISProblem`: The problem instance containing the graph and vertices.
+- `solver::TensorNetworkSolver`: The solver used for optimizing the tensor network.
+- `vs::Vector{Int}`: A vector of vertices to be considered in the subgraph.
+
+# Returns
+- `BranchingTable`: A table containing the reduced alpha configurations derived from the induced subgraph.
+
+# Description
+This function first identifies the open vertices in the graph associated with the given problem. It then creates an induced subgraph based on the specified vertices and computes the reduced alpha configurations using the provided tensor network solver.
+"""
 function OptimalBranchingCore.solve_table(p::MISProblem, solver::TensorNetworkSolver, vs::Vector{Int})
     ovs = open_vertices(p.g, vs)
     subg, vmap = induced_subgraph(p.g, vs)
-	return reduced_alpha_configs(solver, subg, Int[findfirst(==(v), vs) for v in ovs])
+    return reduced_alpha_configs(solver, subg, Int[findfirst(==(v), vs) for v in ovs])
 end
