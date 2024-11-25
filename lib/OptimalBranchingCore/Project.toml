@@ -17,8 +17,8 @@ BitBasis = "0.9.6"
 HiGHS = "1.12.1"
 JuMP = "1.23.4"
 NLsolve = "4.5.1"
-SCIP = "0.12.0"
-julia = "1.6.7"
+SCIP = "0.11, 0.12"
+julia = "1.6"
 
 [extras]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
