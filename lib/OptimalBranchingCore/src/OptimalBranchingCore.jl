@@ -1,7 +1,6 @@
 module OptimalBranchingCore
 
 using NLsolve, JuMP, HiGHS, SCIP
-using GenericTensorNetworks
 using AbstractTrees
 
 using Reexport

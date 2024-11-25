@@ -1,10 +1,28 @@
 """
     Clause{INT <: Integer}
 
-A clause is a pair of bit strings, `mask` and `val`, where `mask` is a bit string that indicates the bits that are relevant to the clause, and `val` is a bit string that indicates the bits that must be satisfied. The clause is satisfied if and only if `val` is covered by the bit string and `mask`.
-- `INT`: The number of integers as the storage.
+A Clause is conjunction of literals, which is specified by a pair of bit strings.
+The type parameter `INT` is the integer type for storing the bit strings.
 
-If some bit in mask is set as 0, then the corresponding bit in val must be 0.
+### Fields
+- `mask`: A bit string that indicates the variables involved in the clause.
+- `val`: A bit string that indicates the positive literals in the clause.
+
+### Examples
+To check if a bit string satisfies a clause, use `OptimalBranchingCore.covered_by`.
+
+```jldoctest
+julia> using OptimalBranchingCore
+
+julia> clause = Clause(0b1110, 0b1010)
+Clause{UInt8}: #2 ∧ ¬#3 ∧ #4
+
+julia> OptimalBranchingCore.covered_by(0b1110, clause)
+false
+
+julia> OptimalBranchingCore.covered_by(0b1010, clause)
+true
+```
 """
 struct Clause{INT <: Integer}
     mask::INT
@@ -14,14 +32,16 @@ struct Clause{INT <: Integer}
     end
 end
 
-Base.show(io::IO, c::Clause{INT}) where INT = print(io, "Clause{$INT}: mask: $(c.mask), val: $(c.val)")
+function Base.show(io::IO, c::Clause{INT}) where INT
+    print(io, "$(typeof(c)): " * join([iszero(readbit(c.val, i)) ? "¬#$i" : "#$i" for i = 1:bsizeof(INT) if readbit(c.mask, i) == 1], " ∧ "))
+end
 function booleans(n::Int)
     C = (n + 63) ÷ 64
     INT = LongLongUInt{C}
     return [Clause(bmask(INT, i), bmask(INT, i)) for i=1:n]
 end
-GenericTensorNetworks.:∧(x::Clause, xs::Clause...) = Clause(reduce(|, getfield.(xs, :mask); init=x.mask), reduce(|, getfield.(xs, :val); init=x.val))
-GenericTensorNetworks.:¬(x::Clause) = Clause(x.mask, flip(x.val, x.mask))
+∧(x::Clause, xs::Clause...) = Clause(reduce(|, getfield.(xs, :mask); init=x.mask), reduce(|, getfield.(xs, :val); init=x.val))
+¬(x::Clause) = Clause(x.mask, flip(x.val, x.mask))
 
 """
     SubCover{INT <: Integer}
@@ -89,35 +109,24 @@ function covered_by(as::AbstractArray, clause::Clause)
     return [covered_by(a, clause) for a in as]
 end
 
-"""
-    covered_items(bitstrings, clause::Clause)
-
-Return the indices of the bit strings that are covered by the clause.
-"""
+# Returns the indices of the bit strings that are covered by the clause.
 function covered_items(bitstrings, clause::Clause)
-    return [k for (k, b) in enumerate(bitstrings) if any(covered_by(b, clause))]
+    return findall(b -> any(covered_by(b, clause)), bitstrings)
 end
 
+# Flip all bits in `b`, `n` is the number of bits
 function flip_all(n::Int, b::INT) where INT <: Integer
     return flip(b, bmask(INT, 1:n))
 end
 
-"""
-    clause(n::Int, bitstrings::AbstractVector{INT})
-
-Return a clause that covers all the bit strings.
-"""
-function clause(n::Int, bitstrings::AbstractVector{INT}) where INT
+# Return a clause that covers all the bit strings.
+function cover_clause(n::Int, bitstrings::AbstractVector{INT}) where INT
     mask = bmask(INT, 1:n)
     for i in 1:length(bitstrings) - 1
         mask &= bitstrings[i] ⊻ flip_all(n, bitstrings[i+1])
     end
     val = bitstrings[1] & mask
     return Clause(mask, val)
-end
-
-function clauses(n::Int, clustered_bs)
-    return [clause(n, bitstrings) for bitstrings in clustered_bs]
 end
 
 function gather2(n::Int, c1::Clause{INT}, c2::Clause{INT}) where INT
@@ -127,11 +136,6 @@ function gather2(n::Int, c1::Clause{INT}, c2::Clause{INT}) where INT
     val = b1 & mask
     return Clause(mask, val)
 end
-
-function _vec2int(::Type{<:LongLongUInt}, sv::StaticBitVector)
-    return LongLongUInt(sv.data)
-end
-
 
 """
     BranchingTable{INT}
@@ -151,8 +155,19 @@ struct BranchingTable{INT <: Integer}
 end
 
 function BranchingTable(n::Int, arr::AbstractVector{<:AbstractVector})
-    return BranchingTable(n, [_vec2int.(LongLongUInt, x) for x in arr])
+    @assert all(x->all(v->length(v) == n, x), arr)
+    T = LongLongUInt{(n-1) ÷ 64 + 1}
+    return BranchingTable(n, [_vec2int.(T, x) for x in arr])
 end
+# encode a bit vector to and integer
+function _vec2int(::Type{T}, v::AbstractVector) where T <: Integer
+    res = zero(T)
+    for i in 1:length(v)
+        res |= T(v[i]) << (i-1)
+    end
+    return res
+end
+
 nbits(t::BranchingTable) = t.bit_length
 Base.:(==)(t1::BranchingTable, t2::BranchingTable) = all(x -> Set(x[1]) == Set(x[2]), zip(t1.table, t2.table))
 function Base.show(io::IO, t::BranchingTable{INT}) where INT

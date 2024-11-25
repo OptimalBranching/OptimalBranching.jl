@@ -62,7 +62,6 @@ Calculates the optimal cover from the provided subcovers using a specified solve
 
 # Description
 This function computes the difference in measure for each subcover and then calls another `cover` function to find the optimal cover based on the computed differences.
-
 """
 function cover(sub_covers::AbstractVector{SubCover{INT}}, p::P, m::M, vs::Vector{T}, solver::Union{LPSolver, IPSolver}; verbose::Bool = false) where{INT, P<:AbstractProblem, M<:AbstractMeasure, T}
     dns = [dn(p, m, subcover, vs) for subcover in sub_covers]
