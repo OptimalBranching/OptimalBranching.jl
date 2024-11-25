@@ -31,24 +31,28 @@ The function checks the number of vertices in the graph:
 function OptimalBranchingCore.problem_reduce(p::MISProblem, ::MISReducer, TR::Type{R}) where R<:AbstractResult
     g = p.g
     if nv(g) == 0
-        return (NoProblem(), 0)
+        return [Branch(NoProblem(), 0)]
     elseif nv(g) == 1
-        return (NoProblem(), 1)
+        return [Branch(NoProblem(), 1)]
     elseif nv(g) == 2
-        return (NoProblem(), (2 - has_edge(g, 1, 2)))
+        return [Branch(NoProblem(), (2 - has_edge(g, 1, 2)))]
     else
         degrees = degree(g)
         degmin = minimum(degrees)
+        degmax = maximum(degrees)
         vmin = findfirst(==(degmin), degrees)
+        vmax = findfirst(==(degmax), degrees)
 
         if degmin == 0
             all_zero_vertices = findall(==(0), degrees)
-            return (MISProblem(remove_vertices(g, all_zero_vertices)), (length(all_zero_vertices)))
+            return [Branch(MISProblem(remove_vertices(g, all_zero_vertices)), (length(all_zero_vertices)))]
         elseif degmin == 1
-            return (MISProblem(remove_vertices(g, neighbors(g, vmin) ∪ vmin)), (1))
+            return [Branch(MISProblem(remove_vertices(g, neighbors(g, vmin) ∪ vmin)), (1))]
         elseif degmin == 2
             g_new, n = folding(g, vmin)
-            return (MISProblem(g_new), (n))
+            return [Branch(MISProblem(g_new), (n))]
+        elseif degmax ≥ 6
+            return [Branch(MISProblem(remove_vertices(g, closed_neighbors(g, [vmax]))), 1), Branch(MISProblem(remove_vertices(g, [vmax])), 0)]
         end
     end
 

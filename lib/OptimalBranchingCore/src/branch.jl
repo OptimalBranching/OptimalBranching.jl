@@ -37,8 +37,8 @@ function branch(p::P, config::SolverConfig) where{P<:AbstractProblem}
 
     (p isa NoProblem) && return zero(config.result_type)
 
-    reduced = problem_reduce(p, config.reducer, config.result_type)
-    branches = !isnothing(reduced) ? [Branch(reduced[1], reduced[2])] : solve_branches(p, config.branching_strategy, config.result_type)
+    reduced_branches = problem_reduce(p, config.reducer, config.result_type)
+    branches = !isnothing(reduced_branches) ? reduced_branches : solve_branches(p, config.branching_strategy, config.result_type)
 
     return maximum([(branch(b.problem, config) + b.result) for b in branches])
 end
