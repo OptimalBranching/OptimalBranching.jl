@@ -180,7 +180,7 @@ This function implements a cover selection algorithm using an iterative process.
 
 # Description
 This function iteratively solves the integer programming problem to find the optimal cover, updating the complexity value until convergence or the maximum number of iterations is reached.
-    
+
 """
 function cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::IPSolver; verbose::Bool = false) where{INT, TF}
     max_itr = solver.max_itr
