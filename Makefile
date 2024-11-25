@@ -15,6 +15,12 @@ test:
 coverage:
 	$(JL) -e 'using Pkg; Pkg.test(["OptimalBranching", "OptimalBranchingCore", "OptimalBranchingMIS"]; coverage=true)'
 
+init-docs:
+	$(JL) -e 'using Pkg; Pkg.activate("docs"); Pkg.develop([Pkg.PackageSpec(path = "."), [Pkg.PackageSpec(path = joinpath("lib", pkg)) for pkg in ["OptimalBranchingCore", "OptimalBranchingMIS"]]...]); Pkg.precompile()'
+
+serve:
+	$(JL) -e 'using Pkg; Pkg.activate("docs"); using LiveServer; servedocs(;skip_dirs=["docs/src/assets", "docs/src/generated"])'
+
 clean:
 	rm -rf docs/build
 	find . -name "*.cov" -type f -print0 | xargs -0 /bin/rm -f
