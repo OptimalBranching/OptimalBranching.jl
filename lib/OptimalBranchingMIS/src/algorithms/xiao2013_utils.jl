@@ -207,7 +207,10 @@ end
 all_three_funnel(g::SimpleGraph) = all_n_funnel(g, 3)
 all_four_funnel(g::SimpleGraph) = all_n_funnel(g, 4)
 
-rho(g::SimpleGraph) = sum(max(degree(g,v) - 2, 0) for v in 1:nv(g))
+function rho(g::SimpleGraph) 
+    nv(g) == 0 && return 0
+    return sum(max(degree(g,v) - 2, 0) for v in 1:nv(g))
+end
 
 function effective_vertex(g::SimpleGraph)
     for funnel_pair in all_three_funnel(g)
