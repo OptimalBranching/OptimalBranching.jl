@@ -5,13 +5,13 @@ version = "1.0.0-DEV"
 
 [deps]
 EliminateGraphs = "b3ff564c-d3b6-11e9-0ef2-9b4ae9f9cbe1"
+GenericTensorNetworks = "3521c873-ad32-4bb4-b63d-f4f178f42b49"
 OptimalBranchingCore = "c76e7b22-e1d2-40e8-b0f1-f659837787b8"
-Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-EliminateGraphs = "0.2.1"
-Reexport = "1.2.2"
-julia = "1.6.7"
+EliminateGraphs = "0.2"
+GenericTensorNetworks = "2"
+julia = "1.6"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

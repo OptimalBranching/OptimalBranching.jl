@@ -1,7 +1,10 @@
 using OptimalBranchingMIS
 using Test
 
-@testset "OptimalBranchingMIS.jl" begin
+@testset "branch" begin
     include("branch.jl")
+end
+
+@testset "graphs" begin
     include("graphs.jl")
 end
