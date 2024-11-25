@@ -1,6 +1,3 @@
-export counting_xiao2013
-
-
 """
     counting_xiao2013(g::SimpleGraph)
 

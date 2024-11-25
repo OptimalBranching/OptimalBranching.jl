@@ -11,7 +11,7 @@ export MISSize, MISCount
 export MISReducer, MinBoundarySelector, EnvFilter, TensorNetworkSolver
 export NumOfVertices, D3Measure
 
-export counting_mis1, counting_mis2
+export counting_mis1, counting_mis2, counting_xiao2013
 
 include("types.jl")
 include("graphs.jl")
