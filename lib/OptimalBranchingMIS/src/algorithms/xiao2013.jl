@@ -1,46 +1,31 @@
-# the algorithm in Confining sets and avoiding bottleneck cases: A simple maximum independent set algorithm in degree-3 graphs
-export mis_xiao2013, count_xiao2013
+export counting_xiao2013
 
 
 """
-    mis_xiao2013(g::SimpleGraph)
+    counting_xiao2013(g::SimpleGraph)
+
+This function counts the maximum independent set (MIS) in a given simple graph using the Xiao 2013 algorithm.
 
 # Arguments
-- `g::SimpleGraph`: The input graph for which the maximum independent set is to be calculated.
+- `g::SimpleGraph`: A simple graph for which the maximum independent set is to be counted.
 
 # Returns
-- `CountingMIS.mis`: The size of the MIS of a graph `g`.
+- `CountingMIS`: An object representing the size of the maximum independent set and the count of branches.
+
 """
-function mis_xiao2013(g::SimpleGraph)
+function counting_xiao2013(g::SimpleGraph)
     gc = copy(g)    
-    return _xiao2013(gc).mis
-end
-
-
-"""
-    count_xiao2013(g::SimpleGraph)
-
-Uses the branch and bound algorithm in xiao2013 to search for the size of the MIS of a graph `g`. 
-
-# Arguments
-- `g::SimpleGraph`: The input graph for which the maximum independent set is to be calculated.
-
-# Returns
-- `CountingMIS.count`: The number of branches generated during the entire process.
-"""
-function count_xiao2013(g::SimpleGraph)
-    gc = copy(g)
-    return _xiao2013(gc).count
+    return _xiao2013(gc)
 end
 
 
 function _xiao2013(g::SimpleGraph)
     if nv(g) == 0
-        return CountingMIS(0)
+        return MISCount(0)
     elseif nv(g) == 1
-        return CountingMIS(1)
+        return MISCount(1)
     elseif nv(g) == 2
-        return CountingMIS(2 - has_edge(g, 1, 2))
+        return MISCount(2 - has_edge(g, 1, 2))
     else
         degrees = degree(g)
         degmin = minimum(degrees)
@@ -48,11 +33,11 @@ function _xiao2013(g::SimpleGraph)
 
         if degmin == 0
             all_zero_vertices = findall(==(0), degrees)
-            return length(all_zero_vertices) + _xiao2013(remove_vertex(g, all_zero_vertices))
+            return length(all_zero_vertices) + _xiao2013(remove_vertices(g, all_zero_vertices))
         elseif degmin == 1
-            return 1 + _xiao2013(remove_vertex(g, neighbors(g, vmin) ∪ vmin))
+            return 1 + _xiao2013(remove_vertices(g, neighbors(g, vmin) ∪ vmin))
         elseif degmin == 2
-            return 1 + _xiao2013(folding(g, vmin))
+            return 1 + _xiao2013(folding(g, vmin)[1])
         end
 
         # reduction rules

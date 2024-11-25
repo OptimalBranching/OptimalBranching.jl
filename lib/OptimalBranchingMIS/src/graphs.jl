@@ -34,9 +34,9 @@ function removed_vertices(vertices::Vector{Int}, g::SimpleGraph, clause::Clause{
     return unique!(rvs)
 end
 
-function remove_vertices(g::SimpleGraph, vertices::Vector{Int})
-    g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), vertices))
-    return g_new
+function remove_vertices(g, v)
+    g, vs = induced_subgraph(g, setdiff(vertices(g), v))
+    return g
 end
 
 """

@@ -2,6 +2,7 @@ module OptimalBranchingMIS
 
 using OptimalBranchingCore
 using OptimalBranchingCore.BitBasis
+using Combinatorics
 using EliminateGraphs, EliminateGraphs.Graphs
 using GenericTensorNetworks
 
@@ -16,6 +17,8 @@ include("types.jl")
 include("graphs.jl")
 include("algorithms/mis1.jl")
 include("algorithms/mis2.jl")
+include("algorithms/xiao2013.jl")
+include("algorithms/xiao2013_utils.jl")
 
 include("reducer.jl")
 include("selector.jl")

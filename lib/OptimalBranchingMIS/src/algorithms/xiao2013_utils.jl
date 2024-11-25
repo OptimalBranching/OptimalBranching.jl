@@ -1,42 +1,3 @@
-"""
-    struct CountingMIS
-
-A struct representing a counting maximum independent set (MIS), where `mis` for size of the maximum independent set and `count` for the count of branches.
-
-# Fields
-- `mis::Int`: The maximum independent set.
-- `count::Int`: The count of the maximum independent set.
-
-# Constructors
-- `CountingMIS(mis::Int)`: Constructs a CountingMIS object with the given maximum independent set and count set to 1.
-- `CountingMIS(mis::Int, count::Int)`: Constructs a CountingMIS object with the given maximum independent set and count.
-
-# Examples
-```jldoctest
-julia> CountingMIS(2, 2) + 2
-CountingMIS(4, 2)
-
-julia> CountingMIS(1, 1) + CountingMIS(2, 2)
-CountingMIS(3, 3)
-
-julia> max(CountingMIS(1, 1), CountingMIS(2, 2))
-CountingMIS(2, 3)
-```
-"""
-struct CountingMIS
-    mis::Int
-    count::Int
-    CountingMIS(mis::Int) = new(mis, 1)
-    CountingMIS(mis::Int, count::Int) = new(mis, count)
-end
-
-Base.:+(x::CountingMIS, y::Int) = CountingMIS(x.mis + y, x.count)
-Base.:+(x::Int, y::CountingMIS) = CountingMIS(x + y.mis, y.count)
-Base.:+(x::CountingMIS, y::CountingMIS) = CountingMIS(x.mis + y.mis, x.count + y.count)
-
-Base.max(x::CountingMIS, y::CountingMIS) = CountingMIS(max(x.mis, y.mis), x.count + y.count)
-Base.max(args...) = reduce(max, args)
-
 struct Path
     vertices::Vector{Int}
 end
@@ -78,45 +39,6 @@ function is_line_graph(g::SimpleGraph)
         end
     end
     return true
-end
-
-function remove_vertex(g, v)
-    g, vs = induced_subgraph(g, setdiff(vertices(g), v))
-    return g
-end
-
-function remove_vertices(g, vertices)
-    gc = copy(g)
-    rem_vertices!(gc, vertices)
-    return gc
-end
-
-function closed_neighbors(g::SimpleGraph, vertices::Vector{Int})
-    return open_neighbors(g, vertices) ∪ vertices
-end
-
-function open_neighbors(g::SimpleGraph, vertices::Vector{Int})
-    ov = Vector{Int}()
-    for v in vertices
-        for n in neighbors(g, v)
-            push!(ov, n)
-        end
-    end
-    return unique!(setdiff(ov, vertices))
-end
-
-function folding(g::SimpleGraph, v)
-    @assert degree(g, v) == 2
-    a, b = neighbors(g, v)
-    if !has_edge(g, a, b)
-        # apply the graph rewrite rule
-        add_vertex!(g)
-        nn = open_neighbors(g, [v, a, b])
-        for n in nn
-            add_edge!(g, nv(g), n)
-        end
-    end
-    return remove_vertex(g, [v, a, b])
 end
 
 function find_children(g::SimpleGraph, vertex_set::Vector{Int})

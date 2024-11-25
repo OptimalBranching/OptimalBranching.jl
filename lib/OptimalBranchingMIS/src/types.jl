@@ -14,7 +14,7 @@ Represents a Maximum Independent Set (MIS) problem.
 mutable struct MISProblem <: AbstractProblem
     g::SimpleGraph
 end
-copy(p::MISProblem) = MISProblem(copy(p.g))
+Base.copy(p::MISProblem) = MISProblem(copy(p.g))
 Base.show(io::IO, p::MISProblem) = print(io, "MISProblem($(nv(p.g)))")
 
 """
