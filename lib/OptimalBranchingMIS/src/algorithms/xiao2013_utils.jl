@@ -266,12 +266,12 @@ function optimal_funnel(g::SimpleGraph)
     # v) select three-funnel leads to a fine instance
     for funnel_pair in three_funnels
         a,b = funnel_pair
-        g_left = copy(g)
-        rem_vertices!(g_left, closed_neighbors(g, [b]))
+        g_left = remove_vertices(g, closed_neighbors(g, [b]))
         has_fine_structure(g_left) && return funnel_pair
     end
 
-    @error "No optimal funnel found"
+    # @error "No optimal funnel found"
+    return nothing
 end
 
 
