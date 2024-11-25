@@ -6,7 +6,7 @@ function all_clauses_naive(n::Int, bss::AbstractVector{Vector{INT}}) where INT
         masks = [ids...]
         cbs = [bss[i][masks[i]] for i in 1:length(bss) if masks[i] != 0]
         if length(cbs) > 0
-            ccbs = clause(n::Int, cbs)
+            ccbs = cover_clause(n::Int, cbs)
             if !(ccbs in allclauses) && (ccbs.mask != 0)
                 push!(allclauses, ccbs)
             end

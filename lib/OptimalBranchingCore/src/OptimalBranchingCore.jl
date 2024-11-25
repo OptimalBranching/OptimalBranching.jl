@@ -1,11 +1,8 @@
 module OptimalBranchingCore
 
 using NLsolve, JuMP, HiGHS, SCIP
-using GenericTensorNetworks
 using AbstractTrees
-
-using Reexport
-@reexport using BitBasis
+using BitBasis
 
 export Clause, BranchingTable, SubCover, DNF, Branch
 export SolverConfig

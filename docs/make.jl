@@ -1,4 +1,4 @@
-using OptimalBranching
+using OptimalBranching, OptimalBranchingCore, OptimalBranchingMIS
 using Documenter
 
 DocMeta.setdocmeta!(OptimalBranching, :DocTestSetup, :(using OptimalBranching); recursive=true)

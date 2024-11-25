@@ -1,4 +1,5 @@
 using OptimalBranchingMIS, EliminateGraphs, EliminateGraphs.Graphs
+using OptimalBranchingCore
 using Test
 
 @testset "mis" begin

@@ -1,9 +1,9 @@
 module OptimalBranchingMIS
 
-using Reexport
-@reexport using OptimalBranchingCore
+using OptimalBranchingCore
+using OptimalBranchingCore.BitBasis
 using EliminateGraphs, EliminateGraphs.Graphs
-using OptimalBranchingCore.GenericTensorNetworks
+using GenericTensorNetworks
 
 export MISProblem
 export MISSize, MISCount

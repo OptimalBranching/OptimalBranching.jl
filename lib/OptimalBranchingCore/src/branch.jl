@@ -1,17 +1,19 @@
 """
-    Generate optimal branches from a given branching table.
+    optimal_branching(tbl::BranchingTable{INT}, vs::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}; verbose::Bool = false) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
 
-    # Arguments
-    - `tbl::BranchingTable{INT}`: The branching table containing subcovers.
-    - `vs::Vector{T}`: A vector of variables to be used in the branching.
-    - `problem::P`: The problem instance being solved.
-    - `measure::M`: The measure used for evaluating the branches.
-    - `solver::S`: The solver used for the set cover problem.
-    - `::Type{R}`: The type of the result expected.
-    - `verbose::Bool`: Optional; if true, enables verbose output (default is false).
+Generate optimal branches from a given branching table.
 
-    # Returns
-    A vector of `Branch` objects representing the optimal branches derived from the subcovers.
+### Arguments
+- `tbl::BranchingTable{INT}`: The branching table containing subcovers.
+- `vs::Vector{T}`: A vector of variables to be used in the branching.
+- `problem::P`: The problem instance being solved.
+- `measure::M`: The measure used for evaluating the branches.
+- `solver::S`: The solver used for the set cover problem.
+- `::Type{R}`: The type of the result expected.
+- `verbose::Bool`: Optional; if true, enables verbose output (default is false).
+
+### Returns
+A vector of `Branch` objects representing the optimal branches derived from the subcovers.
 """
 function optimal_branching(tbl::BranchingTable{INT}, vs::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}; verbose::Bool = false) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
     sub_covers = subcovers(tbl)

@@ -1,5 +1,6 @@
 using OptimalBranchingCore, GenericTensorNetworks
-using OptimalBranchingCore: booleans, covered_by
+using OptimalBranchingCore: booleans, covered_by, ¬, ∧
+using BitBasis
 using Test
 
 @testset "clause and cover" begin
