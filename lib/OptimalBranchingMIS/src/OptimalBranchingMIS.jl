@@ -8,7 +8,10 @@ using GenericTensorNetworks
 
 export MISProblem
 export MISSize, MISCount
-export MISReducer, MinBoundarySelector, EnvFilter, TensorNetworkSolver
+export MISReducer, XiaoReducer
+export MinBoundarySelector
+export EnvFilter
+export TensorNetworkSolver
 export NumOfVertices, D3Measure
 
 export counting_mis1, counting_mis2, counting_xiao2013
