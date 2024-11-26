@@ -7,6 +7,7 @@ init:
 	$(JL) -e 'using Pkg; Pkg.develop([Pkg.PackageSpec(path = joinpath("lib", pkg)) for pkg in ["OptimalBranchingMIS"]]); Pkg.precompile()'
 
 update:
+	git pull
 	$(JL) -e 'using Pkg; Pkg.update(); Pkg.precompile()'
 
 test:
