@@ -11,7 +11,7 @@ export AbstractProblem, AbstractResult, AbstractMeasure, AbstractReducer, Abstra
 export NoProblem, NoResult, NoPruner, LPSolver, IPSolver
 
 export apply, measure, problem_reduce, select, solve_table, prune
-export complexity, cover, branch, solve_branches, optimal_branching
+export complexity, cover, branch, solve_branches, optimal_branching, viz_optimal_branching
 
 include("bitbasis.jl")
 include("subcover.jl")

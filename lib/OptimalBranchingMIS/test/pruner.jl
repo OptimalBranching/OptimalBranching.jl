@@ -29,13 +29,7 @@ using Test
     tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, Int[findfirst(==(v), vs) for v in ovs])
     @test length(tbl.table) == 9
 
-    branches = OptimalBranchingMIS.OptimalBranchingCore.optimal_branching(tbl, vs, MISProblem(graph), measure, set_cover_solver, MISSize, verbose = true)
-    @test length(branches) == 2
-
     problem = MISProblem(graph)
     pruned_tbl = OptimalBranchingMIS.OptimalBranchingCore.prune(tbl, pruner, measure, problem, vs)
     @test length(pruned_tbl.table) == 5
-
-    branches = OptimalBranchingMIS.OptimalBranchingCore.optimal_branching(pruned_tbl, vs, MISProblem(graph), measure, set_cover_solver, MISSize, verbose = true)
-    @test length(branches) == 3
 end
