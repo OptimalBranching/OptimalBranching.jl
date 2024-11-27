@@ -15,13 +15,35 @@ Generate optimal branches from a given branching table.
 ### Returns
 A vector of `Branch` objects representing the optimal branches derived from the subcovers.
 """
-function optimal_branching(tbl::BranchingTable{INT}, vs::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
+function optimal_branching(tbl::BranchingTable{INT}, vs::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}; verbose::Bool = false) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
     sub_covers = subcovers(tbl)
     cov, cx = cover(sub_covers, problem, measure, vs, solver)
     branches = [Branch(sub_cover.clause, vs, problem, R) for sub_cover in cov]
+
+    if verbose
+        println("--------------------------------")
+        println("complexity: $cx")
+        println("branches:")
+        for cov_i in cov
+            println(clause_string(cov_i.clause, vs))
+        end
+        println("branching vector: [$(join([dn(problem, measure, sc, vs) for sc in cov], ", "))]")
+        println("--------------------------------")
+    end
+
     return branches
 end
 
+function clause_string(clause::Clause{INT}, vs::Vector{T}) where {INT, T}
+    cs_vec = String[]
+    for i in 1:length(vs)
+        if (clause.mask >> (i-1)) & 1 == 1
+            t_flag = (clause.val >> (i-1)) & 1 == 1
+            push!(cs_vec, t_flag ? "$(vs[i])" : "¬$(vs[i])")
+        end
+    end
+    return join(cs_vec, " ∧ ")
+end
 
 """
     Branch the given problem using the specified solver configuration.

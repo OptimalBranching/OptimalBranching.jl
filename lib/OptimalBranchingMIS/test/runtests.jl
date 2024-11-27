@@ -12,3 +12,7 @@ end
 @testset "mis" begin
     include("mis.jl")
 end
+
+@testset "pruner" begin
+    include("pruner.jl")
+end
