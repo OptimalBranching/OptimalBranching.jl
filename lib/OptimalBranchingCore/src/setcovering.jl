@@ -63,9 +63,9 @@ Calculates the optimal cover from the provided subcovers using a specified solve
 # Description
 This function computes the difference in measure for each subcover and then calls another `cover` function to find the optimal cover based on the computed differences.
 """
-function cover(sub_covers::AbstractVector{SubCover{INT}}, p::P, m::M, vs::Vector{T}, solver::Union{LPSolver, IPSolver}; verbose::Bool = false) where{INT, P<:AbstractProblem, M<:AbstractMeasure, T}
+function cover(sub_covers::AbstractVector{SubCover{INT}}, p::P, m::M, vs::Vector{T}, solver::Union{LPSolver, IPSolver}) where{INT, P<:AbstractProblem, M<:AbstractMeasure, T}
     dns = [dn(p, m, subcover, vs) for subcover in sub_covers]
-    return cover(sub_covers, dns, solver; verbose)
+    return cover(sub_covers, dns, solver)
 end
 
 """
@@ -88,17 +88,24 @@ Finds the optimal cover based on the provided differences in measure.
 This function iteratively solves the linear programming problem to find the optimal cover, updating the complexity value until convergence or the maximum number of iterations is reached.
 
 """
-function cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::LPSolver; verbose::Bool = false) where{INT, TF}
+function cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::LPSolver) where{INT, TF}
     max_itr = solver.max_itr
     cx, n = γ0(sub_covers, dns)
+    verbose = solver.verbose
     verbose && (@info "γ0 = $(cx)")
+
+    for sub_cover in sub_covers
+        (length(sub_cover.ids) == n) && return [sub_cover], 1.0
+    end
+
     scs_new = copy(sub_covers)
     cx_old = cx
     for i = 1:max_itr
         xs = LP_setcover(cx, scs_new, n, dns, verbose)
         picked_scs = random_pick(xs, sub_covers, n)
-        cx = complexity(dns[picked_scs])
         picked = sub_covers[picked_scs]
+        verbose && (@info "LP Solver, Iteration $i, picked = $(picked), dn = $(dns[picked_scs])")
+        cx = complexity(dns[picked_scs])
         verbose && (@info "LP Solver, Iteration $i, complexity = $cx")
         if (i == max_itr) || (cx ≈ cx_old)
             return picked, cx
@@ -181,16 +188,26 @@ This function implements a cover selection algorithm using an iterative process.
 This function iteratively solves the integer programming problem to find the optimal cover, updating the complexity value until convergence or the maximum number of iterations is reached.
 
 """
-function cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::IPSolver; verbose::Bool = false) where{INT, TF}
+function cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::IPSolver) where{INT, TF}
+    verbose = solver.verbose
+    verbose && (@info "IP Solver, sub_covers = $(sub_covers)")
     max_itr = solver.max_itr
     cx, n = γ0(sub_covers, dns)
     verbose && (@info "γ0 = $cx")
+
+    for sub_cover in sub_covers
+        (length(sub_cover.ids) == n) && return [sub_cover], 1.0
+    end
+
     scs_new = copy(sub_covers)
     cx_old = cx
     for i = 1:max_itr
         xs = IP_setcover(cx, scs_new, n, dns, verbose)
-        cx = complexity(dns[xs .≈ 1.0])
+        verbose && (@info "IP Solver, Iteration $i, xs = $(xs)")
         picked = pick(xs, sub_covers)
+        verbose && (@info "IP Solver, Iteration $i, picked = $(picked)")
+        verbose && (@info "IP Solver, Iteration $i, dns = $(dns[xs .≈ 1.0])")
+        cx = complexity(dns[xs .≈ 1.0])
         verbose && (@info "IP Solver, Iteration $i, complexity = $cx")
         if (i == max_itr) || (cx ≈ cx_old)
             return picked, cx

@@ -15,9 +15,9 @@ Generate optimal branches from a given branching table.
 ### Returns
 A vector of `Branch` objects representing the optimal branches derived from the subcovers.
 """
-function optimal_branching(tbl::BranchingTable{INT}, vs::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}; verbose::Bool = false) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
+function optimal_branching(tbl::BranchingTable{INT}, vs::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
     sub_covers = subcovers(tbl)
-    cov, cx = cover(sub_covers, problem, measure, vs, solver; verbose)
+    cov, cx = cover(sub_covers, problem, measure, vs, solver)
     branches = [Branch(sub_cover.clause, vs, problem, R) for sub_cover in cov]
     return branches
 end

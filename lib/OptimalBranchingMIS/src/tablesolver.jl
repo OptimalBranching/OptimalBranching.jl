@@ -56,5 +56,6 @@ This function first identifies the open vertices in the graph associated with th
 function OptimalBranchingCore.solve_table(p::MISProblem, solver::TensorNetworkSolver, vs::Vector{Int})
     ovs = open_vertices(p.g, vs)
     subg, vmap = induced_subgraph(p.g, vs)
-    return reduced_alpha_configs(solver, subg, Int[findfirst(==(v), vs) for v in ovs])
+	potential = [length(setdiff(neighbors(p.g, v), vs)) for v in ovs]
+    return reduced_alpha_configs(solver, subg, Int[findfirst(==(v), vs) for v in ovs], potential)
 end

@@ -247,11 +247,9 @@ A struct representing a linear programming solver for set covering problems.
 - `LPSolver()`: Creates a new instance of LPSolver with a default maximum of 10 iterations.
 
 """
-struct LPSolver <: AbstractSetCoverSolver 
-    max_itr::Int 
-
-    LPSolver(max_itr::Int) = new(max_itr)
-    LPSolver() = new(10)
+Base.@kwdef struct LPSolver <: AbstractSetCoverSolver 
+    max_itr::Int = 5
+    verbose::Bool = false
 end
 
 """
@@ -267,11 +265,9 @@ A struct representing an integer programming solver for set covering problems.
 - `IPSolver()`: Creates a new instance of IPSolver with a default maximum of 10 iterations.
 
 """
-struct IPSolver <: AbstractSetCoverSolver 
-    max_itr::Int 
-
-    IPSolver(max_itr::Int) = new(max_itr)
-    IPSolver() = new(10)
+Base.@kwdef struct IPSolver <: AbstractSetCoverSolver 
+    max_itr::Int = 5
+    verbose::Bool = false
 end
 
 """

@@ -22,8 +22,9 @@ function OptimalBranchingCore.prune(tbl::BranchingTable{INT}, ::EnvFilter, m::M,
     for i in 1:length(tbl.table)
         row = tbl.table[i]
         x = row[1]
-        for n in 1:length(x)
-            if (x[n] == 1) && (vertices[n] ∈ so)
+        for n in 1:tbl.bit_length
+            xn = (x >> (n-1)) & 1
+            if (xn == 1) && (vertices[n] ∈ so)
                 push!(open_vertices_1[i], vertices[n])
             end
         end

@@ -10,3 +10,5 @@ Manifest.toml
 
 lib/OptimalBranchingMIS/docs/build/
 lib/OptimalBranchingCore/docs/build/
+
+example
