@@ -141,7 +141,7 @@ end
     BranchingTable{INT}
 
 A table of branching configurations. The table is a vector of vectors of `INT`. Type parameters are:
-- `INT`: The number of integers as the storage.
+- `INT`: The integer type for storing bit strings.
 
 # Fields
 - `bit_length::Int`: The length of the bit string.

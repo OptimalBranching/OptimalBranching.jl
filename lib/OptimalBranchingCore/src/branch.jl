@@ -21,7 +21,7 @@ A vector of `Branch` objects representing the optimal branches derived from the 
 """
 function optimal_branching_rule(tbl::BranchingTable{INT}, variables::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
     sub_covers = subcovers(tbl)
-    Δρ = branching_vector(problem, sub_covers, measure, variables)
+    Δρ = branching_vector(problem, variables, sub_covers, measure)
     cov, cx = minimize_γ(length(tbl.table), sub_covers, Δρ, solver)
     return BranchingRule([Branch(sub_cover.clause, variables, problem, R) for sub_cover in cov])
 end
@@ -71,8 +71,7 @@ end
     The maximum result obtained from the branches.
 """
 function reduce_and_branch(p::AbstractProblem, config::SolverConfig)
-    (p isa NoProblem) && return zero(config.result_type)
-
+    isempty(p) && return zero(config.result_type)
     # TODO: why not just reduce directly?
     reduced_branches = reduce_problem(p, config.reducer, config.result_type)
     rule = if isnothing(reduced_branches)  # use the automatically generated branching rule

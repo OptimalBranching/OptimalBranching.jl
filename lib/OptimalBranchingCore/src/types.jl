@@ -7,18 +7,6 @@ This serves as a base type for all specific problem types that will be implement
 abstract type AbstractProblem end
 
 """
-    NoProblem
-
-A concrete implementation of AbstractProblem representing the absence of a problem. 
-This is used as a placeholder in scenarios where no valid problem is present.
-
-# Fields
-None
-
-"""
-struct NoProblem <: AbstractProblem end
-
-"""
     AbstractResult
 
 An abstract type representing a generic result in the optimal branching framework. 
@@ -39,7 +27,7 @@ None
 struct NoResult <: AbstractResult end
 
 """
-    apply_branch(::NoProblem, ::Clause, vs)
+    apply_branch(problem::AbstractProblem, ::Clause, vs)
 
 Applies a clause to a NoProblem instance, returning a NoProblem instance. 
 This function serves as a placeholder for scenarios where no valid problem is present.
@@ -53,10 +41,10 @@ This function serves as a placeholder for scenarios where no valid problem is pr
 - `NoProblem()`: An instance of NoProblem, indicating that no problem exists.
 
 """
-apply_branch(::NoProblem, ::Clause, vs) = NoProblem()
+function apply_branch end
 
 """
-    result(::NoProblem, ::Clause, vs, ::Type{R}) where{R<:AbstractResult}
+    result(problem, ::Clause, vs, ::Type{R}) where{R<:AbstractResult}
 
 Generates a result from a NoProblem instance when a clause is applied. 
 This function serves as a placeholder for scenarios where no valid result is present.
@@ -71,7 +59,7 @@ This function serves as a placeholder for scenarios where no valid result is pre
 - `NoResult()`: An instance of NoResult, indicating that no valid result exists.
 
 """
-result(::NoProblem, ::Clause, vs, ::Type{R}) where{R<:AbstractResult} = NoResult()
+function result end
 
 """
     AbstractMeasure
@@ -94,9 +82,7 @@ This function serves as a placeholder for scenarios where no valid problem is pr
 # Returns
 - `Int`: The measure value, which is always `0` for a NoProblem instance.
 """
-function measure(::NoProblem, ::AbstractMeasure) 
-    return 0 
-end
+function measure end
 
 """
     AbstractReducer
@@ -120,9 +106,7 @@ This function serves as a placeholder for scenarios where no valid problem is pr
 # Returns
 - `NoProblem()`: An instance of NoProblem, indicating that no problem exists.
 """
-function reduce_problem(::NoProblem, ::AbstractReducer, ::Type{R}) where{R<:AbstractResult} 
-    return NoProblem() 
-end
+function reduce_problem end
 
 """
     AbstractSelector
@@ -146,9 +130,7 @@ This function serves as a placeholder for scenarios where no valid selection is 
 # Returns
 - `nothing`: Indicates that no selection is made due to the absence of a problem.
 """
-function select(::NoProblem, ::AbstractMeasure, ::AbstractSelector) 
-    return nothing 
-end
+function select end
 
 """
     AbstractPruner
@@ -207,7 +189,7 @@ Solves a given problem using a specified table solver.
 # Returns
 - `nothing`: Indicates that no solution is produced due to the absence of a problem.
 """
-branching_table(::NoProblem, ::AbstractTableSolver, vs) = nothing
+function branching_table end
 
 """
     AbstractSetCoverSolver

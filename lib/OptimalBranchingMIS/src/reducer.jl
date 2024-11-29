@@ -7,14 +7,14 @@ This struct serves as a specific implementation of the `AbstractReducer` type.
 struct MISReducer <: AbstractReducer end
 
 """
-    reduce_problem(p::MISProblem, ::MISReducer, TR::Type{R}) where R<:AbstractResult
+    reduce_problem(p::MISProblem, ::MISReducer, ::Type{R}) where R<:AbstractResult
 
 Reduces the given `MISProblem` by removing vertices based on their degrees and returns a new `MISProblem` instance along with the count of removed vertices.
 
 # Arguments
 - `p::MISProblem`: The problem instance containing the graph to be reduced.
 - `::MISReducer`: An instance of the `MISReducer` struct.
-- `TR::Type{R}`: The type of the result expected.
+- `::Type{R}`: The type of the result expected.
 
 # Returns
 - A tuple containing:
@@ -23,19 +23,19 @@ Reduces the given `MISProblem` by removing vertices based on their degrees and r
 
 # Description
 The function checks the number of vertices in the graph:
-- If there are no vertices, it returns a `NoProblem` instance and a count of 0.
-- If there is one vertex, it returns a `NoProblem` instance and a count of 1.
-- If there are two vertices, it returns a `NoProblem` instance and a count based on the presence of an edge between them.
+- If there are no vertices, it returns an empty instance and a count of 0.
+- If there is one vertex, it returns an empty instance and a count of 1.
+- If there are two vertices, it returns an empty instance and a count based on the presence of an edge between them.
 - For graphs with more than two vertices, it calculates the degrees of the vertices and identifies the vertex with the minimum degree to determine which vertices to remove.
 """
-function OptimalBranchingCore.reduce_problem(p::MISProblem, ::MISReducer, TR::Type{R}) where R<:AbstractResult
+function OptimalBranchingCore.reduce_problem(p::MISProblem, ::MISReducer, ::Type{<:AbstractResult})
     g = p.g
     if nv(g) == 0
-        return [Branch(NoProblem(), 0)]
+        return [Branch(MISProblem(SimpleGraph(0)), 0)]
     elseif nv(g) == 1
-        return [Branch(NoProblem(), 1)]
+        return [Branch(MISProblem(SimpleGraph(0)), 1)]
     elseif nv(g) == 2
-        return [Branch(NoProblem(), (2 - has_edge(g, 1, 2)))]
+        return [Branch(MISProblem(SimpleGraph(0)), (2 - has_edge(g, 1, 2)))]
     else
         degrees = degree(g)
         degmin = minimum(degrees)
@@ -61,14 +61,15 @@ end
 
 struct XiaoReducer <: AbstractReducer end
 
-function OptimalBranchingCore.reduce_problem(p::MISProblem, ::XiaoReducer, TR::Type{R}) where R<:AbstractResult
+function OptimalBranchingCore.reduce_problem(p::MISProblem, ::XiaoReducer, ::Type{<:AbstractResult})
     g = p.g
     if nv(g) == 0
-        return [Branch(NoProblem(), 0)]
+        # NOTE: using NoProblem can be slower due to type instability.
+        return [Branch(MISProblem(SimpleGraph(0)), 0)]
     elseif nv(g) == 1
-        return [Branch(NoProblem(), 1)]
+        return [Branch(MISProblem(SimpleGraph(0)), 1)]
     elseif nv(g) == 2
-        return [Branch(NoProblem(), (2 - has_edge(g, 1, 2)))]
+        return [Branch(MISProblem(SimpleGraph(0)), (2 - has_edge(g, 1, 2)))]
     else
         degrees = degree(g)
         degmin = minimum(degrees)
