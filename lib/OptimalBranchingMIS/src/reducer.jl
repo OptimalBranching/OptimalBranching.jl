@@ -7,7 +7,7 @@ This struct serves as a specific implementation of the `AbstractReducer` type.
 struct MISReducer <: AbstractReducer end
 
 """
-    problem_reduce(p::MISProblem, ::MISReducer, TR::Type{R}) where R<:AbstractResult
+    reduce_problem(p::MISProblem, ::MISReducer, TR::Type{R}) where R<:AbstractResult
 
 Reduces the given `MISProblem` by removing vertices based on their degrees and returns a new `MISProblem` instance along with the count of removed vertices.
 
@@ -28,7 +28,7 @@ The function checks the number of vertices in the graph:
 - If there are two vertices, it returns a `NoProblem` instance and a count based on the presence of an edge between them.
 - For graphs with more than two vertices, it calculates the degrees of the vertices and identifies the vertex with the minimum degree to determine which vertices to remove.
 """
-function OptimalBranchingCore.problem_reduce(p::MISProblem, ::MISReducer, TR::Type{R}) where R<:AbstractResult
+function OptimalBranchingCore.reduce_problem(p::MISProblem, ::MISReducer, TR::Type{R}) where R<:AbstractResult
     g = p.g
     if nv(g) == 0
         return [Branch(NoProblem(), 0)]
@@ -61,7 +61,7 @@ end
 
 struct XiaoReducer <: AbstractReducer end
 
-function OptimalBranchingCore.problem_reduce(p::MISProblem, ::XiaoReducer, TR::Type{R}) where R<:AbstractResult
+function OptimalBranchingCore.reduce_problem(p::MISProblem, ::XiaoReducer, TR::Type{R}) where R<:AbstractResult
     g = p.g
     if nv(g) == 0
         return [Branch(NoProblem(), 0)]

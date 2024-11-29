@@ -12,7 +12,7 @@ Applies the given clause to the specified vertices of the MISProblem, removing t
 - `MISProblem`: A new instance of `MISProblem` with the specified vertices removed from the graph.
 
 """
-function OptimalBranchingCore.apply(p::MISProblem, clause::Clause{INT}, vertices::Vector{T}) where {INT<:Integer, T<:Integer}
+function OptimalBranchingCore.apply_branch(p::MISProblem, clause::Clause{INT}, vertices::Vector{T}) where {INT<:Integer, T<:Integer}
     g = p.g
     vertices_removed = removed_vertices(vertices, g, clause)
     return MISProblem(remove_vertices(g, vertices_removed))

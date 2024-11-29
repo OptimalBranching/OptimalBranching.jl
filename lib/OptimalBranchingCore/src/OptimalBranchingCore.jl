@@ -10,14 +10,14 @@ export AbstractBranchingStrategy, OptBranchingStrategy
 export AbstractProblem, AbstractResult, AbstractMeasure, AbstractReducer, AbstractSelector, AbstractPruner, AbstractTableSolver, AbstractSetCoverSolver
 export NoProblem, NoResult, NoPruner, LPSolver, IPSolver
 
-export apply, measure, problem_reduce, select, solve_table, prune, weighted_minimum_set_cover
-export complexity, minimum_γ, branch, solve_branches, optimal_branching, viz_optimal_branching
+export apply_branch, measure, reduce_problem, select, branching_table, prune, weighted_minimum_set_cover
+# TODO: complexity should be implemented on BranchingRule
+export complexity, reduce_and_branch, optimal_branching_rule
 
 include("bitbasis.jl")
 include("subcover.jl")
 include("types.jl")
 include("setcovering.jl")
 include("branch.jl")
-# include("branchingtree.jl")
 
 end

@@ -39,7 +39,7 @@ None
 struct NoResult <: AbstractResult end
 
 """
-    apply(::NoProblem, ::Clause, vs)
+    apply_branch(::NoProblem, ::Clause, vs)
 
 Applies a clause to a NoProblem instance, returning a NoProblem instance. 
 This function serves as a placeholder for scenarios where no valid problem is present.
@@ -53,7 +53,7 @@ This function serves as a placeholder for scenarios where no valid problem is pr
 - `NoProblem()`: An instance of NoProblem, indicating that no problem exists.
 
 """
-apply(::NoProblem, ::Clause, vs) = NoProblem()
+apply_branch(::NoProblem, ::Clause, vs) = NoProblem()
 
 """
     result(::NoProblem, ::Clause, vs, ::Type{R}) where{R<:AbstractResult}
@@ -107,7 +107,7 @@ This serves as a base type for all specific reducer implementations.
 abstract type AbstractReducer end
 
 """
-    problem_reduce(p::NoProblem, ::AbstractReducer, ::Type{R}) where{R<:AbstractResult}
+    reduce_problem(p::NoProblem, ::AbstractReducer, ::Type{R}) where{R<:AbstractResult}
 
 Reduces a problem represented by a NoProblem instance. 
 This function serves as a placeholder for scenarios where no valid problem is present.
@@ -120,7 +120,7 @@ This function serves as a placeholder for scenarios where no valid problem is pr
 # Returns
 - `NoProblem()`: An instance of NoProblem, indicating that no problem exists.
 """
-function problem_reduce(::NoProblem, ::AbstractReducer, ::Type{R}) where{R<:AbstractResult} 
+function reduce_problem(::NoProblem, ::AbstractReducer, ::Type{R}) where{R<:AbstractResult} 
     return NoProblem() 
 end
 
@@ -195,7 +195,7 @@ This serves as a base type for all specific table solver implementations.
 abstract type AbstractTableSolver end
 
 """
-    solve_table
+    branching_table
 
 Solves a given problem using a specified table solver.
 
@@ -207,7 +207,7 @@ Solves a given problem using a specified table solver.
 # Returns
 - `nothing`: Indicates that no solution is produced due to the absence of a problem.
 """
-solve_table(::NoProblem, ::AbstractTableSolver, vs) = nothing
+branching_table(::NoProblem, ::AbstractTableSolver, vs) = nothing
 
 """
     AbstractSetCoverSolver
@@ -270,9 +270,8 @@ struct Branch{P<:AbstractProblem, R}
 end
 
 function Branch(clause::Clause{INT}, vs::Vector{T}, p::P, ::Type{R}) where {INT, T, P<:AbstractProblem, R<:AbstractResult}
-    return Branch(apply(p, clause, vs), result(p, clause, vs, R))
+    return Branch(apply_branch(p, clause, vs), result(p, clause, vs, R))
 end
-
 
 """
     AbstractBranchingStrategy
@@ -282,6 +281,7 @@ An abstract type representing a branching strategy in the optimization process.
 """
 abstract type AbstractBranchingStrategy end
 
+# AutoBranchingStrategy? because sometimes it is not optimal, e.g. when using LP
 """
     OptBranchingStrategy
 

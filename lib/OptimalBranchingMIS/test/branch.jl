@@ -17,8 +17,8 @@ using Test
 
                 cfg_count = SolverConfig(reducer, bs, MISCount)
 
-                res = branch(p, cfg)
-                res_count = branch(p, cfg_count)
+                res = reduce_and_branch(p, cfg)
+                res_count = reduce_and_branch(p, cfg_count)
 
                 @test res.mis_size == res_count.mis_size == mis_exact
             end

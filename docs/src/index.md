@@ -67,7 +67,7 @@ SolverConfig
  
 
 # the result shows that the size of the maximum independent set is 9
-julia> branch(problem, config)
+julia> reduce_and_branch(problem, config)
 MISSize(9)
 
 # we can also use the EliminateGraphs package to verify the result
@@ -82,7 +82,7 @@ Furthermore, one can check the count of branches in the following way:
 julia> config = SolverConfig(MISReducer(), branching_strategy, MISCount)
 SolverConfig{MISReducer, OptBranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}, MISCount}(MISReducer(), OptBranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}(TensorNetworkSolver(), IPSolver(10), EnvFilter(), MinBoundarySelector(2), D3Measure()), MISCount)
 
-julia> branch(problem, config)
+julia> reduce_and_branch(problem, config)
 MISCount(9, 1)
 ```
 which shows that it takes only one branch to find the maximum independent set of size 9.
