@@ -187,16 +187,7 @@ prune(bt::BranchingTable, ::NoPruner, ::M, ::P, vs) where{M<:AbstractMeasure, P<
 
 
 """
-    AbstractBranchingStrategy
-
-An abstract type representing a branching strategy in the optimization process.
-
-"""
-abstract type AbstractBranchingStrategy end
-
-# AutoBranchingStrategy? because sometimes it is not optimal, e.g. when using LP
-"""
-    OptBranchingStrategy
+    BranchingStrategy
 
 A struct representing an optimal branching strategy that utilizes various components for solving optimization problems.
 
@@ -208,16 +199,16 @@ A struct representing an optimal branching strategy that utilizes various compon
 - `measure::M`: An instance of a measure, which is used to evaluate the performance of the branching strategy.
 
 """
-struct OptBranchingStrategy{TS<:AbstractTableSolver, SCS<:AbstractSetCoverSolver, PR<:AbstractPruner, SL<:AbstractSelector, M<:AbstractMeasure} <: AbstractBranchingStrategy 
+struct BranchingStrategy{TS<:AbstractTableSolver, SCS<:AbstractSetCoverSolver, PR<:AbstractPruner, SL<:AbstractSelector, M<:AbstractMeasure}
     table_solver::TS
     set_cover_solver::SCS
     pruner::PR
     selector::SL
     measure::M
 end
-Base.show(io::IO, strategy::OptBranchingStrategy) = print(io, 
+Base.show(io::IO, strategy::BranchingStrategy) = print(io, 
 """
-OptBranchingStrategy
+BranchingStrategy
     ├── table_solver - $(strategy.table_solver)
     ├── set_cover_solver - $(strategy.set_cover_solver)
     ├── pruner - $(strategy.pruner)
@@ -232,11 +223,11 @@ A struct representing the configuration for a solver, including the reducer and 
 
 # Fields
 - `reducer::R`: An instance of a reducer, which is responsible for reducing the problem size.
-- `branching_strategy::B`: An instance of a branching strategy, which guides the search process.
+- `branching_strategy::BranchingStrategy`: An instance of a branching strategy, which guides the search process.
 - `result_type::Type{TR}`: The type of the result that the solver will produce.
 
 """
-struct SolverConfig{R<:AbstractReducer, B<:AbstractBranchingStrategy, TR<:AbstractResult}
+struct SolverConfig{R<:AbstractReducer, B<:BranchingStrategy, TR<:AbstractResult}
     reducer::R
     branching_strategy::B
     result_type::Type{TR}
@@ -270,7 +261,6 @@ function reduce_and_branch(p::AbstractProblem, config::SolverConfig)
     rule = optimal_branching_rule(pruned_tbl, variables, rp, strategy.measure, strategy.set_cover_solver)
     return maximum(rule.branches) do branch
         subproblem, localvalue = apply_branch(rp, branch, variables)
-        #result(rp, clause, vs, R)
         reduce_and_branch(subproblem, config) + localvalue + reducedvalue
     end
 end

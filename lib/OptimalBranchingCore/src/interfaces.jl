@@ -46,24 +46,6 @@ function apply_branch end
 
 # can not understand.
 """
-    result(problem, ::Clause, vs, ::Type{R}) where{R<:AbstractResult}
-
-Generates a result from a NoProblem instance when a clause is applied. 
-This function serves as a placeholder for scenarios where no valid result is present.
-
-# Arguments
-- `::NoProblem`: An instance of NoProblem, representing the absence of a problem.
-- `::Clause`: A clause that is being applied (not used in this context).
-- `vs`: A vector of variables (not used in this context).
-- `::Type{R}`: The type of result expected, which must be a subtype of AbstractResult.
-
-# Returns
-- `NoResult()`: An instance of NoResult, indicating that no valid result exists.
-
-"""
-function result end
-
-"""
     AbstractMeasure
 
 An abstract type representing a measure in the context of branching problems. 

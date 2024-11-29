@@ -102,5 +102,5 @@ function OptimalBranchingCore.reduce_problem(p::MISProblem, ::XiaoReducer, ::Typ
 
     end
 
-    return nothing
+    return p, R(0)
 end

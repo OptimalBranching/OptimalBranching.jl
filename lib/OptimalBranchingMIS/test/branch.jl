@@ -11,7 +11,7 @@ using Test
             p = MISProblem(g)
 
             for solver in [IPSolver(10, false), LPSolver(10, false)], measure in [D3Measure(), NumOfVertices()], pruner in [EnvFilter(), NoPruner()], reducer in [MISReducer(), XiaoReducer()]
-                bs = OptBranchingStrategy(TensorNetworkSolver(), solver, pruner, MinBoundarySelector(2), measure)
+                bs = BranchingStrategy(TensorNetworkSolver(), solver, pruner, MinBoundarySelector(2), measure)
 
                 cfg = SolverConfig(reducer, bs, MISSize)
 

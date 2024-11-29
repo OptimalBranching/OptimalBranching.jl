@@ -6,7 +6,7 @@ using BitBasis
 
 export Clause, BranchingTable, CandidateClause, DNF, Branch
 export SolverConfig
-export AbstractBranchingStrategy, OptBranchingStrategy
+export BranchingStrategy
 export AbstractProblem, AbstractResult, AbstractMeasure, AbstractReducer, AbstractSelector, AbstractPruner, AbstractTableSolver, AbstractSetCoverSolver
 export NoResult, NoPruner, LPSolver, IPSolver
 
