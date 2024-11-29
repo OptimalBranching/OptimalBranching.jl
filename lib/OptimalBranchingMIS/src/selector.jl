@@ -29,6 +29,7 @@ This function iterates through each vertex in the graph, computes the neighbor c
 """
 function OptimalBranchingCore.select(p::MISProblem, m::M, selector::MinBoundarySelector) where{M<:AbstractMeasure}
     g = p.g
+    @assert nv(g) > 0
     kneighbor = selector.k
 
     local vs_min

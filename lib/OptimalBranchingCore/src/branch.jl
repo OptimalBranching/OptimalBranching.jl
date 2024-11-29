@@ -45,28 +45,9 @@ function covered_by(t::BranchingTable, dnf::DNF)
     all(x->any(y->covered_by(y, dnf), x), t.table)
 end
 
-"""
-    struct Branch
-
-A struct representing a branching strategy.
-
-# Fields
-- `vertices_removed::Vector{Int}`: A vector of integers representing the vertices removed in the branching strategy.
-- `mis::Int`: An integer representing the maximum independent set (MIS) size of the branching strategy.
-
-"""
-struct Branch{P<:AbstractProblem, R}
-    problem::P
-    result::R
-end
-
-# Q: I can not understand.
-function Branch(clause::Clause{INT}, vs::Vector{T}, p::P, ::Type{R}) where {INT, T, P<:AbstractProblem, R<:AbstractResult}
-    return Branch(apply_branch(p, clause, vs), result(p, clause, vs, R))
-end
-
-struct BranchingRule{P, R}
-    branches::Vector{Branch{P, R}}
+struct BranchingRule{INT<:Integer}
+    branches::Vector{Clause{INT}}
+    γ::Float64
 end
 
 """
@@ -86,11 +67,11 @@ Generate optimal branches from a given branching table.
 ### Returns
 A vector of `Branch` objects representing the optimal branches derived from the candidate clauses.
 """
-function optimal_branching_rule(tbl::BranchingTable{INT}, variables::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
-    clauses = candidate_clauses(tbl)
-    Δρ = branching_vector(problem, variables, clauses, measure)
-    cov, cx = minimize_γ(length(tbl.table), clauses, Δρ, solver)
-    return BranchingRule([Branch(sub_cover.clause, variables, problem, R) for sub_cover in cov])
+function optimal_branching_rule(tbl::BranchingTable, variables::Vector, problem::AbstractProblem, measure::AbstractMeasure, solver::AbstractSetCoverSolver)
+    candidates = candidate_clauses(tbl)
+    Δρ = branching_vector(problem, variables, candidates, measure)
+    selection, cx = minimize_γ(length(tbl.table), candidates, Δρ, solver)
+    return BranchingRule(map(i->candidates[i].clause, selection), cx)
 end
 
 """
@@ -279,17 +260,17 @@ SolverConfig
     The maximum result obtained from the branches.
 """
 function reduce_and_branch(p::AbstractProblem, config::SolverConfig)
-    isempty(p) && return zero(config.result_type)
-    # TODO: why not just reduce directly?
-    reduced_branches = reduce_problem(p, config.reducer, config.result_type)
-    rule = if isnothing(reduced_branches)  # use the automatically generated branching rule
-        strategy = config.branching_strategy
-        variables = select(p, strategy.measure, strategy.selector)  # select a subset of variables
-        tbl = branching_table(p, strategy.table_solver, variables)      # compute the BranchingTable
-        pruned_tbl = prune(tbl, strategy.pruner, strategy.measure, p, variables)
-        optimal_branching_rule(pruned_tbl, variables, p, strategy.measure, strategy.set_cover_solver, config.result_type)
-    else
-        BranchingRule(reduced_branches)
+    rp, reducedvalue = reduce_problem(p, config.reducer, config.result_type)
+    isempty(rp) && return reducedvalue
+
+    strategy = config.branching_strategy
+    variables = select(rp, strategy.measure, strategy.selector)  # select a subset of variables
+    tbl = branching_table(rp, strategy.table_solver, variables)      # compute the BranchingTable
+    pruned_tbl = prune(tbl, strategy.pruner, strategy.measure, rp, variables)
+    rule = optimal_branching_rule(pruned_tbl, variables, rp, strategy.measure, strategy.set_cover_solver)
+    return maximum(rule.branches) do branch
+        subproblem, localvalue = apply_branch(rp, branch, variables)
+        #result(rp, clause, vs, R)
+        reduce_and_branch(subproblem, config) + localvalue + reducedvalue
     end
-    return maximum([(reduce_and_branch(b.problem, config) + b.result) for b in rule.branches])
 end

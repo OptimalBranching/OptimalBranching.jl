@@ -13,9 +13,8 @@ Applies the given clause to the specified vertices of the MISProblem, removing t
 
 """
 function OptimalBranchingCore.apply_branch(p::MISProblem, clause::Clause{INT}, vertices::Vector{T}) where {INT<:Integer, T<:Integer}
-    g = p.g
-    vertices_removed = removed_vertices(vertices, g, clause)
-    return MISProblem(remove_vertices(g, vertices_removed))
+    vertices_removed = removed_vertices(vertices, p.g, clause)
+    return MISProblem(remove_vertices(p.g, vertices_removed)), count_ones(clause.val)
 end
 
 """

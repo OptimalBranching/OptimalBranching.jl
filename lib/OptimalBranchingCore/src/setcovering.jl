@@ -46,34 +46,34 @@ end
 """
     CandidateClause{INT <: Integer}
 
-A candidate clause is a pair of a set of integers `ids` and a clause `clause`. The `ids` for the truth covered by the clause.
+A candidate clause is a pair of a set of integers `covered_items` and a clause `clause`. The `covered_items` for the truth covered by the clause.
 - `INT`: The number of integers as the storage.
 """
 struct CandidateClause{INT <: Integer}
-    ids::Set{Int}
+    covered_items::Set{Int}
     clause::Clause{INT}
 end
 
-CandidateClause(ids::Vector{Int}, clause::Clause) = CandidateClause(Set(ids), clause)
+CandidateClause(covered_items::Vector{Int}, clause::Clause) = CandidateClause(Set(covered_items), clause)
 
-Base.show(io::IO, sc::CandidateClause{INT}) where INT = print(io, "CandidateClause{$INT}: ids: $(sort([i for i in sc.ids])), mask: $(BitStr{sc.n}(sc.clause.mask)), val: $(BitStr{sc.n}(sc.clause.val))")
-Base.:(==)(sc1::CandidateClause{INT}, sc2::CandidateClause{INT}) where {INT} = (sc1.ids == sc2.ids) && (sc1.clause == sc2.clause)
+Base.show(io::IO, sc::CandidateClause{INT}) where INT = print(io, "CandidateClause{$INT}: covered_items: $(sort([i for i in sc.covered_items])), clause: $(sc.clause)")
+Base.:(==)(sc1::CandidateClause{INT}, sc2::CandidateClause{INT}) where {INT} = (sc1.covered_items == sc2.covered_items) && (sc1.clause == sc2.clause)
 
 """
-    complexity(branching_vector::Vector{T}) where {T}
+    complexity_bv(branching_vector::Vector{T}) where {T}
 
 Calculates the complexity based on the provided branching vector by solving the equation:
 ```math
-x^0 = \\sum_{δρ \\in \\text{branching_vector}} x^{-δρ}
+γ^0 = \\sum_{δρ \\in \\text{branching_vector}} γ^{-δρ}
 ```
 
 # Arguments
 - `branching_vector::Vector{T}`: a vector of problem size reduction.
 
 # Returns
-- `Float64`: The computed complexity value.
+- `Float64`: The computed γ value.
 """
-function complexity(branching_vector::Vector{T}) where {T}
+function complexity_bv(branching_vector::Vector{T}) where {T}
     f = x -> sum(x[1]^(-i) for i in branching_vector) - 1.0
     sol = nlsolve(f, [1.0])
     return sol.zero[1]
@@ -83,12 +83,12 @@ end
 function γ0(num_items::Int, candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}) where{INT, TF}
     max_dict = Dict([i => 0 for i in 1:num_items])
     for (i, clause) in enumerate(candidate_clauses)
-        length(clause.ids) == 1 || continue  # ??? What about having two sets
-        id = first(clause.ids)
+        length(clause.covered_items) == 1 || continue  # ??? What about having two sets
+        id = first(clause.covered_items)
         max_dict[id] = max(max_dict[id], Δρ[i])
     end
     max_rvs = [max_dict[i] for i in 1:num_items]
-    return complexity(max_rvs)
+    return complexity_bv(max_rvs)
 end
 
 """
@@ -101,7 +101,7 @@ Generate the branching vector give a target problem and measure.
 - `m::AbstractMeasure`: An instance of a measure associated with the problem.
 """
 function branching_vector(p::AbstractProblem, variables::Vector{T}, clauses::AbstractVector, m::AbstractMeasure) where T
-    return [measure(p, m) - measure(apply_branch(p, candidate.clause, variables), m) for candidate in clauses]
+    return [measure(p, m) - measure(first(apply_branch(p, candidate.clause, variables)), m) for candidate in clauses]
 end
 
 """
@@ -121,28 +121,27 @@ A tuple containing:
 - A vector of selected clauses.
 - The minimum ``γ`` value.
 """
-function minimize_γ(num_items::Int, candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}, solver) where{INT, TF}
+function minimize_γ(num_items::Int, candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}, solver::AbstractSetCoverSolver) where{INT, TF}
     max_itr = solver.max_itr
     cx = γ0(num_items, candidate_clauses, Δρ)
     @debug "solver = $(solver), sets = $(candidate_clauses), γ0 = $(cx)"
 
-    for clause in candidate_clauses  # check if there is a CandidateClause that covers all elements
-        (length(clause.ids) == num_items) && return [clause], 1.0
+    for (k, clause) in enumerate(candidate_clauses)  # check if there is a CandidateClause that covers all elements
+        (length(clause.covered_items) == num_items) && return [k], 1.0
     end
 
     cx_old = cx
-    local picked
+    local picked_scs
     for i = 1:max_itr
         weights = 1 ./ cx_old .^ Δρ
         xs = weighted_minimum_set_cover(solver, weights, candidate_clauses, num_items)
         picked_scs = pick_sets(xs, candidate_clauses, num_items)
-        picked = candidate_clauses[picked_scs]
-        cx = complexity(Δρ[picked_scs])
-        @debug "Iteration $i, xs = $(xs), picked = $(picked), branching_vector = $(Δρ[picked_scs]), complexity = $cx"
+        cx = complexity_bv(Δρ[picked_scs])
+        @debug "Iteration $i, xs = $(xs), picked = $(candidate_clauses[picked_scs]), branching_vector = $(Δρ[picked_scs]), γ = $cx"
         cx ≈ cx_old && break  # convergence
         cx_old = cx
     end
-    return picked, cx
+    return picked_scs, cx
 end
 
 """
@@ -161,7 +160,7 @@ function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, c
 
     sets_id = [Vector{Int}() for _=1:num_items]
     for i in 1:nsc
-        for j in candidate_clauses[i].ids
+        for j in candidate_clauses[i].covered_items
             push!(sets_id[j], i)
         end
     end
@@ -186,7 +185,7 @@ function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, c
 
     sets_id = [Vector{Int}() for _=1:num_items]
     for i in 1:nsc
-        for j in candidate_clauses[i].ids
+        for j in candidate_clauses[i].covered_items
             push!(sets_id[j], i)
         end
     end
@@ -220,7 +219,7 @@ function pick_sets(xs::Vector{TF}, candidate_clauses::AbstractVector{CandidateCl
         for i in 1:nsc
             if (rand() < xs[i]) && i ∉ picked
                 push!(picked, i)
-                picked_ids = union(picked_ids, candidate_clauses[i].ids)
+                picked_ids = union(picked_ids, candidate_clauses[i].covered_items)
             end
             if length(picked_ids) == num_items
                 flag = false

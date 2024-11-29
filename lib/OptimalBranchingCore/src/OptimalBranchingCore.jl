@@ -12,7 +12,7 @@ export NoResult, NoPruner, LPSolver, IPSolver
 
 export apply_branch, measure, reduce_problem, select, branching_table, weighted_minimum_set_cover
 # TODO: complexity should be implemented on BranchingRule
-export complexity, reduce_and_branch, optimal_branching_rule
+export reduce_and_branch, optimal_branching_rule
 
 include("bitbasis.jl")
 include("interfaces.jl")
