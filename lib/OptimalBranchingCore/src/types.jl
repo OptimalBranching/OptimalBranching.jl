@@ -3,10 +3,6 @@
 
 An abstract type representing a generic problem in the optimal branching framework. 
 This serves as a base type for all specific problem types that will be implemented.
-
-# Fields
-None
-
 """
 abstract type AbstractProblem end
 
@@ -27,10 +23,6 @@ struct NoProblem <: AbstractProblem end
 
 An abstract type representing a generic result in the optimal branching framework. 
 This serves as a base type for all specific result types that will be implemented.
-
-# Fields
-None
-
 """
 abstract type AbstractResult end
 
@@ -86,9 +78,9 @@ result(::NoProblem, ::Clause, vs, ::Type{R}) where{R<:AbstractResult} = NoResult
 
 An abstract type representing a measure in the context of branching problems. 
 This serves as a base type for all specific measure implementations.
-
 """
 abstract type AbstractMeasure end
+
 """
     measure(::NoProblem, ::AbstractMeasure)
 
@@ -101,7 +93,6 @@ This function serves as a placeholder for scenarios where no valid problem is pr
 
 # Returns
 - `Int`: The measure value, which is always `0` for a NoProblem instance.
-
 """
 function measure(::NoProblem, ::AbstractMeasure) 
     return 0 
@@ -112,7 +103,6 @@ end
 
 An abstract type representing a reducer in the context of branching problems. 
 This serves as a base type for all specific reducer implementations.
-
 """
 abstract type AbstractReducer end
 
@@ -129,7 +119,6 @@ This function serves as a placeholder for scenarios where no valid problem is pr
 
 # Returns
 - `NoProblem()`: An instance of NoProblem, indicating that no problem exists.
-
 """
 function problem_reduce(::NoProblem, ::AbstractReducer, ::Type{R}) where{R<:AbstractResult} 
     return NoProblem() 
@@ -140,7 +129,6 @@ end
 
 An abstract type representing a selector in the context of branching problems. 
 This serves as a base type for all specific selector implementations.
-
 """
 abstract type AbstractSelector end
 
@@ -157,7 +145,6 @@ This function serves as a placeholder for scenarios where no valid selection is 
 
 # Returns
 - `nothing`: Indicates that no selection is made due to the absence of a problem.
-
 """
 function select(::NoProblem, ::AbstractMeasure, ::AbstractSelector) 
     return nothing 
@@ -196,7 +183,6 @@ This function serves as a placeholder for scenarios where no pruning is required
 
 # Returns
 - `bt`: The original branching table, unchanged.
-
 """
 prune(bt::BranchingTable, ::NoPruner, ::M, ::P, vs) where{M<:AbstractMeasure, P<:AbstractProblem} = bt
 
@@ -205,7 +191,6 @@ prune(bt::BranchingTable, ::NoPruner, ::M, ::P, vs) where{M<:AbstractMeasure, P<
 
 An abstract type representing a solver for table-based problems. 
 This serves as a base type for all specific table solver implementations.
-
 """
 abstract type AbstractTableSolver end
 
@@ -221,7 +206,6 @@ Solves a given problem using a specified table solver.
 
 # Returns
 - `nothing`: Indicates that no solution is produced due to the absence of a problem.
-
 """
 solve_table(::NoProblem, ::AbstractTableSolver, vs) = nothing
 
