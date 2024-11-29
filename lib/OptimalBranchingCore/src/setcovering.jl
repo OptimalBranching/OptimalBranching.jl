@@ -1,4 +1,65 @@
 """
+    AbstractSetCoverSolver
+
+An abstract type representing a solver for set covering problems. 
+This serves as a base type for all specific set cover solver implementations.
+
+"""
+abstract type AbstractSetCoverSolver end
+
+"""
+    LPSolver
+
+A struct representing a linear programming solver for set covering problems.
+
+# Fields
+- `max_itr::Int`: The maximum number of iterations allowed for the solver.
+
+# Constructors
+- `LPSolver(max_itr::Int)`: Creates a new instance of LPSolver with a specified maximum number of iterations.
+- `LPSolver()`: Creates a new instance of LPSolver with a default maximum of 10 iterations.
+
+"""
+Base.@kwdef struct LPSolver <: AbstractSetCoverSolver 
+    max_itr::Int = 5
+    verbose::Bool = false
+end
+
+"""
+    IPSolver
+
+A struct representing an integer programming solver for set covering problems.
+
+# Fields
+- `max_itr::Int`: The maximum number of iterations allowed for the solver.
+
+# Constructors
+- `IPSolver(max_itr::Int)`: Creates a new instance of IPSolver with a specified maximum number of iterations.
+- `IPSolver()`: Creates a new instance of IPSolver with a default maximum of 10 iterations.
+
+"""
+Base.@kwdef struct IPSolver <: AbstractSetCoverSolver 
+    max_itr::Int = 5
+    verbose::Bool = false
+end
+
+"""
+    CandidateClause{INT <: Integer}
+
+A candidate clause is a pair of a set of integers `ids` and a clause `clause`. The `ids` for the truth covered by the clause.
+- `INT`: The number of integers as the storage.
+"""
+struct CandidateClause{INT <: Integer}
+    ids::Set{Int}
+    clause::Clause{INT}
+end
+
+CandidateClause(ids::Vector{Int}, clause::Clause) = CandidateClause(Set(ids), clause)
+
+Base.show(io::IO, sc::CandidateClause{INT}) where INT = print(io, "CandidateClause{$INT}: ids: $(sort([i for i in sc.ids])), mask: $(BitStr{sc.n}(sc.clause.mask)), val: $(BitStr{sc.n}(sc.clause.val))")
+Base.:(==)(sc1::CandidateClause{INT}, sc2::CandidateClause{INT}) where {INT} = (sc1.ids == sc2.ids) && (sc1.clause == sc2.clause)
+
+"""
     complexity(branching_vector::Vector{T}) where {T}
 
 Calculates the complexity based on the provided branching vector by solving the equation:
@@ -18,7 +79,8 @@ function complexity(branching_vector::Vector{T}) where {T}
     return sol.zero[1]
 end
 
-function γ0(num_items::Int, candidate_clauses::AbstractVector{SubCover{INT}}, Δρ::Vector{TF}) where{INT, TF}
+# the γ generated from naive branching
+function γ0(num_items::Int, candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}) where{INT, TF}
     max_dict = Dict([i => 0 for i in 1:num_items])
     for (i, clause) in enumerate(candidate_clauses)
         length(clause.ids) == 1 || continue  # ??? What about having two sets
@@ -39,19 +101,19 @@ Generate the branching vector give a target problem and measure.
 - `m::AbstractMeasure`: An instance of a measure associated with the problem.
 """
 function branching_vector(p::AbstractProblem, variables::Vector{T}, clauses::AbstractVector, m::AbstractMeasure) where T
-    return [measure(p, m) - measure(apply_branch(p, subcover.clause, variables), m) for subcover in clauses]
+    return [measure(p, m) - measure(apply_branch(p, candidate.clause, variables), m) for candidate in clauses]
 end
 
 """
-    minimize_γ(candidate_clauses::AbstractVector{SubCover{INT}}, Δρ::Vector{TF}, solver) where{INT, TF}
+    minimize_γ(candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}, solver) where{INT, TF}
 
 Finds the optimal cover based on the provided vector of problem size reduction.
 This function implements a cover selection algorithm using an iterative process.
 It utilizes an integer programming solver to optimize the selection of sub-covers based on their complexity.
 
 # Arguments
-- `candidate_clauses::AbstractVector{SubCover{INT}}`: A vector of subcover structures.
-- `Δρ::Vector{TF}`: A vector of problem size reduction for each subcover.
+- `candidate_clauses::AbstractVector{CandidateClause{INT}}`: A vector of CandidateClause structures.
+- `Δρ::Vector{TF}`: A vector of problem size reduction for each CandidateClause.
 - `solver`: The solver to be used. It can be an instance of `LPSolver` or `IPSolver`.
 
 # Returns
@@ -59,12 +121,12 @@ A tuple containing:
 - A vector of selected clauses.
 - The minimum ``γ`` value.
 """
-function minimize_γ(num_items::Int, candidate_clauses::AbstractVector{SubCover{INT}}, Δρ::Vector{TF}, solver) where{INT, TF}
+function minimize_γ(num_items::Int, candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}, solver) where{INT, TF}
     max_itr = solver.max_itr
     cx = γ0(num_items, candidate_clauses, Δρ)
     @debug "solver = $(solver), sets = $(candidate_clauses), γ0 = $(cx)"
 
-    for clause in candidate_clauses  # check if there is a subcover that covers all elements
+    for clause in candidate_clauses  # check if there is a CandidateClause that covers all elements
         (length(clause.ids) == num_items) && return [clause], 1.0
     end
 
@@ -84,17 +146,17 @@ function minimize_γ(num_items::Int, candidate_clauses::AbstractVector{SubCover{
 end
 
 """
-    weighted_minimum_set_cover(solver, weights::AbstractVector, candidate_clauses::AbstractVector{SubCover{INT}}, num_items::Int) where{INT, TF, T}
+    weighted_minimum_set_cover(solver, weights::AbstractVector, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT, TF, T}
 
 Solves the weighted minimum set cover problem.
 
 # Arguments
 - `solver`: The solver to be used. It can be an instance of `LPSolver` or `IPSolver`.
 - `weights::AbstractVector`: The weights of the candidate clauses.
-- `candidate_clauses::AbstractVector{SubCover{INT}}`: A vector of subcover structures.
+- `candidate_clauses::AbstractVector{CandidateClause{INT}}`: A vector of CandidateClause structures.
 - `num_items::Int`: The number of elements to cover.
 """
-function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, candidate_clauses::AbstractVector{SubCover{INT}}, num_items::Int) where{INT}
+function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT}
     nsc = length(candidate_clauses)
 
     sets_id = [Vector{Int}() for _=1:num_items]
@@ -119,7 +181,7 @@ function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, c
     return [value(x[i]) for i in 1:nsc]
 end
 
-function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, candidate_clauses::AbstractVector{SubCover{INT}}, num_items::Int) where{INT}
+function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT}
     nsc = length(candidate_clauses)
 
     sets_id = [Vector{Int}() for _=1:num_items]
@@ -149,7 +211,7 @@ function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, c
 end
 
 # by viewing xs as the probability of being selected, we can use a random algorithm to pick the sets
-function pick_sets(xs::Vector{TF}, candidate_clauses::AbstractVector{SubCover{INT}}, num_items::Int) where{INT, TF}
+function pick_sets(xs::Vector{TF}, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT, TF}
     picked = Set{Int}()
     picked_ids = Set{Int}()
     nsc = length(candidate_clauses)

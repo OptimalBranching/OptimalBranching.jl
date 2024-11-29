@@ -1,4 +1,51 @@
 """
+    BranchingTable{INT}
+
+A table of branching configurations. The table is a vector of vectors of `INT`. Type parameters are:
+- `INT`: The integer type for storing bit strings.
+
+# Fields
+- `bit_length::Int`: The length of the bit string.
+- `table::Vector{Vector{INT}}`: The table of bitstrings used for branching.
+
+To cover the branching table, at least one clause in each row must be satisfied.
+"""
+struct BranchingTable{INT <: Integer}
+    bit_length::Int
+    table::Vector{Vector{INT}}
+end
+
+function BranchingTable(n::Int, arr::AbstractVector{<:AbstractVector})
+    @assert all(x->all(v->length(v) == n, x), arr)
+    T = LongLongUInt{(n-1) ÷ 64 + 1}
+    return BranchingTable(n, [_vec2int.(T, x) for x in arr])
+end
+# encode a bit vector to and integer
+function _vec2int(::Type{T}, v::AbstractVector) where T <: Integer
+    res = zero(T)
+    for i in 1:length(v)
+        res |= T(v[i]) << (i-1)
+    end
+    return res
+end
+
+nbits(t::BranchingTable) = t.bit_length
+Base.:(==)(t1::BranchingTable, t2::BranchingTable) = all(x -> Set(x[1]) == Set(x[2]), zip(t1.table, t2.table))
+function Base.show(io::IO, t::BranchingTable{INT}) where INT
+    println(io, "BranchingTable{$INT}")
+    for (i, row) in enumerate(t.table)
+        print(io, join(["$(bitstring(r)[end-nbits(t)+1:end])" for r in row], ", "))
+        i < length(t.table) && println(io)
+    end
+end
+Base.show(io::IO, ::MIME"text/plain", t::BranchingTable) = show(io, t)
+Base.copy(t::BranchingTable) = BranchingTable(t.bit_length, copy(t.table))
+
+function covered_by(t::BranchingTable, dnf::DNF)
+    all(x->any(y->covered_by(y, dnf), x), t.table)
+end
+
+"""
     struct Branch
 
 A struct representing a branching strategy.
@@ -13,6 +60,7 @@ struct Branch{P<:AbstractProblem, R}
     result::R
 end
 
+# Q: I can not understand.
 function Branch(clause::Clause{INT}, vs::Vector{T}, p::P, ::Type{R}) where {INT, T, P<:AbstractProblem, R<:AbstractResult}
     return Branch(apply_branch(p, clause, vs), result(p, clause, vs, R))
 end
@@ -45,7 +93,6 @@ function optimal_branching_rule(tbl::BranchingTable{INT}, variables::Vector{T}, 
     return BranchingRule([Branch(sub_cover.clause, variables, problem, R) for sub_cover in cov])
 end
 
-
 """
     candidate_clauses(tbl::BranchingTable{INT}) where {INT}
 
@@ -55,7 +102,7 @@ Generates candidate_clauses from a branching table.
 - `tbl::BranchingTable{INT}`: The branching table containing bit strings.
 
 # Returns
-- `Vector{SubCover{INT}}`: A vector of `SubCover` objects generated from the branching table.
+- `Vector{CandidateClause{INT}}`: A vector of `CandidateClause` objects generated from the branching table.
 
 # Description
 This function calls the `candidate_clauses` function with the bit length and table from the provided branching table to generate the corresponding candidate_clauses.
@@ -83,7 +130,7 @@ function candidate_clauses(tbl::BranchingTable{INT}) where {INT}
         end
     end
 
-    allcovers = [SubCover(covered_items(bss, c), c) for c in all_clauses]
+    allcovers = [CandidateClause(covered_items(bss, c), c) for c in all_clauses]
     return allcovers
 end
 
@@ -120,6 +167,106 @@ function clause_string(clause::Clause{INT}, vs::Vector{T}) where {INT, T}
     end
     return join(cs_vec, " ∧ ")
 end
+
+"""
+    AbstractPruner
+
+An abstract type representing a pruner in the context of branching problems. 
+This serves as a base type for all specific pruner implementations.
+
+"""
+abstract type AbstractPruner end
+
+"""
+    NoPruner
+
+A struct representing a no-operation pruner. 
+This pruner does not modify the branching table during the pruning process.
+
+"""
+struct NoPruner <: AbstractPruner end
+
+"""
+    prune(bt::BranchingTable, ::NoPruner, ::M, ::P, vs)
+
+Applies a no-operation pruning strategy to the given branching table. 
+This function serves as a placeholder for scenarios where no pruning is required.
+
+# Arguments
+- `bt::BranchingTable`: The branching table to be pruned.
+- `::NoPruner`: An instance of NoPruner, indicating that no pruning will occur.
+- `::M`: An abstract measure type, which is not utilized in this context.
+- `::P`: An abstract problem type, which is not utilized in this context.
+- `vs`: A vector of values associated with the branching process.
+
+# Returns
+- `bt`: The original branching table, unchanged.
+"""
+prune(bt::BranchingTable, ::NoPruner, ::M, ::P, vs) where{M<:AbstractMeasure, P<:AbstractProblem} = bt
+
+
+"""
+    AbstractBranchingStrategy
+
+An abstract type representing a branching strategy in the optimization process.
+
+"""
+abstract type AbstractBranchingStrategy end
+
+# AutoBranchingStrategy? because sometimes it is not optimal, e.g. when using LP
+"""
+    OptBranchingStrategy
+
+A struct representing an optimal branching strategy that utilizes various components for solving optimization problems.
+
+# Fields
+- `table_solver::TS`: An instance of a table solver, which is responsible for solving the underlying table representation of the problem.
+- `set_cover_solver::SCS`: An instance of a set cover solver, which is used to solve the set covering problem.
+- `pruner`: used as an input of `prune`, which takes a BranchingTable instance as the input and returns one with reduced size.
+- `selector::SL`: An instance of a selector, which is responsible for selecting the next branching variable or decision.
+- `measure::M`: An instance of a measure, which is used to evaluate the performance of the branching strategy.
+
+"""
+struct OptBranchingStrategy{TS<:AbstractTableSolver, SCS<:AbstractSetCoverSolver, PR<:AbstractPruner, SL<:AbstractSelector, M<:AbstractMeasure} <: AbstractBranchingStrategy 
+    table_solver::TS
+    set_cover_solver::SCS
+    pruner::PR
+    selector::SL
+    measure::M
+end
+Base.show(io::IO, strategy::OptBranchingStrategy) = print(io, 
+"""
+OptBranchingStrategy
+    ├── table_solver - $(strategy.table_solver)
+    ├── set_cover_solver - $(strategy.set_cover_solver)
+    ├── pruner - $(strategy.pruner)
+    ├── selector - $(strategy.selector)
+    └── measure - $(strategy.measure)
+""")
+
+"""
+    SolverConfig
+
+A struct representing the configuration for a solver, including the reducer and branching strategy.
+
+# Fields
+- `reducer::R`: An instance of a reducer, which is responsible for reducing the problem size.
+- `branching_strategy::B`: An instance of a branching strategy, which guides the search process.
+- `result_type::Type{TR}`: The type of the result that the solver will produce.
+
+"""
+struct SolverConfig{R<:AbstractReducer, B<:AbstractBranchingStrategy, TR<:AbstractResult}
+    reducer::R
+    branching_strategy::B
+    result_type::Type{TR}
+end
+Base.show(io::IO, config::SolverConfig) = print(io, 
+"""
+SolverConfig
+├── reducer - $(config.reducer) 
+├── result_type - $(config.result_type)
+└── branching_strategy - $(config.branching_strategy) 
+""")
 
 """
     Branch the given problem using the specified solver configuration.

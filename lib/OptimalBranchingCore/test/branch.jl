@@ -19,10 +19,10 @@ using Test
     function subcovers_naive(tbl::BranchingTable{INT}) where{INT}
         n, bs = tbl.bit_length, tbl.table
         allclauses = all_clauses_naive(n, bs)
-        allcovers = Vector{SubCover{INT}}()
+        allcovers = Vector{CandidateClause{INT}}()
         for (i, c) in enumerate(allclauses)
             ids = OptimalBranchingCore.covered_items(bs, c)
-            push!(allcovers, SubCover(ids, c))
+            push!(allcovers, CandidateClause(ids, c))
         end
         return allcovers
     end

@@ -14,6 +14,7 @@ This serves as a base type for all specific result types that will be implemente
 """
 abstract type AbstractResult end
 
+# TODO: do we really need it?
 """
     NoResult
 
@@ -43,6 +44,7 @@ This function serves as a placeholder for scenarios where no valid problem is pr
 """
 function apply_branch end
 
+# can not understand.
 """
     result(problem, ::Clause, vs, ::Type{R}) where{R<:AbstractResult}
 
@@ -133,42 +135,6 @@ This function serves as a placeholder for scenarios where no valid selection is 
 function select end
 
 """
-    AbstractPruner
-
-An abstract type representing a pruner in the context of branching problems. 
-This serves as a base type for all specific pruner implementations.
-
-"""
-abstract type AbstractPruner end
-
-"""
-    NoPruner
-
-A struct representing a no-operation pruner. 
-This pruner does not modify the branching table during the pruning process.
-
-"""
-struct NoPruner <: AbstractPruner end
-
-"""
-    prune(bt::BranchingTable, ::NoPruner, ::M, ::P, vs)
-
-Applies a no-operation pruning strategy to the given branching table. 
-This function serves as a placeholder for scenarios where no pruning is required.
-
-# Arguments
-- `bt::BranchingTable`: The branching table to be pruned.
-- `::NoPruner`: An instance of NoPruner, indicating that no pruning will occur.
-- `::M`: An abstract measure type, which is not utilized in this context.
-- `::P`: An abstract problem type, which is not utilized in this context.
-- `vs`: A vector of values associated with the branching process.
-
-# Returns
-- `bt`: The original branching table, unchanged.
-"""
-prune(bt::BranchingTable, ::NoPruner, ::M, ::P, vs) where{M<:AbstractMeasure, P<:AbstractProblem} = bt
-
-"""
     AbstractTableSolver
 
 An abstract type representing a solver for table-based problems. 
@@ -190,111 +156,3 @@ Solves a given problem using a specified table solver.
 - `nothing`: Indicates that no solution is produced due to the absence of a problem.
 """
 function branching_table end
-
-"""
-    AbstractSetCoverSolver
-
-An abstract type representing a solver for set covering problems. 
-This serves as a base type for all specific set cover solver implementations.
-
-"""
-abstract type AbstractSetCoverSolver end
-
-"""
-    LPSolver
-
-A struct representing a linear programming solver for set covering problems.
-
-# Fields
-- `max_itr::Int`: The maximum number of iterations allowed for the solver.
-
-# Constructors
-- `LPSolver(max_itr::Int)`: Creates a new instance of LPSolver with a specified maximum number of iterations.
-- `LPSolver()`: Creates a new instance of LPSolver with a default maximum of 10 iterations.
-
-"""
-Base.@kwdef struct LPSolver <: AbstractSetCoverSolver 
-    max_itr::Int = 5
-    verbose::Bool = false
-end
-
-"""
-    IPSolver
-
-A struct representing an integer programming solver for set covering problems.
-
-# Fields
-- `max_itr::Int`: The maximum number of iterations allowed for the solver.
-
-# Constructors
-- `IPSolver(max_itr::Int)`: Creates a new instance of IPSolver with a specified maximum number of iterations.
-- `IPSolver()`: Creates a new instance of IPSolver with a default maximum of 10 iterations.
-
-"""
-Base.@kwdef struct IPSolver <: AbstractSetCoverSolver 
-    max_itr::Int = 5
-    verbose::Bool = false
-end
-
-"""
-    AbstractBranchingStrategy
-
-An abstract type representing a branching strategy in the optimization process.
-
-"""
-abstract type AbstractBranchingStrategy end
-
-# AutoBranchingStrategy? because sometimes it is not optimal, e.g. when using LP
-"""
-    OptBranchingStrategy
-
-A struct representing an optimal branching strategy that utilizes various components for solving optimization problems.
-
-# Fields
-- `table_solver::TS`: An instance of a table solver, which is responsible for solving the underlying table representation of the problem.
-- `set_cover_solver::SCS`: An instance of a set cover solver, which is used to solve the set covering problem.
-- `pruner::PR`: An instance of a pruner, which is used to eliminate unnecessary branches in the search space.
-- `selector::SL`: An instance of a selector, which is responsible for selecting the next branching variable or decision.
-- `measure::M`: An instance of a measure, which is used to evaluate the performance of the branching strategy.
-
-"""
-struct OptBranchingStrategy{TS<:AbstractTableSolver, SCS<:AbstractSetCoverSolver, PR<:AbstractPruner, SL<:AbstractSelector, M<:AbstractMeasure} <: AbstractBranchingStrategy 
-    table_solver::TS
-    set_cover_solver::SCS
-    pruner::PR
-    selector::SL
-    measure::M
-end
-Base.show(io::IO, strategy::OptBranchingStrategy) = print(io, 
-"""
-OptBranchingStrategy
-    ├── table_solver - $(strategy.table_solver)
-    ├── set_cover_solver - $(strategy.set_cover_solver)
-    ├── pruner - $(strategy.pruner)
-    ├── selector - $(strategy.selector)
-    └── measure - $(strategy.measure)
-""")
-
-"""
-    SolverConfig
-
-A struct representing the configuration for a solver, including the reducer and branching strategy.
-
-# Fields
-- `reducer::R`: An instance of a reducer, which is responsible for reducing the problem size.
-- `branching_strategy::B`: An instance of a branching strategy, which guides the search process.
-- `result_type::Type{TR}`: The type of the result that the solver will produce.
-
-"""
-struct SolverConfig{R<:AbstractReducer, B<:AbstractBranchingStrategy, TR<:AbstractResult}
-    reducer::R
-    branching_strategy::B
-    result_type::Type{TR}
-end
-Base.show(io::IO, config::SolverConfig) = print(io, 
-"""
-SolverConfig
-├── reducer - $(config.reducer) 
-├── result_type - $(config.result_type)
-└── branching_strategy - $(config.branching_strategy) 
-""")
