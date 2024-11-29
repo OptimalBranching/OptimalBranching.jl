@@ -1,3 +1,22 @@
+"""
+    struct Branch
+
+A struct representing a branching strategy.
+
+# Fields
+- `vertices_removed::Vector{Int}`: A vector of integers representing the vertices removed in the branching strategy.
+- `mis::Int`: An integer representing the maximum independent set (MIS) size of the branching strategy.
+
+"""
+struct Branch{P<:AbstractProblem, R}
+    problem::P
+    result::R
+end
+
+function Branch(clause::Clause{INT}, vs::Vector{T}, p::P, ::Type{R}) where {INT, T, P<:AbstractProblem, R<:AbstractResult}
+    return Branch(apply_branch(p, clause, vs), result(p, clause, vs, R))
+end
+
 struct BranchingRule{P, R}
     branches::Vector{Branch{P, R}}
 end
@@ -8,7 +27,7 @@ end
 Generate optimal branches from a given branching table.
 
 ### Arguments
-- `tbl::BranchingTable{INT}`: The branching table containing subcovers.
+- `tbl::BranchingTable{INT}`: The branching table containing candidate clauses.
 - `variables::Vector{T}`: A vector of variables to be used in the branching.
 - `problem::P`: The problem instance being solved.
 - `measure::M`: The measure used for evaluating the branches.
@@ -17,13 +36,55 @@ Generate optimal branches from a given branching table.
 - `verbose::Bool`: Optional; if true, enables verbose output (default is false).
 
 ### Returns
-A vector of `Branch` objects representing the optimal branches derived from the subcovers.
+A vector of `Branch` objects representing the optimal branches derived from the candidate clauses.
 """
 function optimal_branching_rule(tbl::BranchingTable{INT}, variables::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
-    sub_covers = subcovers(tbl)
-    Δρ = branching_vector(problem, variables, sub_covers, measure)
-    cov, cx = minimize_γ(length(tbl.table), sub_covers, Δρ, solver)
+    clauses = candidate_clauses(tbl)
+    Δρ = branching_vector(problem, variables, clauses, measure)
+    cov, cx = minimize_γ(length(tbl.table), clauses, Δρ, solver)
     return BranchingRule([Branch(sub_cover.clause, variables, problem, R) for sub_cover in cov])
+end
+
+
+"""
+    candidate_clauses(tbl::BranchingTable{INT}) where {INT}
+
+Generates candidate_clauses from a branching table.
+
+# Arguments
+- `tbl::BranchingTable{INT}`: The branching table containing bit strings.
+
+# Returns
+- `Vector{SubCover{INT}}`: A vector of `SubCover` objects generated from the branching table.
+
+# Description
+This function calls the `candidate_clauses` function with the bit length and table from the provided branching table to generate the corresponding candidate_clauses.
+"""
+function candidate_clauses(tbl::BranchingTable{INT}) where {INT}
+    n, bss = tbl.bit_length, tbl.table
+    bs = vcat(bss...)
+    all_clauses = Set{Clause{INT}}()
+    temp_clauses = [Clause(bmask(INT, 1:n), bs[i]) for i in 1:length(bs)]
+    while !isempty(temp_clauses)
+        c = pop!(temp_clauses)
+        if !(c in all_clauses)
+            push!(all_clauses, c)
+            idc = Set(covered_items(bss, c))
+            for i in 1:length(bss)
+                if i ∉ idc                
+                    for b in bss[i]
+                        c_new = gather2(n, c, Clause(bmask(INT, 1:n), b))
+                        if (c_new != c) && c_new.mask != 0
+                            push!(temp_clauses, c_new)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    allcovers = [SubCover(covered_items(bss, c), c) for c in all_clauses]
+    return allcovers
 end
 
 # TODO: use a data structure for the result, and define show instead.
@@ -32,8 +93,8 @@ function viz_optimal_branching(tbl::BranchingTable{INT}, vs::Vector{T}, problem:
 
     @assert (isnothing(label) || ((label isa AbstractVector) && (length(label) == length(vs))))
 
-    sub_covers = subcovers(tbl)
-    cov, cx = cover(sub_covers, problem, measure, vs, solver)
+    clauses = candidate_clauses(tbl)
+    cov, cx = cover(clauses, problem, measure, vs, solver)
 
     label_string = (isnothing(label)) ? vs : label
 

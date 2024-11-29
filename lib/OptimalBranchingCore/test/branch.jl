@@ -1,7 +1,7 @@
 using OptimalBranchingCore, GenericTensorNetworks
 using Test
 
-@testset "constructing subcovers" begin
+@testset "constructing candidate_clauses" begin
     function all_clauses_naive(n::Int, bss::AbstractVector{Vector{INT}}) where INT
         allclauses = Vector{Clause{INT}}()
         for ids in Iterators.product([0:length(bss[i]) for i in 1:length(bss)]...)
@@ -22,7 +22,7 @@ using Test
         allcovers = Vector{SubCover{INT}}()
         for (i, c) in enumerate(allclauses)
             ids = OptimalBranchingCore.covered_items(bs, c)
-            push!(allcovers, SubCover(n, ids, c))
+            push!(allcovers, SubCover(ids, c))
         end
         return allcovers
     end
@@ -32,7 +32,7 @@ using Test
         [StaticElementVector(2, [1, 0, 0, 1, 0])],
         [StaticElementVector(2, [0, 0, 1, 0, 1])]
     ])
-    scs = OptimalBranchingCore.subcovers(tbl)
+    scs = OptimalBranchingCore.candidate_clauses(tbl)
     scs_naive = subcovers_naive(tbl)
     @test length(scs) == length(scs_naive)
     for sc in scs

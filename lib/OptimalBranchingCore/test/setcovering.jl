@@ -7,7 +7,7 @@ using Test
         [StaticBitVector([1, 0, 0, 1, 0])],
         [StaticBitVector([0, 0, 1, 0, 1])]
     ])
-    scs = OptimalBranchingCore.subcovers(tbl)
+    scs = OptimalBranchingCore.candidate_clauses(tbl)
     dns = [count_ones(sc.clause.mask) for sc in scs]
     opt_ip, cx_ip = OptimalBranchingCore.minimize_γ(3, scs, dns, IPSolver(; max_itr = 10, verbose = false))
     opt_lp, cx_lp = OptimalBranchingCore.minimize_γ(3, scs, dns, LPSolver(; max_itr = 10, verbose = false))
@@ -21,7 +21,7 @@ end
         [[1, 0, 0, 1, 0]],
         [[0, 0, 1, 0, 1]]
     ])
-    scs = OptimalBranchingCore.subcovers(tbl)
+    scs = OptimalBranchingCore.candidate_clauses(tbl)
     dns = [count_ones(sc.clause.mask) for sc in scs]
     opt_ip, cx_ip = OptimalBranchingCore.minimize_γ(3, scs, dns, IPSolver(max_itr = 10, verbose = false))
     opt_lp, cx_lp = OptimalBranchingCore.minimize_γ(3, scs, dns, LPSolver(max_itr = 10, verbose = false))

@@ -50,12 +50,11 @@ A subcover is a pair of a set of integers `ids` and a clause `clause`. The `ids`
 - `INT`: The number of integers as the storage.
 """
 struct SubCover{INT <: Integer}
-    n::Int # length of bit strings in clause
     ids::Set{Int}
     clause::Clause{INT}
 end
 
-SubCover(n::Int, ids::Vector{Int}, clause::Clause) = SubCover(n, Set(ids), clause)
+SubCover(ids::Vector{Int}, clause::Clause) = SubCover(Set(ids), clause)
 
 Base.show(io::IO, sc::SubCover{INT}) where INT = print(io, "SubCover{$INT}: ids: $(sort([i for i in sc.ids])), mask: $(BitStr{sc.n}(sc.clause.mask)), val: $(BitStr{sc.n}(sc.clause.val))")
 Base.:(==)(sc1::SubCover{INT}, sc2::SubCover{INT}) where {INT} = (sc1.ids == sc2.ids) && (sc1.clause == sc2.clause)

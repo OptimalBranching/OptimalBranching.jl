@@ -5,8 +5,8 @@ using Test, Documenter
     include("bitbasis.jl")
 end
 
-@testset "subcover" begin
-    include("subcover.jl")
+@testset "branch" begin
+    include("branch.jl")
 end
 
 @testset "set covering" begin

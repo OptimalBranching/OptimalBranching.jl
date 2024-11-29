@@ -237,25 +237,6 @@ Base.@kwdef struct IPSolver <: AbstractSetCoverSolver
 end
 
 """
-    struct Branch
-
-A struct representing a branching strategy.
-
-# Fields
-- `vertices_removed::Vector{Int}`: A vector of integers representing the vertices removed in the branching strategy.
-- `mis::Int`: An integer representing the maximum independent set (MIS) size of the branching strategy.
-
-"""
-struct Branch{P<:AbstractProblem, R}
-    problem::P
-    result::R
-end
-
-function Branch(clause::Clause{INT}, vs::Vector{T}, p::P, ::Type{R}) where {INT, T, P<:AbstractProblem, R<:AbstractResult}
-    return Branch(apply_branch(p, clause, vs), result(p, clause, vs, R))
-end
-
-"""
     AbstractBranchingStrategy
 
 An abstract type representing a branching strategy in the optimization process.

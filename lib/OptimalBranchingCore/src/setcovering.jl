@@ -56,7 +56,7 @@ It utilizes an integer programming solver to optimize the selection of sub-cover
 
 # Returns
 A tuple containing:
-- A vector of selected subcovers.
+- A vector of selected clauses.
 - The minimum ``γ`` value.
 """
 function minimize_γ(num_items::Int, candidate_clauses::AbstractVector{SubCover{INT}}, Δρ::Vector{TF}, solver) where{INT, TF}
@@ -90,7 +90,7 @@ Solves the weighted minimum set cover problem.
 
 # Arguments
 - `solver`: The solver to be used. It can be an instance of `LPSolver` or `IPSolver`.
-- `weights::AbstractVector`: The weights of the subcovers.
+- `weights::AbstractVector`: The weights of the candidate clauses.
 - `candidate_clauses::AbstractVector{SubCover{INT}}`: A vector of subcover structures.
 - `num_items::Int`: The number of elements to cover.
 """
@@ -169,4 +169,3 @@ function pick_sets(xs::Vector{TF}, candidate_clauses::AbstractVector{SubCover{IN
 
     return [i for i in picked]
 end
-

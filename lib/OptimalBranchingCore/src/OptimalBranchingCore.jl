@@ -15,7 +15,6 @@ export apply_branch, measure, reduce_problem, select, branching_table, prune, we
 export complexity, reduce_and_branch, optimal_branching_rule
 
 include("bitbasis.jl")
-include("subcover.jl")
 include("types.jl")
 include("setcovering.jl")
 include("branch.jl")
