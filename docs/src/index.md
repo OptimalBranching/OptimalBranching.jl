@@ -45,8 +45,8 @@ julia> problem = MISProblem(g)
 MISProblem(20)
 
 # select the branching strategy
-julia> branching_strategy = OptBranchingStrategy(TensorNetworkSolver(), IPSolver(), EnvFilter(), MinBoundarySelector(2), D3Measure())
-OptBranchingStrategy
+julia> branching_strategy = BranchingStrategy(TensorNetworkSolver(), IPSolver(), EnvFilter(), MinBoundarySelector(2), D3Measure())
+BranchingStrategy
     ├── table_solver - TensorNetworkSolver()
     ├── set_cover_solver - IPSolver(10)
     ├── pruner - EnvFilter()
@@ -58,7 +58,7 @@ julia> config = SolverConfig(MISReducer(), branching_strategy, Int)
 SolverConfig
 ├── reducer - MISReducer() 
 ├── result_type - Int
-└── branching_strategy - OptBranchingStrategy
+└── branching_strategy - BranchingStrategy
     ├── table_solver - TensorNetworkSolver()
     ├── set_cover_solver - IPSolver(10)
     ├── pruner - EnvFilter()
@@ -80,7 +80,7 @@ julia> mis2(EliminateGraph(g))
 Furthermore, one can check the count of branches in the following way:
 ```julia
 julia> config = SolverConfig(MISReducer(), branching_strategy, MISCount)
-SolverConfig{MISReducer, OptBranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}, MISCount}(MISReducer(), OptBranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}(TensorNetworkSolver(), IPSolver(10), EnvFilter(), MinBoundarySelector(2), D3Measure()), MISCount)
+SolverConfig{MISReducer, BranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}, MISCount}(MISReducer(), BranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}(TensorNetworkSolver(), IPSolver(10), EnvFilter(), MinBoundarySelector(2), D3Measure()), MISCount)
 
 julia> reduce_and_branch(problem, config)
 MISCount(9, 1)

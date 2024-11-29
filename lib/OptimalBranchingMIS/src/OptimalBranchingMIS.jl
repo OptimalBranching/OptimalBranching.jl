@@ -13,7 +13,6 @@ export MinBoundarySelector
 export EnvFilter
 export TensorNetworkSolver
 export NumOfVertices, D3Measure
-export viz_optimal_branching
 
 export counting_mis1, counting_mis2, counting_xiao2013
 
