@@ -7,27 +7,6 @@ This serves as a base type for all specific problem types that will be implement
 abstract type AbstractProblem end
 
 """
-    AbstractResult
-
-An abstract type representing a generic result in the optimal branching framework. 
-This serves as a base type for all specific result types that will be implemented.
-"""
-abstract type AbstractResult end
-
-# TODO: do we really need it?
-"""
-    NoResult
-
-A concrete implementation of AbstractResult representing the absence of a result. 
-This is used as a placeholder in scenarios where no valid result is present.
-
-# Fields
-None
-
-"""
-struct NoResult <: AbstractResult end
-
-"""
     apply_branch(problem::AbstractProblem, ::Clause, vs)
 
 Applies a clause to a NoProblem instance, returning a NoProblem instance. 
@@ -77,15 +56,15 @@ This serves as a base type for all specific reducer implementations.
 abstract type AbstractReducer end
 
 """
-    reduce_problem(p::NoProblem, ::AbstractReducer, ::Type{R}) where{R<:AbstractResult}
+    reduce_problem(::Type{R}, p::NoProblem, ::AbstractReducer) where{R}
 
 Reduces a problem represented by a NoProblem instance. 
 This function serves as a placeholder for scenarios where no valid problem is present.
 
 # Arguments
+- `::Type{R}`: The type of result expected
 - `p::NoProblem`: An instance of NoProblem, representing the absence of a problem.
 - `::AbstractReducer`: An abstract reducer type, which is not utilized in this context.
-- `::Type{R}`: The type of result expected, which must be a subtype of AbstractResult.
 
 # Returns
 - `NoProblem()`: An instance of NoProblem, indicating that no problem exists.

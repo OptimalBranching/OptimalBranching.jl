@@ -13,14 +13,14 @@ using Test
             for solver in [IPSolver(10, false), LPSolver(10, false)], measure in [D3Measure(), NumOfVertices()], pruner in [EnvFilter(), NoPruner()], reducer in [MISReducer(), XiaoReducer()]
                 bs = BranchingStrategy(TensorNetworkSolver(), solver, pruner, MinBoundarySelector(2), measure)
 
-                cfg = SolverConfig(reducer, bs, MISSize)
+                cfg = SolverConfig(reducer, bs, Int)
 
                 cfg_count = SolverConfig(reducer, bs, MISCount)
 
                 res = reduce_and_branch(p, cfg)
                 res_count = reduce_and_branch(p, cfg_count)
 
-                @test res.mis_size == res_count.mis_size == mis_exact
+                @test res == res_count.mis_size == mis_exact
             end
         end
     end

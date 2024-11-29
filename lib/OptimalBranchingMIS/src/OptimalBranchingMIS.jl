@@ -7,7 +7,7 @@ using EliminateGraphs, EliminateGraphs.Graphs
 using GenericTensorNetworks
 
 export MISProblem
-export MISSize, MISCount
+export MISCount
 export MISReducer, XiaoReducer
 export MinBoundarySelector
 export EnvFilter

@@ -51,7 +51,7 @@ struct BranchingRule{INT<:Integer}
 end
 
 """
-    optimal_branching_rule(tbl::BranchingTable{INT}, vs::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}; verbose::Bool = false) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
+    optimal_branching_rule(tbl::BranchingTable{INT}, vs::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}; verbose::Bool = false) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R}
 
 Generate optimal branches from a given branching table.
 
@@ -113,29 +113,6 @@ function candidate_clauses(tbl::BranchingTable{INT}) where {INT}
 
     allcovers = [CandidateClause(covered_items(bss, c), c) for c in all_clauses]
     return allcovers
-end
-
-# TODO: use a data structure for the result, and define show instead.
-# Q: why optimal? do not propagate contexts into all functions
-function viz_optimal_branching(tbl::BranchingTable{INT}, vs::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}; label = nothing) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
-
-    @assert (isnothing(label) || ((label isa AbstractVector) && (length(label) == length(vs))))
-
-    clauses = candidate_clauses(tbl)
-    cov, cx = cover(clauses, problem, measure, vs, solver)
-
-    label_string = (isnothing(label)) ? vs : label
-
-    println("--------------------------------")
-    println("complexity: $cx")
-    println("branches:")
-    for cov_i in cov
-        println(clause_string(cov_i.clause, label_string))
-    end
-    println("branching vector: [$(join([dn(problem, measure, sc, vs) for sc in cov], ", "))]")
-    println("--------------------------------")
-
-    return cov, cx
 end
 
 function clause_string(clause::Clause{INT}, vs::Vector{T}) where {INT, T}
@@ -227,7 +204,7 @@ A struct representing the configuration for a solver, including the reducer and 
 - `result_type::Type{TR}`: The type of the result that the solver will produce.
 
 """
-struct SolverConfig{R<:AbstractReducer, B<:BranchingStrategy, TR<:AbstractResult}
+struct SolverConfig{R<:AbstractReducer, B<:BranchingStrategy, TR}
     reducer::R
     branching_strategy::B
     result_type::Type{TR}
@@ -251,7 +228,7 @@ SolverConfig
     The maximum result obtained from the branches.
 """
 function reduce_and_branch(p::AbstractProblem, config::SolverConfig)
-    rp, reducedvalue = reduce_problem(p, config.reducer, config.result_type)
+    rp, reducedvalue = reduce_problem(config.result_type, p, config.reducer)
     isempty(rp) && return reducedvalue
 
     strategy = config.branching_strategy

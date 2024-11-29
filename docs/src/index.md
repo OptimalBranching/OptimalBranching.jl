@@ -54,10 +54,10 @@ OptBranchingStrategy
     └── measure - D3Measure()
 
 
-julia> config = SolverConfig(MISReducer(), branching_strategy, MISSize)
+julia> config = SolverConfig(MISReducer(), branching_strategy, Int)
 SolverConfig
 ├── reducer - MISReducer() 
-├── result_type - MISSize
+├── result_type - Int
 └── branching_strategy - OptBranchingStrategy
     ├── table_solver - TensorNetworkSolver()
     ├── set_cover_solver - IPSolver(10)
@@ -68,7 +68,7 @@ SolverConfig
 
 # the result shows that the size of the maximum independent set is 9
 julia> reduce_and_branch(problem, config)
-MISSize(9)
+9
 
 # we can also use the EliminateGraphs package to verify the result
 julia> using OptimalBranchingMIS.EliminateGraphs

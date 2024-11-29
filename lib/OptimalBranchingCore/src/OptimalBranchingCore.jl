@@ -7,8 +7,8 @@ using BitBasis
 export Clause, BranchingTable, CandidateClause, DNF, Branch
 export SolverConfig
 export BranchingStrategy
-export AbstractProblem, AbstractResult, AbstractMeasure, AbstractReducer, AbstractSelector, AbstractPruner, AbstractTableSolver, AbstractSetCoverSolver
-export NoResult, NoPruner, LPSolver, IPSolver
+export AbstractProblem, AbstractMeasure, AbstractReducer, AbstractSelector, AbstractPruner, AbstractTableSolver, AbstractSetCoverSolver
+export NoPruner, LPSolver, IPSolver
 
 export apply_branch, measure, reduce_problem, select, branching_table, weighted_minimum_set_cover
 # TODO: complexity should be implemented on BranchingRule
