@@ -16,31 +16,10 @@ mutable struct MISProblem <: AbstractProblem
 end
 Base.copy(p::MISProblem) = MISProblem(copy(p.g))
 Base.show(io::IO, p::MISProblem) = print(io, "MISProblem($(nv(p.g)))")
+Base.isempty(p::MISProblem) = nv(p.g) == 0
 
 """
-    struct MISSize <: AbstractResult
-
-Represents the size of a Maximum Independent Set (MIS).
-
-# Fields
-- `mis_size::Int`: The size of the Maximum Independent Set.
-
-"""
-struct MISSize <: AbstractResult
-    mis_size::Int
-end
-
-Base.:+(a::MISSize, b::MISSize) = MISSize(a.mis_size + b.mis_size)
-Base.:+(a::MISSize, b::Int) = MISSize(a.mis_size + b)
-Base.:+(a::Int, b::MISSize) = MISSize(a + b.mis_size)
-Base.max(a::MISSize, b::MISSize) = MISSize(max(a.mis_size, b.mis_size))
-Base.max(a::MISSize, b::Int) = MISSize(max(a.mis_size, b))
-Base.max(a::Int, b::MISSize) = MISSize(max(a, b.mis_size))
-Base.zero(::MISSize) = MISSize(0)
-Base.zero(::Type{MISSize}) = MISSize(0)
-
-"""
-    struct MISCount <: AbstractResult
+    struct MISCount
 
 Represents the count of Maximum Independent Sets (MIS).
 
@@ -53,7 +32,7 @@ Represents the count of Maximum Independent Sets (MIS).
 - `MISCount(mis_size::Int, mis_count::Int)`: Creates a `MISCount` with the specified size and count.
 
 """
-struct MISCount <: AbstractResult
+struct MISCount
     mis_size::Int
     mis_count::Int
     MISCount(mis_size::Int) = new(mis_size, 1)
@@ -69,11 +48,14 @@ Base.zero(::Type{MISCount}) = MISCount(0, 1)
 
 """
     TensorNetworkSolver
+    TensorNetworkSolver(; prune_by_env::Bool = true)
 
 A struct representing a solver for tensor network problems. 
 This struct serves as a specific implementation of the `AbstractTableSolver` type.
 """
-struct TensorNetworkSolver <: AbstractTableSolver end
+@kwdef struct TensorNetworkSolver <: AbstractTableSolver
+    prune_by_env::Bool = true
+end
 
 """
     NumOfVertices

@@ -1,23 +1,22 @@
 module OptimalBranchingCore
 
-using NLsolve, JuMP, HiGHS, SCIP
+using JuMP, HiGHS, SCIP
 using AbstractTrees
 using BitBasis
 
-export Clause, BranchingTable, SubCover, DNF, Branch
-export SolverConfig
-export AbstractBranchingStrategy, OptBranchingStrategy
-export AbstractProblem, AbstractResult, AbstractMeasure, AbstractReducer, AbstractSelector, AbstractPruner, AbstractTableSolver, AbstractSetCoverSolver
-export NoProblem, NoResult, NoPruner, LPSolver, IPSolver
+export complexity_bv
+export Clause, BranchingTable, CandidateClause, DNF, Branch
+export BranchingStrategy
+export AbstractProblem, AbstractMeasure, AbstractReducer, AbstractSelector, AbstractTableSolver, AbstractSetCoverSolver
+export LPSolver, IPSolver
 
-export apply, measure, problem_reduce, select, solve_table, prune
-export complexity, cover, branch, solve_branches, optimal_branching, viz_optimal_branching
+export apply_branch, measure, reduce_problem, select, branching_table, weighted_minimum_set_cover
+export reduce_and_branch, optimal_branching_rule
 
 include("bitbasis.jl")
-include("subcover.jl")
-include("types.jl")
+include("interfaces.jl")
 include("setcovering.jl")
+include("branching_table.jl")
 include("branch.jl")
-# include("branchingtree.jl")
 
 end

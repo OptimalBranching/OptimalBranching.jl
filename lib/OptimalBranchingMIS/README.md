@@ -7,7 +7,7 @@
 In this pacakge a set of tools for MIS problem has been provided, including:
 * `MISProblem`: the problem type for MIS
 * `MISReducer`: the reducer for MIS
-* `MISSize` & `MISCount`: different types for the results, returning the size of the maximum independent set or together with the count of branches
+* `Int` & `MISCount`: different types for the results, returning the size of the maximum independent set or together with the count of branches
 * `MinBoundarySelector`: the selectors for the minimum boundary size
 * `NumOfVertices` & `D3Measure`: different measures for the MIS problem
 

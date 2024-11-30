@@ -1,97 +1,131 @@
 """
-    optimal_branching(tbl::BranchingTable{INT}, vs::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}; verbose::Bool = false) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
+    optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, measure::AbstractMeasure, solver::AbstractSetCoverSolver)::DNF
 
-Generate optimal branches from a given branching table.
+Generate an optimal branching rule from a given branching table.
 
 ### Arguments
-- `tbl::BranchingTable{INT}`: The branching table containing subcovers.
-- `vs::Vector{T}`: A vector of variables to be used in the branching.
-- `problem::P`: The problem instance being solved.
-- `measure::M`: The measure used for evaluating the branches.
-- `solver::S`: The solver used for the set cover problem.
-- `::Type{R}`: The type of the result expected.
-- `verbose::Bool`: Optional; if true, enables verbose output (default is false).
+- `table`: A [`BranchingTable`](@ref) instance containing candidate clauses.
+- `variables`: A vector of variables to perform the branching.
+- `problem`: The problem instance being solved.
+- `measure`: The measure used for evaluating the problem size reduction in the branches.
+- `solver`: The solver used for the weighted minimum set cover problem, which can be either [`LPSolver`](@ref) or [`IPSolver`](@ref).
 
 ### Returns
-A vector of `Branch` objects representing the optimal branches derived from the subcovers.
+A [`DNF`](@ref) object representing the optimal branching rule.
 """
-function optimal_branching(tbl::BranchingTable{INT}, vs::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
-    sub_covers = subcovers(tbl)
-    cov, cx = cover(sub_covers, problem, measure, vs, solver)
-    branches = [Branch(sub_cover.clause, vs, problem, R) for sub_cover in cov]
-
-    return branches
+function optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, m::AbstractMeasure, solver::AbstractSetCoverSolver)
+    candidates = candidate_clauses(table)
+    size_reductions = [measure(problem, m) - measure(first(apply_branch(problem, candidate.clause, variables)), m) for candidate in candidates]
+    selection, _ = minimize_γ(length(table.table), candidates, size_reductions, solver; γ0=2.0)
+    return DNF(map(i->candidates[i].clause, selection))
 end
 
-function viz_optimal_branching(tbl::BranchingTable{INT}, vs::Vector{T}, problem::P, measure::M, solver::S, ::Type{R}; label = nothing) where{INT, T, P<:AbstractProblem, M<:AbstractMeasure, S<:AbstractSetCoverSolver, R<:AbstractResult}
+# TODO: we need to extend this function to trim the candidate clauses
+"""
+    candidate_clauses(tbl::BranchingTable{INT}) where {INT}
 
-    @assert (isnothing(label) || ((label isa AbstractVector) && (length(label) == length(vs))))
+Generates candidate clauses from a branching table.
 
-    sub_covers = subcovers(tbl)
-    cov, cx = cover(sub_covers, problem, measure, vs, solver)
+### Arguments
+- `tbl::BranchingTable{INT}`: The branching table containing bit strings.
 
-    label_string = (isnothing(label)) ? vs : label
-
-    println("--------------------------------")
-    println("complexity: $cx")
-    println("branches:")
-    for cov_i in cov
-        println(clause_string(cov_i.clause, label_string))
-    end
-    println("branching vector: [$(join([dn(problem, measure, sc, vs) for sc in cov], ", "))]")
-    println("--------------------------------")
-
-    return cov, cx
-end
-
-function clause_string(clause::Clause{INT}, vs::Vector{T}) where {INT, T}
-    cs_vec = String[]
-    for i in 1:length(vs)
-        if (clause.mask >> (i-1)) & 1 == 1
-            t_flag = (clause.val >> (i-1)) & 1 == 1
-            push!(cs_vec, t_flag ? "$(vs[i])" : "¬$(vs[i])")
+### Returns
+- `Vector{CandidateClause{INT}}`: A vector of `CandidateClause` objects generated from the branching table.
+"""
+function candidate_clauses(tbl::BranchingTable{INT}) where {INT}
+    n, bss = tbl.bit_length, tbl.table
+    bs = vcat(bss...)
+    all_clauses = Set{Clause{INT}}()
+    temp_clauses = [Clause(bmask(INT, 1:n), bs[i]) for i in 1:length(bs)]
+    while !isempty(temp_clauses)
+        c = pop!(temp_clauses)
+        if !(c in all_clauses)
+            push!(all_clauses, c)
+            idc = Set(covered_items(bss, c))
+            for i in 1:length(bss)
+                if i ∉ idc                
+                    for b in bss[i]
+                        c_new = gather2(n, c, Clause(bmask(INT, 1:n), b))
+                        if (c_new != c) && c_new.mask != 0
+                            push!(temp_clauses, c_new)
+                        end
+                    end
+                end
+            end
         end
     end
-    return join(cs_vec, " ∧ ")
+
+    allcovers = [CandidateClause(covered_items(bss, c), c) for c in all_clauses]
+    return allcovers
+end
+# Returns the indices of the bit strings that are covered by the clause.
+function covered_items(bitstrings, clause::Clause)
+    return findall(bs -> any(x->covered_by(x, clause), bs), bitstrings)
+end
+# merge two clauses, i.e. generate a new clause covering both
+function gather2(n::Int, c1::Clause{INT}, c2::Clause{INT}) where INT
+    b1 = c1.val & c1.mask
+    b2 = c2.val & c2.mask
+    mask = (b1 ⊻ flip_all(n, b2)) & c1.mask & c2.mask
+    val = b1 & mask
+    return Clause(mask, val)
 end
 
 """
-    Branch the given problem using the specified solver configuration.
+    BranchingStrategy
+    BranchingStrategy(; kwargs...)
 
-    # Arguments
-    - `p::P`: The problem instance to branch.
-    - `config::SolverConfig`: The configuration for the solver.
+A struct representing the configuration for a solver, including the reducer and branching strategy.
 
-    # Returns
-    The maximum result obtained from the branches.
+### Fields
+- `table_solver::AbstractTableSolver`: The solver to resolve the relevant bit strings and generate a branching table.
+- `set_cover_solver::AbstractSetCoverSolver = IPSolver()`: The solver to solve the set covering problem.
+- `selector::AbstractSelector`: The selector to select the next branching variable or decision.
+- `m::AbstractMeasure`: The measure to evaluate the performance of the branching strategy.
 """
-function branch(p::P, config::SolverConfig) where{P<:AbstractProblem}
-
-    (p isa NoProblem) && return zero(config.result_type)
-
-    reduced_branches = problem_reduce(p, config.reducer, config.result_type)
-    branches = !isnothing(reduced_branches) ? reduced_branches : solve_branches(p, config.branching_strategy, config.result_type)
-
-    return maximum([(branch(b.problem, config) + b.result) for b in branches])
+@kwdef struct BranchingStrategy{TS<:AbstractTableSolver, SCS<:AbstractSetCoverSolver, SL<:AbstractSelector, M<:AbstractMeasure}
+    set_cover_solver::SCS = IPSolver()
+    table_solver::TS
+    selector::SL
+    measure::M
 end
+Base.show(io::IO, config::BranchingStrategy) = print(io, 
+"""
+BranchingStrategy
+├── table_solver - $(config.table_solver)
+├── set_cover_solver - $(config.set_cover_solver)
+├── selector - $(config.selector)
+└── measure - $(config.measure)
+""")
 
 """
-    Solve branches of the given problem using the specified branching strategy.
+    reduce_and_branch(problem::AbstractProblem, config::BranchingStrategy; reducer::AbstractReducer=NoReducer(), result_type=Int)
 
-    # Arguments
-    - `p::P`: The problem instance to solve branches for.
-    - `strategy::OptBranchingStrategy`: The strategy to use for branching.
-    - `result_type::Type{R}`: The type of the result expected.
+Branch the given problem using the specified solver configuration.
 
-    # Returns
-    A vector of branches derived from the problem using the specified strategy.
+### Arguments
+- `problem`: The problem instance to solve.
+- `config`: The configuration for the solver, which is a [`BranchingStrategy`](@ref) instance.
+
+### Keyword Arguments
+- `reducer::AbstractReducer=NoReducer()`: The reducer to reduce the problem size.
+- `result_type::Type{TR}`: The type of the result that the solver will produce.
+
+### Returns
+The resulting value, which may have different type depending on the `result_type`.
 """
-function solve_branches(p::P, strategy::OptBranchingStrategy, result_type::Type{R}) where{P<:AbstractProblem, R<:AbstractResult}
+function reduce_and_branch(problem::AbstractProblem, config::BranchingStrategy; reducer::AbstractReducer=NoReducer(), result_type=Int)
+    isempty(problem) && return zero(result_type)
+    # reduce the problem
+    rp, reducedvalue = reduce_problem(result_type, problem, reducer)
+    rp !== problem && return reduce_and_branch(rp, config) + reducedvalue
 
-    vs = select(p, strategy.measure, strategy.selector)
-    tbl = solve_table(p, strategy.table_solver, vs)
-    pruned_tbl = prune(tbl, strategy.pruner, strategy.measure, p, vs)
-    branches = optimal_branching(pruned_tbl, vs, p, strategy.measure, strategy.set_cover_solver, result_type)
-
-    return branches
+    # branch the problem
+    variables = select_variables(rp, config.measure, config.selector)  # select a subset of variables
+    tbl = branching_table(rp, config.table_solver, variables)      # compute the BranchingTable
+    rule = optimal_branching_rule(tbl, variables, rp, config.measure, config.set_cover_solver)  # compute the optimal branching rule
+    return maximum(rule.clauses) do branch  # branch and recurse
+        subproblem, localvalue = apply_branch(rp, branch, variables)
+        reduce_and_branch(subproblem, config) + localvalue + reducedvalue
+    end
 end

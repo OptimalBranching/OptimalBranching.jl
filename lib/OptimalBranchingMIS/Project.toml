@@ -10,13 +10,14 @@ GenericTensorNetworks = "3521c873-ad32-4bb4-b63d-f4f178f42b49"
 OptimalBranchingCore = "c76e7b22-e1d2-40e8-b0f1-f659837787b8"
 
 [compat]
-Combinatorics = "1.0.2"
+Combinatorics = "1"
 EliminateGraphs = "0.2"
 GenericTensorNetworks = "2"
 julia = "1.6"
 
 [extras]
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Random", "Test"]

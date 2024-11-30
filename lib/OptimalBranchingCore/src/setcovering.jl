@@ -1,160 +1,212 @@
 """
-    complexity(sbranches::Vector{T}) where {T}
+    AbstractSetCoverSolver
 
-Calculates the complexity based on the provided branching structures.
-
-# Arguments
-- `sbranches::Vector{T}`: A vector of branching structures, where each element represents a branch.
-
-# Returns
-- `Float64`: The computed complexity value.
+An abstract type for the strategy of solving the set covering problem.
+"""
+abstract type AbstractSetCoverSolver end
 
 """
-function complexity(sbranches::Vector{T}) where {T}
-    f = x -> sum(x[1]^(-i) for i in sbranches) - 1.0
-    sol = nlsolve(f, [1.0])
-    return sol.zero[1]
+    LPSolver <: AbstractSetCoverSolver
+    LPSolver(; max_itr::Int = 5, verbose::Bool = false)
+
+A linear programming solver for set covering problems.
+
+### Fields
+- `max_itr::Int`: The maximum number of iterations to be performed.
+- `verbose::Bool`: Whether to print the solver's output.
+"""
+Base.@kwdef struct LPSolver <: AbstractSetCoverSolver 
+    max_itr::Int = 5
+    verbose::Bool = false
 end
 
-function max_id(sub_covers::AbstractVector{SubCover{INT}}) where{INT}
-    m0 = 1
-    for sc in sub_covers
-        m0 = max(m0, maximum(sc.ids))
+"""
+    IPSolver <: AbstractSetCoverSolver
+    IPSolver(; max_itr::Int = 5, verbose::Bool = false)
+
+An integer programming solver for set covering problems.
+
+### Fields
+- `max_itr::Int`: The maximum number of iterations to be performed.
+- `verbose::Bool`: Whether to print the solver's output.
+"""
+Base.@kwdef struct IPSolver <: AbstractSetCoverSolver 
+    max_itr::Int = 5
+    verbose::Bool = false
+end
+
+"""
+    CandidateClause{INT <: Integer}
+
+A candidate clause is a clause containing the formation related to how it can cover the items in the branching table.
+
+### Fields
+- `covered_items::Set{Int}`: The items in the branching table that are covered by the clause.
+- `clause::Clause{INT}`: The clause itself.
+"""
+struct CandidateClause{INT <: Integer}
+    covered_items::Set{Int}
+    clause::Clause{INT}
+end
+CandidateClause(covered_items::Vector{Int}, clause::Clause) = CandidateClause(Set(covered_items), clause)
+
+Base.show(io::IO, sc::CandidateClause{INT}) where INT = print(io, "CandidateClause{$INT}: covered_items: $(sort([i for i in sc.covered_items])), clause: $(sc.clause)")
+Base.:(==)(sc1::CandidateClause{INT}, sc2::CandidateClause{INT}) where {INT} = (sc1.covered_items == sc2.covered_items) && (sc1.clause == sc2.clause)
+
+"""
+    complexity_bv(branching_vector::Vector)::Float64
+
+Calculates the complexity that associated with the provided branching vector by solving the equation:
+```math
+γ^0 = \\sum_{δρ \\in \\text{branching_vector}} γ^{-δρ}
+```
+
+### Arguments
+- `branching_vector`: a vector of problem size reductions in the branches.
+
+### Returns
+- `Float64`: The computed γ value.
+"""
+function complexity_bv(branching_vector::Vector{T}) where {T}
+    # NOTE: for different measure, the size reduction may not always be positive
+    if any(x -> x <= 0, branching_vector)
+        return Inf
     end
-    return m0
+    f = x -> sum(x[1]^(-i) for i in branching_vector) - 1.0
+    return bisect_solve(f, 1.0, f(1.0), 2.0, f(2.0))
 end
-
-function γ0(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}) where{INT, TF}
-    n = max_id(sub_covers)
-    max_dict = Dict([i => 0 for i in 1:n])
-    for (i, sub_cover) in enumerate(sub_covers)
-        length(sub_cover.ids) == 1 || continue
-        id = first(sub_cover.ids)
-        max_dict[id] = max(max_dict[id], dns[i])
-    end
-
-    max_rvs = [max_dict[i] for i in 1:n]
-
-    return complexity(max_rvs), n
-end
-
-function dn(p::P, m::M, subcover::SubCover{INT}, vs::Vector{T}) where{P<:AbstractProblem, M<:AbstractMeasure, INT<:Integer, T}
-    return measure(p, m) - measure(apply(p, subcover.clause, vs), m)
-end
-
-"""
-    cover(sub_covers::AbstractVector{SubCover{INT}}, p::P, m::M, vs::Vector{T}, solver::Union{LPSolver, IPSolver}; verbose::Bool = false) where{INT, P<:AbstractProblem, M<:AbstractMeasure, T}
-
-Calculates the optimal cover from the provided subcovers using a specified solver.
-
-# Arguments
-- `sub_covers::AbstractVector{SubCover{INT}}`: A vector of subcover structures.
-- `p::P`: An instance of a problem that needs to be solved.
-- `m::M`: An instance of a measure associated with the problem.
-- `vs::Vector{T}`: A vector of values used in the calculation.
-- `solver::Union{LPSolver, IPSolver}`: The solver to be used for optimization.
-- `verbose::Bool`: A flag to enable verbose output (default is false).
-
-# Returns
-- A tuple containing:
-  - A vector of selected subcovers.
-  - The computed complexity value.
-
-# Description
-This function computes the difference in measure for each subcover and then calls another `cover` function to find the optimal cover based on the computed differences.
-"""
-function cover(sub_covers::AbstractVector{SubCover{INT}}, p::P, m::M, vs::Vector{T}, solver::Union{LPSolver, IPSolver}) where{INT, P<:AbstractProblem, M<:AbstractMeasure, T}
-    dns = [dn(p, m, subcover, vs) for subcover in sub_covers]
-    return cover(sub_covers, dns, solver)
-end
-
-"""
-    cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::LPSolver; verbose::Bool = false) where{INT, TF}
-
-Finds the optimal cover based on the provided differences in measure.
-
-# Arguments
-- `sub_covers::AbstractVector{SubCover{INT}}`: A vector of subcover structures.
-- `dns::Vector{TF}`: A vector of differences in measure for each subcover.
-- `solver::LPSolver`: The linear programming solver to be used.
-- `verbose::Bool`: A flag to enable verbose output (default is false).
-
-# Returns
-- A tuple containing:
-  - A vector of selected subcovers.
-  - The computed complexity value.
-
-# Description
-This function iteratively solves the linear programming problem to find the optimal cover, updating the complexity value until convergence or the maximum number of iterations is reached.
-
-"""
-function cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::LPSolver) where{INT, TF}
-    max_itr = solver.max_itr
-    cx, n = γ0(sub_covers, dns)
-    verbose = solver.verbose
-    verbose && (@info "γ0 = $(cx)")
-
-    for sub_cover in sub_covers
-        (length(sub_cover.ids) == n) && return [sub_cover], 1.0
-    end
-
-    scs_new = copy(sub_covers)
-    cx_old = cx
-    for i = 1:max_itr
-        xs = LP_setcover(cx, scs_new, n, dns, verbose)
-        picked_scs = random_pick(xs, sub_covers, n)
-        picked = sub_covers[picked_scs]
-        verbose && (@info "LP Solver, Iteration $i, picked = $(picked), dn = $(dns[picked_scs])")
-        cx = complexity(dns[picked_scs])
-        verbose && (@info "LP Solver, Iteration $i, complexity = $cx")
-        if (i == max_itr) || (cx ≈ cx_old)
-            return picked, cx
+function bisect_solve(f, a, fa, b, fb)
+    @assert fa * fb <= 0 "f(a) and f(b) have the same sign"
+    while b - a > eps(b)
+        c = (a + b) / 2
+        fc = f(c)
+        if fc == 0
+            return c
+        elseif fa * fc < 0
+            b = c
         else
-            cx_old = cx
+            a = c
         end
     end
+    return (a + b) / 2
 end
 
+"""
+    minimize_γ(candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}, solver) where{INT, TF}
 
-function LP_setcover(γp::TF, sub_covers::AbstractVector{SubCover{INT}}, n::Int, dns::Vector{T}, verbose::Bool) where{INT, TF, T}
-    fixeds = dns
-    γs = 1 ./ γp .^ fixeds
-    nsc = length(sub_covers)
+Finds the optimal cover based on the provided vector of problem size reduction.
+This function implements a cover selection algorithm using an iterative process.
+It utilizes an integer programming solver to optimize the selection of sub-covers based on their complexity.
 
-    sets_id = [Vector{Int}() for _=1:n]
+### Arguments
+- `candidate_clauses::AbstractVector{CandidateClause{INT}}`: A vector of CandidateClause structures.
+- `Δρ::Vector{TF}`: A vector of problem size reduction for each CandidateClause.
+- `solver`: The solver to be used. It can be an instance of `LPSolver` or `IPSolver`.
+
+### Keyword Arguments
+- `γ0::Float64`: The initial γ value.
+
+### Returns
+A tuple of two elements: (indices of selected clauses, γ)
+"""
+function minimize_γ(num_items::Int, candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}, solver::AbstractSetCoverSolver; γ0::Float64 = 2.0) where{INT, TF}
+    @debug "solver = $(solver), sets = $(candidate_clauses), γ0 = $γ0"
+
+    # Note: the following instance is captured for time saving, and also for it may cause IP solver to fail
+    for (k, clause) in enumerate(candidate_clauses)
+        (length(clause.covered_items) == num_items) && return [k], 1.0
+    end
+
+    cx_old = cx = γ0
+    local picked_scs
+    for i = 1:solver.max_itr
+        weights = 1 ./ cx_old .^ Δρ
+        picked_scs = weighted_minimum_set_cover(solver, weights, candidate_clauses, num_items)
+        cx = complexity_bv(Δρ[picked_scs])
+        @debug "Iteration $i, picked indices = $(picked_scs), clauses = $(candidate_clauses[picked_scs]), branching_vector = $(Δρ[picked_scs]), γ = $cx"
+        cx ≈ cx_old && break  # convergence
+        cx_old = cx
+    end
+    return picked_scs, cx
+end
+
+"""
+    weighted_minimum_set_cover(solver, weights::AbstractVector, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT, TF, T}
+
+Solves the weighted minimum set cover problem.
+
+### Arguments
+- `solver`: The solver to be used. It can be an instance of `LPSolver` or `IPSolver`.
+- `weights::AbstractVector`: The weights of the candidate clauses.
+- `candidate_clauses::AbstractVector{CandidateClause{INT}}`: A vector of CandidateClause structures.
+- `num_items::Int`: The number of elements to cover.
+
+### Returns
+A vector of indices of selected clauses.
+"""
+function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT}
+    nsc = length(candidate_clauses)
+
+    sets_id = [Vector{Int}() for _=1:num_items]
     for i in 1:nsc
-        for j in sub_covers[i].ids
+        for j in candidate_clauses[i].covered_items
             push!(sets_id[j], i)
         end
     end
 
     # LP by JuMP
     model = Model(HiGHS.Optimizer)
-    !verbose && set_silent(model)
+    !solver.verbose && set_silent(model)
     @variable(model, 0 <= x[i = 1:nsc] <= 1)
-    @objective(model, Min, sum(x[i] * γs[i] for i in 1:nsc))
-    for i in 1:n
+    @objective(model, Min, sum(x[i] * weights[i] for i in 1:nsc))
+    for i in 1:num_items
         @constraint(model, sum(x[j] for j in sets_id[i]) >= 1)
     end
 
     optimize!(model)
     @assert is_solved_and_feasible(model)
-
-    return [value(x[i]) for i in 1:nsc]
+    return pick_sets(value.(x), candidate_clauses, num_items)
 end
 
-function random_pick(xs::Vector{TF}, sub_covers::AbstractVector{SubCover{INT}}, n::Int) where{INT, TF}
+function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT}
+    nsc = length(candidate_clauses)
+
+    sets_id = [Vector{Int}() for _=1:num_items]
+    for i in 1:nsc
+        for j in candidate_clauses[i].covered_items
+            push!(sets_id[j], i)
+        end
+    end
+
+    # IP by JuMP
+    model = Model(SCIP.Optimizer)
+    !solver.verbose && set_attribute(model, "display/verblevel", 0)
+    set_attribute(model, "limits/gap", 0.05)
+
+    @variable(model, 0 <= x[i = 1:nsc] <= 1, Int)
+    @objective(model, Min, sum(x[i] * weights[i] for i in 1:nsc))
+    for i in 1:num_items
+        @constraint(model, sum(x[j] for j in sets_id[i]) >= 1)
+    end
+
+    optimize!(model)
+    @assert is_solved_and_feasible(model)
+    return pick_sets(value.(x), candidate_clauses, num_items)
+end
+
+# by viewing xs as the probability of being selected, we can use a random algorithm to pick the sets
+function pick_sets(xs::Vector{TF}, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT, TF}
     picked = Set{Int}()
     picked_ids = Set{Int}()
-    nsc = length(sub_covers)
+    nsc = length(candidate_clauses)
     flag = true
     while flag 
         for i in 1:nsc
-            if (rand() < xs[i]) && !(i in picked)
+            if (rand() < xs[i]) && i ∉ picked
                 push!(picked, i)
-                picked_ids = union(picked_ids, sub_covers[i].ids)
+                picked_ids = union(picked_ids, candidate_clauses[i].covered_items)
             end
-            if length(picked_ids) == n
+            if length(picked_ids) == num_items
                 flag = false
                 break
             end
@@ -162,88 +214,4 @@ function random_pick(xs::Vector{TF}, sub_covers::AbstractVector{SubCover{INT}}, 
     end
 
     return [i for i in picked]
-end
-
-function pick(xs::Vector{TF}, sub_covers::AbstractVector{SubCover{INT}}) where{INT, TF}
-    return [sub_covers[i] for i in 1:length(xs) if xs[i] ≈ 1.0]
-end
-
-"""
-    cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::IPSolver; verbose::Bool = false) where{INT, TF}
-
-This function implements a cover selection algorithm using an iterative process. It utilizes an integer programming solver to optimize the selection of sub-covers based on their complexity.
-
-# Arguments
-- `sub_covers::AbstractVector{SubCover{INT}}`: A vector of sub-cover objects that represent the available covers.
-- `dns::Vector{TF}`: A vector of decision variables or parameters that influence the complexity calculation.
-- `solver::IPSolver`: An object that contains the settings for the integer programming solver, including the maximum number of iterations.
-- `verbose::Bool`: A flag to control the verbosity of the output. If set to true, additional information will be logged.
-
-# Returns
-- A tuple containing:
-  - `picked`: A vector of selected sub-covers based on the optimization process.
-  - `cx`: The final complexity value after the optimization iterations.
-
-# Description
-This function iteratively solves the integer programming problem to find the optimal cover, updating the complexity value until convergence or the maximum number of iterations is reached.
-
-"""
-function cover(sub_covers::AbstractVector{SubCover{INT}}, dns::Vector{TF}, solver::IPSolver) where{INT, TF}
-    verbose = solver.verbose
-    verbose && (@info "IP Solver, sub_covers = $(sub_covers)")
-    max_itr = solver.max_itr
-    cx, n = γ0(sub_covers, dns)
-    verbose && (@info "γ0 = $cx")
-
-    for sub_cover in sub_covers
-        (length(sub_cover.ids) == n) && return [sub_cover], 1.0
-    end
-
-    scs_new = copy(sub_covers)
-    cx_old = cx
-    for i = 1:max_itr
-        xs = IP_setcover(cx, scs_new, n, dns, verbose)
-        verbose && (@info "IP Solver, Iteration $i, xs = $(xs)")
-        picked = pick(xs, sub_covers)
-        verbose && (@info "IP Solver, Iteration $i, picked = $(picked)")
-        verbose && (@info "IP Solver, Iteration $i, dns = $(dns[xs .≈ 1.0])")
-        cx = complexity(dns[xs .≈ 1.0])
-        verbose && (@info "IP Solver, Iteration $i, complexity = $cx")
-        if (i == max_itr) || (cx ≈ cx_old)
-            return picked, cx
-        else
-            cx_old = cx
-        end
-    end
-end
-
-function IP_setcover(γp::TF, sub_covers::AbstractVector{SubCover{INT}}, n::Int, dns::Vector{T}, verbose::Bool) where{INT, TF, T}
-    fixeds = dns
-    γs = 1 ./ γp .^ fixeds
-    nsc = length(sub_covers)
-
-    sets_id = [Vector{Int}() for _=1:n]
-    for i in 1:nsc
-        for j in sub_covers[i].ids
-            push!(sets_id[j], i)
-        end
-    end
-
-    # IP by JuMP
-    model = Model(SCIP.Optimizer)
-    !verbose && set_attribute(model, "display/verblevel", 0)
-    set_attribute(model, "limits/gap", 0.05)
-
-    @variable(model, 0 <= x[i = 1:nsc] <= 1, Int)
-    @objective(model, Min, sum(x[i] * γs[i] for i in 1:nsc))
-    for i in 1:n
-        @constraint(model, sum(x[j] for j in sets_id[i]) >= 1)
-    end
-
-    optimize!(model)
-    @assert is_solved_and_feasible(model)
-
-    selected = [value(x[i]) for i in 1:nsc]
-
-    return selected
 end

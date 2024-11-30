@@ -13,6 +13,6 @@ end
     include("mis.jl")
 end
 
-@testset "pruner" begin
-    include("pruner.jl")
+@testset "table solver" begin
+    include("table_solver.jl")
 end

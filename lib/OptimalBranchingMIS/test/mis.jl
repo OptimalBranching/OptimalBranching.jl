@@ -1,5 +1,5 @@
 using EliminateGraphs, EliminateGraphs.Graphs
-using Test
+using Test, Random
 
 using OptimalBranchingMIS: find_children, unconfined_vertices, is_line_graph, first_twin, twin_filter!, short_funnel_filter!, desk_filter!, effective_vertex, all_three_funnel, all_four_funnel, rho, optimal_four_cycle, optimal_vertex, has_fine_structure, count_o_path, closed_neighbors, is_complete_graph
 
@@ -91,7 +91,7 @@ end
         rem_vertices!(g_copy, closed_neighbors(g, S_a))
         degree(g,a) == 3 && all(degree(g,n) == 3 for n in neighbors(g,a)) && rho(g) - rho(g_copy) >= 20
     end
-
+    Random.seed!(2)
     g = random_regular_graph(1000, 3)
     a, S_a = effective_vertex(g)
     @test is_effective_vertex(g, a, S_a)

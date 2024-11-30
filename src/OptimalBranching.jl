@@ -2,8 +2,8 @@ module OptimalBranching
 
 using Reexport
 @reexport using OptimalBranchingMIS
-using OptimalBranchingMIS.OptimalBranchingCore: OptBranchingStrategy, IPSolver, LPSolver, SolverConfig, branch
+using OptimalBranchingMIS.OptimalBranchingCore: BranchingStrategy, IPSolver, LPSolver, SolverConfig, reduce_and_branch
 
-export OptBranchingStrategy, IPSolver, LPSolver, SolverConfig, branch
+export BranchingStrategy, IPSolver, LPSolver, SolverConfig, reduce_and_branch
 
 end
