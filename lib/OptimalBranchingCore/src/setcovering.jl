@@ -1,24 +1,19 @@
 """
     AbstractSetCoverSolver
 
-An abstract type representing a solver for set covering problems. 
-This serves as a base type for all specific set cover solver implementations.
-
+An abstract type for the strategy of solving the set covering problem.
 """
 abstract type AbstractSetCoverSolver end
 
 """
-    LPSolver
+    LPSolver <: AbstractSetCoverSolver
+    LPSolver(; max_itr::Int = 5, verbose::Bool = false)
 
-A struct representing a linear programming solver for set covering problems.
+A linear programming solver for set covering problems.
 
-# Fields
-- `max_itr::Int`: The maximum number of iterations allowed for the solver.
-
-# Constructors
-- `LPSolver(max_itr::Int)`: Creates a new instance of LPSolver with a specified maximum number of iterations.
-- `LPSolver()`: Creates a new instance of LPSolver with a default maximum of 10 iterations.
-
+### Fields
+- `max_itr::Int`: The maximum number of iterations to be performed.
+- `verbose::Bool`: Whether to print the solver's output.
 """
 Base.@kwdef struct LPSolver <: AbstractSetCoverSolver 
     max_itr::Int = 5
@@ -26,17 +21,14 @@ Base.@kwdef struct LPSolver <: AbstractSetCoverSolver
 end
 
 """
-    IPSolver
+    IPSolver <: AbstractSetCoverSolver
+    IPSolver(; max_itr::Int = 5, verbose::Bool = false)
 
-A struct representing an integer programming solver for set covering problems.
+An integer programming solver for set covering problems.
 
-# Fields
-- `max_itr::Int`: The maximum number of iterations allowed for the solver.
-
-# Constructors
-- `IPSolver(max_itr::Int)`: Creates a new instance of IPSolver with a specified maximum number of iterations.
-- `IPSolver()`: Creates a new instance of IPSolver with a default maximum of 10 iterations.
-
+### Fields
+- `max_itr::Int`: The maximum number of iterations to be performed.
+- `verbose::Bool`: Whether to print the solver's output.
 """
 Base.@kwdef struct IPSolver <: AbstractSetCoverSolver 
     max_itr::Int = 5
@@ -46,31 +38,33 @@ end
 """
     CandidateClause{INT <: Integer}
 
-A candidate clause is a pair of a set of integers `covered_items` and a clause `clause`. The `covered_items` for the truth covered by the clause.
-- `INT`: The number of integers as the storage.
+A candidate clause is a clause containing the formation related to how it can cover the items in the branching table.
+
+### Fields
+- `covered_items::Set{Int}`: The items in the branching table that are covered by the clause.
+- `clause::Clause{INT}`: The clause itself.
 """
 struct CandidateClause{INT <: Integer}
     covered_items::Set{Int}
     clause::Clause{INT}
 end
-
 CandidateClause(covered_items::Vector{Int}, clause::Clause) = CandidateClause(Set(covered_items), clause)
 
 Base.show(io::IO, sc::CandidateClause{INT}) where INT = print(io, "CandidateClause{$INT}: covered_items: $(sort([i for i in sc.covered_items])), clause: $(sc.clause)")
 Base.:(==)(sc1::CandidateClause{INT}, sc2::CandidateClause{INT}) where {INT} = (sc1.covered_items == sc2.covered_items) && (sc1.clause == sc2.clause)
 
 """
-    complexity_bv(branching_vector::Vector{T}) where {T}
+    complexity_bv(branching_vector::Vector)::Float64
 
-Calculates the complexity based on the provided branching vector by solving the equation:
+Calculates the complexity that associated with the provided branching vector by solving the equation:
 ```math
 γ^0 = \\sum_{δρ \\in \\text{branching_vector}} γ^{-δρ}
 ```
 
-# Arguments
-- `branching_vector::Vector{T}`: a vector of problem size reduction.
+### Arguments
+- `branching_vector`: a vector of problem size reductions in the branches.
 
-# Returns
+### Returns
 - `Float64`: The computed γ value.
 """
 function complexity_bv(branching_vector::Vector{T}) where {T}

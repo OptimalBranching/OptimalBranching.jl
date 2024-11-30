@@ -10,7 +10,6 @@ export MISProblem
 export MISCount
 export MISReducer, XiaoReducer
 export MinBoundarySelector
-export EnvFilter
 export TensorNetworkSolver
 export NumOfVertices, D3Measure
 
@@ -26,7 +25,6 @@ include("algorithms/xiao2013_utils.jl")
 include("reducer.jl")
 include("selector.jl")
 include("tablesolver.jl")
-include("pruner.jl")
 include("branch.jl")
 
 end

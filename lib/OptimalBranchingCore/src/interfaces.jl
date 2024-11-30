@@ -1,49 +1,46 @@
 """
     AbstractProblem
 
-An abstract type representing a generic problem in the optimal branching framework. 
-This serves as a base type for all specific problem types that will be implemented.
+The problem type that can be used in the optimal branching framework.
 """
 abstract type AbstractProblem end
 
 """
-    apply_branch(problem::AbstractProblem, ::Clause, vs)
+    apply_branch(problem::AbstractProblem, clause::Clause, vertices::Vector)::Tuple{AbstractProblem, Number}
 
-Applies a clause to a NoProblem instance, returning a NoProblem instance. 
-This function serves as a placeholder for scenarios where no valid problem is present.
+Create a branch from the given clause applied to the specified vertices.
 
-# Arguments
-- `::NoProblem`: An instance of NoProblem, representing the absence of a problem.
-- `::Clause`: A clause that is being applied (not used in this context).
-- `vs`: A vector of variables (not used in this context).
+### Arguments
+- `problem`: The problem instance.
+- `clause`: The clause that containing the information about how to fix the values of the variables.
+- `vertices`: A vector of vertices to be considered for the branch.
 
-# Returns
-- `NoProblem()`: An instance of NoProblem, indicating that no problem exists.
-
+### Returns
+A tuple of two values:
+- `AbstractProblem`: A new instance of `AbstractProblem` with reduced size.
+- `Number`: The local gain of the branch, which will be added to the global gain.
 """
 function apply_branch end
 
-# can not understand.
 """
     AbstractMeasure
 
-An abstract type representing a measure in the context of branching problems. 
-This serves as a base type for all specific measure implementations.
+The base type for the measure of the problem size in terms of computational hardness.
+Some widely used measures include the number of variables, the vertices with connectivity of at least 3, etc.
 """
 abstract type AbstractMeasure end
 
 """
-    measure(::NoProblem, ::AbstractMeasure)
+    measure(problem::AbstractProblem, measure::AbstractMeasure)::Number
 
-Calculates a measure for a NoProblem instance. 
-This function serves as a placeholder for scenarios where no valid problem is present.
+Calculate the size of the problem, reducing which serves as the guiding principle for the branching strategy.
 
-# Arguments
-- `::NoProblem`: An instance of NoProblem, representing the absence of a problem.
-- `::AbstractMeasure`: An abstract measure type, which is not utilized in this context.
+### Arguments
+- `problem`: The problem instance.
+- `measure`: The measure of the problem size.
 
-# Returns
-- `Int`: The measure value, which is always `0` for a NoProblem instance.
+### Returns
+A real number representing the problem size.
 """
 function measure end
 
@@ -56,64 +53,39 @@ This serves as a base type for all specific reducer implementations.
 abstract type AbstractReducer end
 
 """
-    reduce_problem(::Type{R}, p::NoProblem, ::AbstractReducer) where{R}
+    reduce_problem(::Type{R}, problem::AbstractProblem, reducer::AbstractReducer) where R
 
-Reduces a problem represented by a NoProblem instance. 
-This function serves as a placeholder for scenarios where no valid problem is present.
+Reduces the problem size directly, e.g. by graph rewriting. It is a crucial step in the reduce and branch strategy.
 
-# Arguments
-- `::Type{R}`: The type of result expected
-- `p::NoProblem`: An instance of NoProblem, representing the absence of a problem.
-- `::AbstractReducer`: An abstract reducer type, which is not utilized in this context.
+### Arguments
+- `R`: The element type used for computing the size of solution. The should have an additive commutative monoid structure.
+- `problem`: The problem instance.
+- `reducer`: The reducer.
 
-# Returns
-- `NoProblem()`: An instance of NoProblem, indicating that no problem exists.
+### Returns
+A new instance of `AbstractProblem` with reduced size.
 """
 function reduce_problem end
 
 """
     AbstractSelector
 
-An abstract type representing a selector in the context of branching problems. 
-This serves as a base type for all specific selector implementations.
+An abstract type for the strategy of selecting a subset of variables to be branched.
 """
 abstract type AbstractSelector end
 
+# TODO: do we need this? the problem is the selection strategy can be numerous.
 """
-    select(::NoProblem, ::AbstractMeasure, ::NoSelector)
+    select_variables(problem::AbstractProblem, measure::AbstractMeasure, selector::AbstractSelector)::Vector{Int}
 
-Selects a branching strategy for a NoProblem instance. 
-This function serves as a placeholder for scenarios where no valid selection is present.
+Selects a branching strategy for a `AbstractProblem` instance. 
 
-# Arguments
-- `::NoProblem`: An instance of NoProblem, representing the absence of a problem.
-- `::AbstractMeasure`: An abstract measure type, which is not utilized in this context.
-- `::NoSelector`: An instance of NoSelector, representing the absence of a selector.
+### Arguments
+- `problem`: The problem instance.
+- `measure`: The measure of the problem size.
+- `selector`: The variables selection strategy, which is a subtype of [`AbstractSelector`](@ref).
 
-# Returns
-- `nothing`: Indicates that no selection is made due to the absence of a problem.
+### Returns
+A vector of indices of the selected variables.
 """
-function select end
-
-"""
-    AbstractTableSolver
-
-An abstract type representing a solver for table-based problems. 
-This serves as a base type for all specific table solver implementations.
-"""
-abstract type AbstractTableSolver end
-
-"""
-    branching_table
-
-Solves a given problem using a specified table solver.
-
-# Arguments
-- `::NoProblem`: An instance of NoProblem, representing the absence of a problem.
-- `::AbstractTableSolver`: An abstract table solver type, which is not utilized in this context.
-- `vs`: A vector of values associated with the problem-solving process.
-
-# Returns
-- `nothing`: Indicates that no solution is produced due to the absence of a problem.
-"""
-function branching_table end
+function select_variables end

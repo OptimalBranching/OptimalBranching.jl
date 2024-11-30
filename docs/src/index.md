@@ -49,7 +49,6 @@ julia> branching_strategy = BranchingStrategy(TensorNetworkSolver(), IPSolver(),
 BranchingStrategy
     ├── table_solver - TensorNetworkSolver()
     ├── set_cover_solver - IPSolver(10)
-    ├── pruner - EnvFilter()
     ├── selector - MinBoundarySelector(2)
     └── measure - D3Measure()
 
@@ -61,7 +60,6 @@ SolverConfig
 └── branching_strategy - BranchingStrategy
     ├── table_solver - TensorNetworkSolver()
     ├── set_cover_solver - IPSolver(10)
-    ├── pruner - EnvFilter()
     ├── selector - MinBoundarySelector(2)
     └── measure - D3Measure()
  

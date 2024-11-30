@@ -17,9 +17,8 @@ using Test
     
     vs = [1,2,3,4,5,6,7,8]
     measure = D3Measure()
-    table_solver = TensorNetworkSolver()
+    table_solver = TensorNetworkSolver(true)
     set_cover_solver = IPSolver()
-    pruner = EnvFilter()
     edges = [(1, 2), (1, 5), (2, 3), (2, 6), (3, 4), (4, 5), (5, 8), (6, 7), (7, 8)]
     branching_region = SimpleGraph(Graphs.SimpleEdge.(edges))
     graph = tree_like_N3_neighborhood(copy(branching_region))
@@ -30,6 +29,6 @@ using Test
     @test length(tbl.table) == 9
 
     problem = MISProblem(graph)
-    pruned_tbl = OptimalBranchingMIS.OptimalBranchingCore.prune(tbl, pruner, measure, problem, vs)
+    pruned_tbl = OptimalBranchingMIS.prune_by_env(tbl, problem, vs)
     @test length(pruned_tbl.table) == 5
 end

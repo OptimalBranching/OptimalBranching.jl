@@ -10,8 +10,8 @@ using Test
             mis_exact = mis2(EliminateGraph(g))
             p = MISProblem(g)
 
-            for solver in [IPSolver(10, false), LPSolver(10, false)], measure in [D3Measure(), NumOfVertices()], pruner in [EnvFilter(), NoPruner()], reducer in [MISReducer(), XiaoReducer()]
-                bs = BranchingStrategy(TensorNetworkSolver(), solver, pruner, MinBoundarySelector(2), measure)
+            for solver in [IPSolver(10, false), LPSolver(10, false)], measure in [D3Measure(), NumOfVertices()], reducer in [MISReducer(), XiaoReducer()], prune_by_env in [true, false]
+                bs = BranchingStrategy(TensorNetworkSolver(prune_by_env), solver, MinBoundarySelector(2), measure)
 
                 cfg = SolverConfig(reducer, bs, Int)
 

@@ -52,7 +52,9 @@ Base.zero(::Type{MISCount}) = MISCount(0, 1)
 A struct representing a solver for tensor network problems. 
 This struct serves as a specific implementation of the `AbstractTableSolver` type.
 """
-struct TensorNetworkSolver <: AbstractTableSolver end
+struct TensorNetworkSolver <: AbstractTableSolver
+    prune_by_env::Bool
+end
 
 """
     NumOfVertices
