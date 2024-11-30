@@ -165,7 +165,7 @@ end
         g = random_regular_graph(seed, 3)
         eg = EliminateGraph(g)
         mis_size_standard = mis2(eg)
-        mis_size = counting_xiao2013(g).mis_size
+        mis_size = counting_xiao2013(g).size
         @test mis_size_standard == mis_size
     end
 end

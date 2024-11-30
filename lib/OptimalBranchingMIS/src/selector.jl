@@ -17,6 +17,14 @@ function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::Mi
     kneighbor = selector.k
 
     local vs_min
+    # if exists a vertex with degree geq 6, then select it and it 1st-order neighbors.
+    for v in 1:nv(g)
+        if degree(g, v) ≥ 6
+            vs_min =  neighbor_cover(g, v, 1)[1]
+            return vs_min
+        end
+    end
+    
     novs_min = nv(g)
     for v in 1:nv(g)
         vs, ovs = neighbor_cover(g, v, kneighbor)
