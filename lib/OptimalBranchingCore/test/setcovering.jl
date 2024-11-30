@@ -1,6 +1,11 @@
 using OptimalBranchingCore, GenericTensorNetworks
 using Test
 
+@testset "bisect_solve" begin
+    f(x) = x^2 - 2
+    @test OptimalBranchingCore.bisect_solve(f, 1.0, f(1.0), 2.0, f(2.0)) ≈ sqrt(2)
+end
+
 @testset "setcover by JuMP - StaticBitVector type" begin
     tbl = BranchingTable(5, [
         [StaticBitVector([0, 0, 1, 0, 0]), StaticBitVector([0, 1, 0, 0, 0])],

@@ -79,10 +79,11 @@ end
 """
     DNF{INT}
 
-A data structure representing a Disjunctive Normal Form (DNF) expression. A DNF is a logical formula that is a disjunction of one or more conjunctions of literals. 
+A data structure representing a logic expression in Disjunctive Normal Form (DNF), which is a disjunction of one or more conjunctions of literals.
+In OptimalBranchingCore, a DNF is used to represent the branching rule.
 
 # Fields
-- `clauses::Vector{Clause{INT}}`: A vector of `Clause` objects representing the individual clauses in the DNF.
+- `clauses::Vector{Clause{INT}}`: A vector of `Clause` objects.
 """
 struct DNF{INT}
     clauses::Vector{Clause{INT}}

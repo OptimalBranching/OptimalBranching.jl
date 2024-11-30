@@ -115,9 +115,10 @@ Branch the given problem using the specified solver configuration.
 The resulting value, which may have different type depending on the `result_type`.
 """
 function reduce_and_branch(problem::AbstractProblem, config::BranchingStrategy; reducer::AbstractReducer=NoReducer(), result_type=Int)
+    isempty(problem) && return zero(result_type)
     # reduce the problem
     rp, reducedvalue = reduce_problem(result_type, problem, reducer)
-    isempty(rp) && return reducedvalue
+    rp !== problem && return reduce_and_branch(rp, config) + reducedvalue
 
     # branch the problem
     variables = select_variables(rp, config.measure, config.selector)  # select a subset of variables

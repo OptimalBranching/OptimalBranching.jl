@@ -3,7 +3,7 @@ using OptimalBranchingMIS.EliminateGraphs, OptimalBranchingMIS.EliminateGraphs.G
 using Test
 
 @testset "MIS" begin
-    g = random_regular_graph(20, 3)
+    g = random_regular_graph(40, 3)
     p = MISProblem(g)
     bs = BranchingStrategy(; table_solver=TensorNetworkSolver(; prune_by_env=true), set_cover_solver=IPSolver(), selector=MinBoundarySelector(2), measure=D3Measure())
     res = reduce_and_branch(p, bs; reducer=MISReducer(), result_type=Int)

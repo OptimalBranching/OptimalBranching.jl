@@ -1,8 +1,9 @@
 using OptimalBranchingMIS, EliminateGraphs, EliminateGraphs.Graphs
 using OptimalBranchingCore
-using Test
+using Test, Random
 
 @testset "mis" begin
+    Random.seed!(1234)
     for n in [40]
         for d in [3,4]
             g = random_regular_graph(n, d)

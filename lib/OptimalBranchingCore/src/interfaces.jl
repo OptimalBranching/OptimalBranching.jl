@@ -77,7 +77,7 @@ An abstract type for the strategy of selecting a subset of variables to be branc
 """
 abstract type AbstractSelector end
 
-# TODO: do we need this? the problem is the selection strategy can be numerous.
+# TODO: do we need this? or do we use function instead? since the problem is the selection strategy can be numerous.
 """
     select_variables(problem::AbstractProblem, measure::AbstractMeasure, selector::AbstractSelector)::Vector{Int}
 
@@ -111,6 +111,6 @@ Obtains the branching table for a given problem using a specified table solver.
 - `variables`: A vector of indices of the variables to be considered for the branching table.
 
 ### Returns
-A branching table, which is a subtype of [`AbstractBranchingTable`](@ref).
+A branching table, which is a [`BranchingTable`](@ref) object.
 """
 function branching_table end

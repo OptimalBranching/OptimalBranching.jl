@@ -68,9 +68,27 @@ Calculates the complexity that associated with the provided branching vector by 
 - `Float64`: The computed γ value.
 """
 function complexity_bv(branching_vector::Vector{T}) where {T}
+    # NOTE: for different measure, the size reduction may not always be positive
+    if any(x -> x <= 0, branching_vector)
+        return Inf
+    end
     f = x -> sum(x[1]^(-i) for i in branching_vector) - 1.0
-    sol = nlsolve(f, [1.0])
-    return sol.zero[1]
+    return bisect_solve(f, 1.0, f(1.0), 2.0, f(2.0))
+end
+function bisect_solve(f, a, fa, b, fb)
+    @assert fa * fb <= 0 "f(a) and f(b) have the same sign"
+    while b - a > eps(b)
+        c = (a + b) / 2
+        fc = f(c)
+        if fc == 0
+            return c
+        elseif fa * fc < 0
+            b = c
+        else
+            a = c
+        end
+    end
+    return (a + b) / 2
 end
 
 """
@@ -89,9 +107,7 @@ It utilizes an integer programming solver to optimize the selection of sub-cover
 - `γ0::Float64`: The initial γ value.
 
 ### Returns
-A tuple containing:
-- A vector of selected clauses.
-- The minimum ``γ`` value.
+A tuple of two elements: (indices of selected clauses, γ)
 """
 function minimize_γ(num_items::Int, candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}, solver::AbstractSetCoverSolver; γ0::Float64 = 2.0) where{INT, TF}
     @debug "solver = $(solver), sets = $(candidate_clauses), γ0 = $γ0"
@@ -105,10 +121,9 @@ function minimize_γ(num_items::Int, candidate_clauses::AbstractVector{Candidate
     local picked_scs
     for i = 1:solver.max_itr
         weights = 1 ./ cx_old .^ Δρ
-        xs = weighted_minimum_set_cover(solver, weights, candidate_clauses, num_items)
-        picked_scs = pick_sets(xs, candidate_clauses, num_items)
+        picked_scs = weighted_minimum_set_cover(solver, weights, candidate_clauses, num_items)
         cx = complexity_bv(Δρ[picked_scs])
-        @debug "Iteration $i, xs = $(xs), picked = $(candidate_clauses[picked_scs]), branching_vector = $(Δρ[picked_scs]), γ = $cx"
+        @debug "Iteration $i, picked indices = $(picked_scs), clauses = $(candidate_clauses[picked_scs]), branching_vector = $(Δρ[picked_scs]), γ = $cx"
         cx ≈ cx_old && break  # convergence
         cx_old = cx
     end
@@ -125,6 +140,9 @@ Solves the weighted minimum set cover problem.
 - `weights::AbstractVector`: The weights of the candidate clauses.
 - `candidate_clauses::AbstractVector{CandidateClause{INT}}`: A vector of CandidateClause structures.
 - `num_items::Int`: The number of elements to cover.
+
+### Returns
+A vector of indices of selected clauses.
 """
 function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT}
     nsc = length(candidate_clauses)
@@ -147,8 +165,7 @@ function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, c
 
     optimize!(model)
     @assert is_solved_and_feasible(model)
-
-    return [value(x[i]) for i in 1:nsc]
+    return pick_sets(value.(x), candidate_clauses, num_items)
 end
 
 function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT}
@@ -174,10 +191,7 @@ function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, c
 
     optimize!(model)
     @assert is_solved_and_feasible(model)
-
-    selected = [value(x[i]) for i in 1:nsc]
-
-    return selected
+    return pick_sets(value.(x), candidate_clauses, num_items)
 end
 
 # by viewing xs as the probability of being selected, we can use a random algorithm to pick the sets

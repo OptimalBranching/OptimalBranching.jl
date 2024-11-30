@@ -1,6 +1,6 @@
 module OptimalBranchingCore
 
-using NLsolve, JuMP, HiGHS, SCIP
+using JuMP, HiGHS, SCIP
 using AbstractTrees
 using BitBasis
 
