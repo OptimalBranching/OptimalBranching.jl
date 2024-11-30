@@ -44,25 +44,3 @@ Base.copy(t::BranchingTable) = BranchingTable(t.bit_length, copy(t.table))
 function covered_by(t::BranchingTable, dnf::DNF)
     all(x->any(y->covered_by(y, dnf), x), t.table)
 end
-
-"""
-    AbstractTableSolver
-
-An abstract type for the strategy of obtaining the branching table.
-"""
-abstract type AbstractTableSolver end
-
-"""
-    branching_table(problem::AbstractProblem, table_solver::AbstractTableSolver, variables::Vector{Int})
-
-Obtains the branching table for a given problem using a specified table solver.
-
-### Arguments
-- `problem`: The problem instance.
-- `table_solver`: The table solver, which is a subtype of [`AbstractTableSolver`](@ref).
-- `variables`: A vector of indices of the variables to be considered for the branching table.
-
-### Returns
-A branching table, which is a subtype of [`AbstractBranchingTable`](@ref).
-"""
-function branching_table end

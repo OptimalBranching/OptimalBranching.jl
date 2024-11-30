@@ -39,9 +39,7 @@ function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, ::MISRedu
     else
         degrees = degree(g)
         degmin = minimum(degrees)
-        degmax = maximum(degrees)
         vmin = findfirst(==(degmin), degrees)
-        vmax = findfirst(==(degmax), degrees)
 
         if degmin == 0
             all_zero_vertices = findall(==(0), degrees)
@@ -51,13 +49,9 @@ function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, ::MISRedu
         elseif degmin == 2
             g_new, n = folding(g, vmin)
             return MISProblem(g_new), R(n)
-        elseif degmax ≥ 6   # Q: No, This is branching!!!!!!!!!
-            error("!!!")
-            return (MISProblem(remove_vertices(g, closed_neighbors(g, [vmax]))), 1), (MISProblem(remove_vertices(g, [vmax])), 0)
         end
     end
-
-    return p, 0
+    return p, R(0)
 end
 
 struct XiaoReducer <: AbstractReducer end
@@ -74,9 +68,7 @@ function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, ::XiaoRed
     else
         degrees = degree(g)
         degmin = minimum(degrees)
-        degmax = maximum(degrees)
         vmin = findfirst(==(degmin), degrees)
-        vmax = findfirst(==(degmax), degrees)
 
         if degmin == 0
             all_zero_vertices = findall(==(0), degrees)
@@ -99,7 +91,6 @@ function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, ::XiaoRed
         twin_filter!(g) && return MISProblem(g), R(2)
         short_funnel_filter!(g) && return MISProblem(g), R(1)
         desk_filter!(g) && return MISProblem(g), R(2)
-
     end
 
     return p, R(0)

@@ -48,12 +48,13 @@ Base.zero(::Type{MISCount}) = MISCount(0, 1)
 
 """
     TensorNetworkSolver
+    TensorNetworkSolver(; prune_by_env::Bool = true)
 
 A struct representing a solver for tensor network problems. 
 This struct serves as a specific implementation of the `AbstractTableSolver` type.
 """
-struct TensorNetworkSolver <: AbstractTableSolver
-    prune_by_env::Bool
+@kwdef struct TensorNetworkSolver <: AbstractTableSolver
+    prune_by_env::Bool = true
 end
 
 """

@@ -13,10 +13,10 @@ Generate an optimal branching rule from a given branching table.
 ### Returns
 A [`DNF`](@ref) object representing the optimal branching rule.
 """
-function optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, measure::AbstractMeasure, solver::AbstractSetCoverSolver)
+function optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, m::AbstractMeasure, solver::AbstractSetCoverSolver)
     candidates = candidate_clauses(table)
-    Δρ = branching_vector(problem, variables, candidates, measure)
-    selection, _ = minimize_γ(length(table.table), candidates, Δρ, solver)
+    size_reductions = [measure(problem, m) - measure(first(apply_branch(problem, candidate.clause, variables)), m) for candidate in candidates]
+    selection, _ = minimize_γ(length(table.table), candidates, size_reductions, solver; γ0=2.0)
     return DNF(map(i->candidates[i].clause, selection))
 end
 
@@ -58,77 +58,72 @@ function candidate_clauses(tbl::BranchingTable{INT}) where {INT}
     allcovers = [CandidateClause(covered_items(bss, c), c) for c in all_clauses]
     return allcovers
 end
+# Returns the indices of the bit strings that are covered by the clause.
+function covered_items(bitstrings, clause::Clause)
+    return findall(bs -> any(x->covered_by(x, clause), bs), bitstrings)
+end
+# merge two clauses, i.e. generate a new clause covering both
+function gather2(n::Int, c1::Clause{INT}, c2::Clause{INT}) where INT
+    b1 = c1.val & c1.mask
+    b2 = c2.val & c2.mask
+    mask = (b1 ⊻ flip_all(n, b2)) & c1.mask & c2.mask
+    val = b1 & mask
+    return Clause(mask, val)
+end
 
 """
     BranchingStrategy
-
-A struct representing an optimal branching strategy that utilizes various components for solving optimization problems.
-
-# Fields
-- `table_solver::TS`: An instance of a table solver, which is responsible for solving the underlying table representation of the problem.
-- `set_cover_solver::SCS`: An instance of a set cover solver, which is used to solve the set covering problem.
-- `selector::SL`: An instance of a selector, which is responsible for selecting the next branching variable or decision.
-- `measure::M`: An instance of a measure, which is used to evaluate the performance of the branching strategy.
-
-"""
-struct BranchingStrategy{TS<:AbstractTableSolver, SCS<:AbstractSetCoverSolver, SL<:AbstractSelector, M<:AbstractMeasure}
-    table_solver::TS
-    set_cover_solver::SCS
-    selector::SL
-    measure::M
-end
-Base.show(io::IO, strategy::BranchingStrategy) = print(io, 
-"""
-BranchingStrategy
-    ├── table_solver - $(strategy.table_solver)
-    ├── set_cover_solver - $(strategy.set_cover_solver)
-    ├── selector - $(strategy.selector)
-    └── measure - $(strategy.measure)
-""")
-
-"""
-    SolverConfig
+    BranchingStrategy(; kwargs...)
 
 A struct representing the configuration for a solver, including the reducer and branching strategy.
 
-# Fields
-- `reducer::R`: An instance of a reducer, which is responsible for reducing the problem size.
-- `branching_strategy::BranchingStrategy`: An instance of a branching strategy, which guides the search process.
-- `result_type::Type{TR}`: The type of the result that the solver will produce.
-
+### Fields
+- `table_solver::AbstractTableSolver`: The solver to resolve the relevant bit strings and generate a branching table.
+- `set_cover_solver::AbstractSetCoverSolver = IPSolver()`: The solver to solve the set covering problem.
+- `selector::AbstractSelector`: The selector to select the next branching variable or decision.
+- `m::AbstractMeasure`: The measure to evaluate the performance of the branching strategy.
 """
-struct SolverConfig{R<:AbstractReducer, B<:BranchingStrategy, TR}
-    reducer::R
-    branching_strategy::B
-    result_type::Type{TR}
+@kwdef struct BranchingStrategy{TS<:AbstractTableSolver, SCS<:AbstractSetCoverSolver, SL<:AbstractSelector, M<:AbstractMeasure}
+    set_cover_solver::SCS = IPSolver()
+    table_solver::TS
+    selector::SL
+    measure::M
 end
-Base.show(io::IO, config::SolverConfig) = print(io, 
+Base.show(io::IO, config::BranchingStrategy) = print(io, 
 """
-SolverConfig
-├── reducer - $(config.reducer) 
-├── result_type - $(config.result_type)
-└── branching_strategy - $(config.branching_strategy) 
+BranchingStrategy
+├── table_solver - $(config.table_solver)
+├── set_cover_solver - $(config.set_cover_solver)
+├── selector - $(config.selector)
+└── measure - $(config.measure)
 """)
 
 """
-    Branch the given problem using the specified solver configuration.
+    reduce_and_branch(problem::AbstractProblem, config::BranchingStrategy; reducer::AbstractReducer=NoReducer(), result_type=Int)
 
-    # Arguments
-    - `p::P`: The problem instance to branch.
-    - `config::SolverConfig`: The configuration for the solver.
+Branch the given problem using the specified solver configuration.
 
-    # Returns
-    The maximum result obtained from the branches.
+### Arguments
+- `problem`: The problem instance to solve.
+- `config`: The configuration for the solver, which is a [`BranchingStrategy`](@ref) instance.
+
+### Keyword Arguments
+- `reducer::AbstractReducer=NoReducer()`: The reducer to reduce the problem size.
+- `result_type::Type{TR}`: The type of the result that the solver will produce.
+
+### Returns
+The resulting value, which may have different type depending on the `result_type`.
 """
-function reduce_and_branch(p::AbstractProblem, config::SolverConfig)
-    rp, reducedvalue = reduce_problem(config.result_type, p, config.reducer)
+function reduce_and_branch(problem::AbstractProblem, config::BranchingStrategy; reducer::AbstractReducer=NoReducer(), result_type=Int)
+    # reduce the problem
+    rp, reducedvalue = reduce_problem(result_type, problem, reducer)
     isempty(rp) && return reducedvalue
 
-    strategy = config.branching_strategy
-    variables = select_variables(rp, strategy.measure, strategy.selector)  # select a subset of variables
-    tbl = branching_table(rp, strategy.table_solver, variables)      # compute the BranchingTable
-    rule = optimal_branching_rule(tbl, variables, rp, strategy.measure, strategy.set_cover_solver)
-    return maximum(rule.clauses) do branch
+    # branch the problem
+    variables = select_variables(rp, config.measure, config.selector)  # select a subset of variables
+    tbl = branching_table(rp, config.table_solver, variables)      # compute the BranchingTable
+    rule = optimal_branching_rule(tbl, variables, rp, config.measure, config.set_cover_solver)  # compute the optimal branching rule
+    return maximum(rule.clauses) do branch  # branch and recurse
         subproblem, localvalue = apply_branch(rp, branch, variables)
         reduce_and_branch(subproblem, config) + localvalue + reducedvalue
     end

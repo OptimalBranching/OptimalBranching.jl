@@ -73,31 +73,6 @@ function complexity_bv(branching_vector::Vector{T}) where {T}
     return sol.zero[1]
 end
 
-# the γ generated from naive branching
-function γ0(num_items::Int, candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}) where{INT, TF}
-    max_dict = Dict([i => 0 for i in 1:num_items])
-    for (i, clause) in enumerate(candidate_clauses)
-        length(clause.covered_items) == 1 || continue  # ??? What about having two sets
-        id = first(clause.covered_items)
-        max_dict[id] = max(max_dict[id], Δρ[i])
-    end
-    max_rvs = [max_dict[i] for i in 1:num_items]
-    return complexity_bv(max_rvs)
-end
-
-"""
-    branching_vector(p::AbstractProblem, m::AbstractMeasure, variables::Vector{T}) where T
-
-Generate the branching vector give a target problem and measure.
-
-- `p::AbstractProblem`: An instance of a problem that needs to be solved.
-- `variables::Vector{T}`: A subset of variables used for branching.
-- `m::AbstractMeasure`: An instance of a measure associated with the problem.
-"""
-function branching_vector(p::AbstractProblem, variables::Vector{T}, clauses::AbstractVector, m::AbstractMeasure) where T
-    return [measure(p, m) - measure(first(apply_branch(p, candidate.clause, variables)), m) for candidate in clauses]
-end
-
 """
     minimize_γ(candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}, solver) where{INT, TF}
 
@@ -105,28 +80,30 @@ Finds the optimal cover based on the provided vector of problem size reduction.
 This function implements a cover selection algorithm using an iterative process.
 It utilizes an integer programming solver to optimize the selection of sub-covers based on their complexity.
 
-# Arguments
+### Arguments
 - `candidate_clauses::AbstractVector{CandidateClause{INT}}`: A vector of CandidateClause structures.
 - `Δρ::Vector{TF}`: A vector of problem size reduction for each CandidateClause.
 - `solver`: The solver to be used. It can be an instance of `LPSolver` or `IPSolver`.
 
-# Returns
+### Keyword Arguments
+- `γ0::Float64`: The initial γ value.
+
+### Returns
 A tuple containing:
 - A vector of selected clauses.
 - The minimum ``γ`` value.
 """
-function minimize_γ(num_items::Int, candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}, solver::AbstractSetCoverSolver) where{INT, TF}
-    max_itr = solver.max_itr
-    cx = γ0(num_items, candidate_clauses, Δρ)
-    @debug "solver = $(solver), sets = $(candidate_clauses), γ0 = $(cx)"
+function minimize_γ(num_items::Int, candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}, solver::AbstractSetCoverSolver; γ0::Float64 = 2.0) where{INT, TF}
+    @debug "solver = $(solver), sets = $(candidate_clauses), γ0 = $γ0"
 
-    for (k, clause) in enumerate(candidate_clauses)  # check if there is a CandidateClause that covers all elements
+    # Note: the following instance is captured for time saving, and also for it may cause IP solver to fail
+    for (k, clause) in enumerate(candidate_clauses)
         (length(clause.covered_items) == num_items) && return [k], 1.0
     end
 
-    cx_old = cx
+    cx_old = cx = γ0
     local picked_scs
-    for i = 1:max_itr
+    for i = 1:solver.max_itr
         weights = 1 ./ cx_old .^ Δρ
         xs = weighted_minimum_set_cover(solver, weights, candidate_clauses, num_items)
         picked_scs = pick_sets(xs, candidate_clauses, num_items)
@@ -143,7 +120,7 @@ end
 
 Solves the weighted minimum set cover problem.
 
-# Arguments
+### Arguments
 - `solver`: The solver to be used. It can be an instance of `LPSolver` or `IPSolver`.
 - `weights::AbstractVector`: The weights of the candidate clauses.
 - `candidate_clauses::AbstractVector{CandidateClause{INT}}`: A vector of CandidateClause structures.

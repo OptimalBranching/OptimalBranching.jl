@@ -55,52 +55,25 @@ function BitBasis.bdistance(c::Clause{INT}, b::INT) where INT <: Integer
     return bdistance(b1, c1)
 end
 
-"""
-    covered_by(a::LongLongUInt, b::LongLongUInt, mask::LongLongUInt)
-
-Check if `a` is covered by `b` with `mask`. The function returns `true` if and only if `a` and `b` are the same when masked by `mask`.
-"""
-function covered_by(a, b, mask)
-    return (a & mask) == (b & mask)
-end
-
-"""
-    covered_by(a::LongLongUInt, clause::Clause)
-
-Check if `a` is covered by the clause. The function returns `true` if and only if `a` and `clause.val` are the same when masked by `clause.mask`.
-"""
-covered_by(a, clause::Clause) = covered_by(a, clause.val, clause.mask)
-
-function covered_by(as::AbstractArray, clause::Clause)
-    return [covered_by(a, clause) for a in as]
-end
-
-# Returns the indices of the bit strings that are covered by the clause.
-function covered_items(bitstrings, clause::Clause)
-    return findall(b -> any(covered_by(b, clause)), bitstrings)
-end
-
 # Flip all bits in `b`, `n` is the number of bits
 function flip_all(n::Int, b::INT) where INT <: Integer
     return flip(b, bmask(INT, 1:n))
 end
 
-# Return a clause that covers all the bit strings.
-function cover_clause(n::Int, bitstrings::AbstractVector{INT}) where INT
-    mask = bmask(INT, 1:n)
-    for i in 1:length(bitstrings) - 1
-        mask &= bitstrings[i] ⊻ flip_all(n, bitstrings[i+1])
-    end
-    val = bitstrings[1] & mask
-    return Clause(mask, val)
-end
+"""
+    covered_by(a::Integer, clause_or_dnf)
 
-function gather2(n::Int, c1::Clause{INT}, c2::Clause{INT}) where INT
-    b1 = c1.val & c1.mask
-    b2 = c2.val & c2.mask
-    mask = (b1 ⊻ flip_all(n, b2)) & c1.mask & c2.mask
-    val = b1 & mask
-    return Clause(mask, val)
+Check if `a` is covered by the logic expression `clause_or_dnf`.
+
+### Arguments
+- `a`: A bit string.
+- `clause_or_dnf`: Logic expression, which can be a [`Clause`](@ref) object or a [`DNF`](@ref) object.
+
+### Returns
+`true` if `a` satisfies `clause_or_dnf`, `false` otherwise.
+"""
+function covered_by(a::Integer, clause::Clause)
+    return (a & clause.mask) == (clause.val & clause.mask)
 end
 
 """

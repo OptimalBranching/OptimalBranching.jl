@@ -8,7 +8,7 @@ using Test
             masks = [ids...]
             cbs = [bss[i][masks[i]] for i in 1:length(bss) if masks[i] != 0]
             if length(cbs) > 0
-                ccbs = OptimalBranchingCore.cover_clause(n::Int, cbs)
+                ccbs = cover_clause(n, cbs)
                 if !(ccbs in allclauses) && (ccbs.mask != 0)
                     push!(allclauses, ccbs)
                 end
@@ -25,6 +25,16 @@ using Test
             push!(allcovers, CandidateClause(ids, c))
         end
         return allcovers
+    end
+
+    # Return a clause that covers all the bit strings.
+    function cover_clause(n::Int, bitstrings::AbstractVector{INT}) where INT
+        mask = OptimalBranchingCore.bmask(INT, 1:n)
+        for i in 1:length(bitstrings) - 1
+            mask &= bitstrings[i] ⊻ OptimalBranchingCore.flip_all(n, bitstrings[i+1])
+        end
+        val = bitstrings[1] & mask
+        return Clause(mask, val)
     end
 
     tbl = BranchingTable(5, [

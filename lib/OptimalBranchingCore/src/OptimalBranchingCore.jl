@@ -6,7 +6,6 @@ using BitBasis
 
 export complexity_bv
 export Clause, BranchingTable, CandidateClause, DNF, Branch
-export SolverConfig
 export BranchingStrategy
 export AbstractProblem, AbstractMeasure, AbstractReducer, AbstractSelector, AbstractTableSolver, AbstractSetCoverSolver
 export LPSolver, IPSolver
