@@ -1,17 +1,27 @@
 module OptimalBranchingCore
 
 using JuMP, HiGHS, SCIP
-using AbstractTrees
 using BitBasis
 
-export complexity_bv
-export Clause, BranchingTable, CandidateClause, DNF, Branch
-export BranchingStrategy
-export AbstractProblem, AbstractMeasure, AbstractReducer, AbstractSelector, AbstractTableSolver, AbstractSetCoverSolver
-export LPSolver, IPSolver
+# highest level API
+export BranchingStrategy, reduce_and_branch, optimal_branching_rule
 
-export apply_branch, measure, reduce_problem, select, branching_table, weighted_minimum_set_cover
-export reduce_and_branch, optimal_branching_rule
+# problem and complexity measure
+export AbstractProblem
+export measure, AbstractMeasure
+
+# reduce problem
+export AbstractReducer, reduce_problem
+
+# select variables
+export AbstractSelector, select_variables
+
+# solve the relevant configurations
+export AbstractTableSolver, branching_table
+
+# logic expression and set covering solver
+export booleans, Clause, BranchingTable, DNF, ¬, ∨, ∧
+export AbstractSetCoverSolver, LPSolver, IPSolver, weighted_minimum_set_cover
 
 include("bitbasis.jl")
 include("interfaces.jl")

@@ -35,6 +35,11 @@ end
 function Base.show(io::IO, c::Clause{INT}) where INT
     print(io, "$(typeof(c)): " * join([iszero(readbit(c.val, i)) ? "¬#$i" : "#$i" for i = 1:bsizeof(INT) if readbit(c.mask, i) == 1], " ∧ "))
 end
+"""
+    booleans(n::Int)
+
+Create `n` boolean variables.
+"""
 function booleans(n::Int)
     C = (n + 63) ÷ 64
     INT = LongLongUInt{C}
