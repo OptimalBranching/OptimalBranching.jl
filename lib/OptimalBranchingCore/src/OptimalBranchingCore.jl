@@ -9,6 +9,7 @@ export Clause, BranchingTable, CandidateClause, DNF, Branch
 export BranchingStrategy
 export AbstractProblem, AbstractMeasure, AbstractReducer, AbstractSelector, AbstractTableSolver, AbstractSetCoverSolver
 export LPSolver, IPSolver
+export NoReducer
 
 export MaxSize, MaxSizeBranchCount
 

@@ -15,7 +15,7 @@ A [`DNF`](@ref) object representing the optimal branching rule.
 """
 function optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, m::AbstractMeasure, solver::AbstractSetCoverSolver)
     candidates = candidate_clauses(table)
-    size_reductions = [measure(problem, m) - measure(apply_branch(problem, candidate.clause, variables), m) for candidate in candidates]
+    size_reductions = [measure(problem, m) - measure(first(apply_branch(problem, candidate.clause, variables)), m) for candidate in candidates]
     selection, _ = minimize_γ(length(table.table), candidates, size_reductions, solver; γ0=2.0)
     return DNF(map(i->candidates[i].clause, selection))
 end
@@ -114,18 +114,18 @@ Branch the given problem using the specified solver configuration.
 ### Returns
 The resulting value, which may have different type depending on the `result_type`.
 """
-function reduce_and_branch(problem::AbstractProblem, config::BranchingStrategy; reducer::AbstractReducer=NoReducer(), result_type=MaxSize)
+function reduce_and_branch(problem::AbstractProblem, config::BranchingStrategy, reducer::AbstractReducer, result_type)
     isempty(problem) && return zero(result_type)
     # reduce the problem
     rp, reducedvalue = reduce_problem(result_type, problem, reducer)
-    rp !== problem && return reduce_and_branch(rp, config, reducer = reducer, result_type = result_type) * reducedvalue
+    rp !== problem && return reduce_and_branch(rp, config, reducer, result_type) * reducedvalue
 
     # branch the problem
     variables = select_variables(rp, config.measure, config.selector)  # select a subset of variables
     tbl = branching_table(rp, config.table_solver, variables)      # compute the BranchingTable
     rule = optimal_branching_rule(tbl, variables, rp, config.measure, config.set_cover_solver)  # compute the optimal branching rule
     return sum(rule.clauses) do branch  # branch and recurse
-        subproblem, localvalue = apply_branch_gain(result_type, rp, branch, variables)
-        reduce_and_branch(subproblem, config, reducer = reducer, result_type = result_type) * localvalue * reducedvalue
+        subproblem, localvalue = apply_branch(rp, branch, variables)
+        reduce_and_branch(subproblem, config, reducer, result_type) * result_type(localvalue) * reducedvalue
     end
 end

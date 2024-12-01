@@ -21,13 +21,6 @@ Create a branch from the given clause applied to the specified vertices.
 function apply_branch end
 
 """
-    apply_branch_gain(::Type{Result}, problem::AbstractProblem, clause::Clause, vertices::Vector)::Tuple{AbstractProblem, Result}
-
-Calculate the local gain of the branch.
-"""
-function apply_branch_gain end
-
-"""
     AbstractMeasure
 
 The base type for the measure of the problem size in terms of computational hardness.
