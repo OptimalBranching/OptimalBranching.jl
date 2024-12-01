@@ -3,7 +3,7 @@ using OptimalBranchingCore: booleans, covered_by, ¬, ∧
 using BitBasis
 using Test
 
-@testset "clause and cover" begin
+@testset "clause and dnf" begin
     c1 = Clause(bit"1110", bit"0000")
     c2 = Clause(bit"1110", bit"0001")
     c3 = Clause(bit"1110", bit"0010")
@@ -11,6 +11,17 @@ using Test
     @test c1 == c2
     @test c1 !== c3
     @test c1 !== c4
+
+    dnf_1 = DNF(c1, c2, c3)
+    dnf_2 = DNF(c1, c2, c4)
+    dnf_3 = DNF(c1, c3, c2)
+    @test !(dnf_1 == dnf_2)
+    @test dnf_1 == dnf_3
+    @test length(dnf_1) == 3
+
+    cstr = bit"0011"
+    @test bdistance(c2, c3) == 1
+    @test bdistance(c2, cstr) == 1
 end
 
 @testset "gather2" begin

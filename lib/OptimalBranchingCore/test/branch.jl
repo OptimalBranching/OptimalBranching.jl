@@ -1,4 +1,4 @@
-using OptimalBranchingCore, GenericTensorNetworks
+using OptimalBranchingCore, GenericTensorNetworks, NLsolve
 using Test
 
 @testset "constructing candidate_clauses" begin
@@ -48,4 +48,10 @@ using Test
     for sc in scs
         @test sc in scs_naive
     end
+end
+
+@testset "complexity" begin
+    bv = rand(1:10, 5)
+    f = x -> sum(x[1]^(-i) for i in bv) - 1.0
+    @test OptimalBranchingCore.complexity_bv(bv) ≈ nlsolve(f, [1.0]).zero[1]
 end

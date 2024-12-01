@@ -1,8 +1,16 @@
 using OptimalBranchingCore
 using Test, Documenter
 
+@testset "algebra" begin
+    include("algebra.jl")
+end
+
 @testset "bit basis" begin
     include("bitbasis.jl")
+end
+
+@testset "branching_table" begin
+    include("branching_table.jl")
 end
 
 @testset "branch" begin
