@@ -2,7 +2,7 @@ using OptimalBranchingMIS, EliminateGraphs, EliminateGraphs.Graphs
 using OptimalBranchingCore
 using Test, Random
 
-@testset "mis" begin
+@testset "reduce_and_branch" begin
     Random.seed!(1234)
     for n in [40]
         for d in [3,4]
