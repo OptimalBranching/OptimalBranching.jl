@@ -22,6 +22,9 @@ using Test
     cstr = bit"0011"
     @test bdistance(c2, c3) == 1
     @test bdistance(c2, cstr) == 1
+
+    viz_dnf(dnf_1, [1, 2, 3, 4])
+    viz_dnf(dnf_1, ['i', 'j', 'k', 'l'])
 end
 
 @testset "gather2" begin
