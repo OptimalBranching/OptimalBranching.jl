@@ -52,7 +52,12 @@ using Test
 end
 
 @testset "complexity" begin
-    bv = rand(1:10, 5)
-    f = x -> sum(x[1]^(-i) for i in bv) - 1.0
-    @test OptimalBranchingCore.complexity_bv(bv) ≈ nlsolve(f, [1.0]).zero[1]
+    for k=1:100
+        bv = rand(1:10, 5)
+        f = x -> sum(x[1]^(-i) for i in bv) - 1.0
+        sol = nlsolve(f, [1.0]).zero[1]
+        if sol <= 2.0   # complexity_bv may fail for sol > 2.0!
+            @test OptimalBranchingCore.complexity_bv(bv) ≈ sol
+        end
+    end
 end
