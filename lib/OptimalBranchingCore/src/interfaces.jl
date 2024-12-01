@@ -6,7 +6,7 @@ The problem type that can be used in the optimal branching framework.
 abstract type AbstractProblem end
 
 """
-    apply_branch(problem::AbstractProblem, clause::Clause, vertices::Vector)::Tuple{AbstractProblem}
+    apply_branch(problem::AbstractProblem, clause::Clause, vertices::Vector)::Tuple
 
 Create a branch from the given clause applied to the specified vertices.
 
