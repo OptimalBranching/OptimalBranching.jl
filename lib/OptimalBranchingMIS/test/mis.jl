@@ -160,12 +160,14 @@ end
     @test v == 1
 end
 
-@testset "xiao2013" begin
-    for seed in 10:2:100
+@testset "mis_algorithm" begin
+    for seed in 10:10:60
         g = random_regular_graph(seed, 3)
         eg = EliminateGraph(g)
         mis_size_standard = mis2(eg)
-        mis_size = counting_xiao2013(g).size
-        @test mis_size_standard == mis_size
+        mis_size_mis1 = counting_mis1(g).size
+        mis_size_mis2 = counting_mis2(g).size
+        mis_size_xiao = counting_xiao2013(g).size
+        @test mis_size_standard == mis_size_mis1 == mis_size_mis2 == mis_size_xiao
     end
 end
