@@ -96,21 +96,3 @@ Base.length(x::DNF) = length(x.clauses)
 function covered_by(s::Integer, dnf::DNF)
     any(c->covered_by(s, c), dnf.clauses)
 end
-
-function viz_dnf(dnf::DNF, vs::AbstractVector)
-    println("DNF:")
-    for c in dnf.clauses
-        println(clause_string(c, vs))
-    end
-end
-
-function clause_string(clause::Clause{INT}, vs::Vector{T}) where {INT, T}
-    cs_vec = String[]
-    for i in 1:length(vs)
-        if (clause.mask >> (i-1)) & 1 == 1
-            t_flag = (clause.val >> (i-1)) & 1 == 1
-            push!(cs_vec, t_flag ? "$(vs[i])" : "¬$(vs[i])")
-        end
-    end
-    return join(cs_vec, " ∧ ")
-end

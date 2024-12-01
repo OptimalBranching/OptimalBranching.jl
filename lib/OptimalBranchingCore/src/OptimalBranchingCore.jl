@@ -13,7 +13,7 @@ export NoReducer
 export MaxSize, MaxSizeBranchCount
 
 export apply_branch, measure, reduce_problem, select, branching_table, weighted_minimum_set_cover
-export reduce_and_branch, optimal_branching_rule, viz_dnf
+export reduce_and_branch, optimal_branching_rule
 
 include("algebra.jl")
 include("bitbasis.jl")
