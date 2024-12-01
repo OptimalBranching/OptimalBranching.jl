@@ -1,7 +1,6 @@
 module OptimalBranchingCore
 
 using JuMP, HiGHS, SCIP
-using AbstractTrees
 using BitBasis
 
 export complexity_bv
