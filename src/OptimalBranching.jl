@@ -10,6 +10,5 @@ export NoReducer
 export MaxSize, MaxSizeBranchCount
 
 export reduce_and_branch
-export viz_dnf
 
 end
