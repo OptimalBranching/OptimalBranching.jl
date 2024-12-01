@@ -12,6 +12,21 @@ using Test
     @test c1 !== c3
     @test c1 !== c4
 
+    # literals
+    lts1 = literals(c1)
+    @test length(lts1) == 3 && is_true_literal.(lts1) == [false, false, false]
+    @test length(lts1) == 3 && is_false_literal.(lts1) == [true, true, true]
+    lts2 = literals(c2)
+    @test length(lts2) == 3 && is_true_literal.(lts2) == [false, false, false]
+    @test length(lts2) == 3 && is_false_literal.(lts2) == [true, true, true]
+    lts3 = literals(c3)
+    @test length(lts3) == 3 && is_true_literal.(lts3) == [true, false, false]
+    @test length(lts3) == 3 && is_false_literal.(lts3) == [false, true, true]
+    lts4 = literals(c4)
+    @test length(lts4) == 2 && is_true_literal.(lts4) == [false, false]
+    @test length(lts4) == 2 && is_false_literal.(lts4) == [true, true]
+    @test !is_true_literal(c1) && !is_false_literal(c1)
+
     dnf_1 = DNF(c1, c2, c3)
     dnf_2 = DNF(c1, c2, c4)
     dnf_3 = DNF(c1, c3, c2)
