@@ -16,3 +16,7 @@ end
 @testset "table solver" begin
     include("table_solver.jl")
 end
+
+@testset "interfaces" begin
+    include("interfaces.jl")
+end

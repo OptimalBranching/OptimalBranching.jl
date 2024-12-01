@@ -90,7 +90,7 @@ struct DNF{INT}
 end
 
 DNF(c::Clause{INT}, cs::Clause{INT}...) where {INT} = DNF([c, cs...])
-Base.:(==)(x::DNF, y::DNF) = x.clauses == y.clauses
+Base.:(==)(x::DNF, y::DNF) = Set(x.clauses) == Set(y.clauses)
 Base.length(x::DNF) = length(x.clauses)
 
 function covered_by(s::Integer, dnf::DNF)

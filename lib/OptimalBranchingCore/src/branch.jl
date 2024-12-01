@@ -114,18 +114,18 @@ Branch the given problem using the specified solver configuration.
 ### Returns
 The resulting value, which may have different type depending on the `result_type`.
 """
-function reduce_and_branch(problem::AbstractProblem, config::BranchingStrategy; reducer::AbstractReducer=NoReducer(), result_type=Int)
+function reduce_and_branch(problem::AbstractProblem, config::BranchingStrategy, reducer::AbstractReducer, result_type)
     isempty(problem) && return zero(result_type)
     # reduce the problem
     rp, reducedvalue = reduce_problem(result_type, problem, reducer)
-    rp !== problem && return reduce_and_branch(rp, config) + reducedvalue
+    rp !== problem && return reduce_and_branch(rp, config, reducer, result_type) * reducedvalue
 
     # branch the problem
     variables = select_variables(rp, config.measure, config.selector)  # select a subset of variables
     tbl = branching_table(rp, config.table_solver, variables)      # compute the BranchingTable
     rule = optimal_branching_rule(tbl, variables, rp, config.measure, config.set_cover_solver)  # compute the optimal branching rule
-    return maximum(rule.clauses) do branch  # branch and recurse
+    return sum(rule.clauses) do branch  # branch and recurse
         subproblem, localvalue = apply_branch(rp, branch, variables)
-        reduce_and_branch(subproblem, config) + localvalue + reducedvalue
+        reduce_and_branch(subproblem, config, reducer, result_type) * result_type(localvalue) * reducedvalue
     end
 end

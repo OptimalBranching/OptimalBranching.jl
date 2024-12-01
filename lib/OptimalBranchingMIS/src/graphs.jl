@@ -160,6 +160,7 @@ function folding(g::SimpleGraph, v::Int)
         return (induced_subgraph(g, setdiff(1:nv(g), [v, a, b]))[1], 1)
     else
         # apply the graph rewrite rule
+        g = copy(g)
         add_vertex!(g)
         nn = open_neighbors(g, [v, a, b])
         for n in nn

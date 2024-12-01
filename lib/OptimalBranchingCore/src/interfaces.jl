@@ -6,7 +6,7 @@ The problem type that can be used in the optimal branching framework.
 abstract type AbstractProblem end
 
 """
-    apply_branch(problem::AbstractProblem, clause::Clause, vertices::Vector)::Tuple{AbstractProblem, Number}
+    apply_branch(problem::AbstractProblem, clause::Clause, vertices::Vector)::Tuple
 
 Create a branch from the given clause applied to the specified vertices.
 
@@ -16,9 +16,7 @@ Create a branch from the given clause applied to the specified vertices.
 - `vertices`: A vector of vertices to be considered for the branch.
 
 ### Returns
-A tuple of two values:
 - `AbstractProblem`: A new instance of `AbstractProblem` with reduced size.
-- `Number`: The local gain of the branch, which will be added to the global gain.
 """
 function apply_branch end
 
