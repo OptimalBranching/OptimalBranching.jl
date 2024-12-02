@@ -20,7 +20,7 @@ init-docs:
 	$(JL) -e 'using Pkg; Pkg.activate("docs"); Pkg.develop([Pkg.PackageSpec(path = "."), [Pkg.PackageSpec(path = joinpath("lib", pkg)) for pkg in ["OptimalBranchingCore", "OptimalBranchingMIS"]]...]); Pkg.precompile()'
 
 serve:
-	$(JL) -e 'using Pkg; Pkg.activate("docs"); using LiveServer; servedocs(;skip_dirs=["docs/src/assets", "docs/src/generated"])'
+	$(JL) -e 'using Pkg; Pkg.activate("docs"); using LiveServer; servedocs(;skip_dirs=["docs/src/assets", "docs/src/generated"], literate_dir="examples")'
 
 clean:
 	rm -rf docs/build
