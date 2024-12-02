@@ -8,7 +8,7 @@ using GenericTensorNetworks
 
 export MISProblem
 export MISReducer, XiaoReducer
-export MinBoundarySelector
+export MinBoundarySelector, MinBoundaryHighDegreeSelector
 export TensorNetworkSolver
 export NumOfVertices, D3Measure
 

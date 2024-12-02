@@ -30,7 +30,7 @@ Calculate the size and the number of branches of the Maximum Independent Set (MI
 ### Returns
 - A tuple `(size, count)` where `size` is the size of the Maximum Independent Set and `count` is the number of branches.
 """
-function mis_branch_count(g::AbstractGraph; branching_strategy::BranchingStrategy = BranchingStrategy(table_solver = TensorNetworkSolver(), selector = MinBoundarySelector(2), measure=D3Measure()), reducer=MISReducer())
+function mis_branch_count(g::AbstractGraph; branching_strategy::BranchingStrategy = BranchingStrategy(table_solver = TensorNetworkSolver(), selector = MinBoundaryHighDegreeSelector(2, 6, 0), measure=D3Measure()), reducer=MISReducer())
     p = MISProblem(g)
     res = branch_and_reduce(p, branching_strategy, reducer, MaxSizeBranchCount)
     return (res.size, res.count)
