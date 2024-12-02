@@ -9,6 +9,6 @@ export BranchingStrategy, IPSolver, LPSolver
 export NoReducer
 export MaxSize, MaxSizeBranchCount
 
-export reduce_and_branch
+export branch_and_reduce
 
 end

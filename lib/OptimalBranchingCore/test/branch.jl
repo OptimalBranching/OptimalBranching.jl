@@ -19,12 +19,12 @@ using Test
     function subcovers_naive(tbl::BranchingTable{INT}) where{INT}
         n, bs = tbl.bit_length, tbl.table
         allclauses = all_clauses_naive(n, bs)
-        allcovers = Vector{CandidateClause{INT}}()
+        subsets = Vector{Vector{Int}}()
         for (i, c) in enumerate(allclauses)
             ids = OptimalBranchingCore.covered_items(bs, c)
-            push!(allcovers, CandidateClause(ids, c))
+            push!(subsets, ids)
         end
-        return allcovers
+        return subsets
     end
 
     # Return a clause that covers all the bit strings.
@@ -42,16 +42,22 @@ using Test
         [StaticElementVector(2, [1, 0, 0, 1, 0])],
         [StaticElementVector(2, [0, 0, 1, 0, 1])]
     ])
-    scs = OptimalBranchingCore.candidate_clauses(tbl)
-    scs_naive = subcovers_naive(tbl)
-    @test length(scs) == length(scs_naive)
-    for sc in scs
-        @test sc in scs_naive
+    clauses = OptimalBranchingCore.candidate_clauses(tbl)
+    subsets = [OptimalBranchingCore.covered_items(tbl.table, c) for c in clauses]
+    subsets_naive = subcovers_naive(tbl)
+    @test length(subsets) == length(subsets_naive)
+    for sc in subsets
+        @test sc in subsets_naive
     end
 end
 
 @testset "complexity" begin
-    bv = rand(1:10, 5)
-    f = x -> sum(x[1]^(-i) for i in bv) - 1.0
-    @test OptimalBranchingCore.complexity_bv(bv) ≈ nlsolve(f, [1.0]).zero[1]
+    for k=1:100
+        bv = rand(1:10, 5)
+        f = x -> sum(x[1]^(-i) for i in bv) - 1.0
+        sol = nlsolve(f, [1.0]).zero[1]
+        if sol <= 2.0   # complexity_bv may fail for sol > 2.0!
+            @test OptimalBranchingCore.complexity_bv(bv) ≈ sol
+        end
+    end
 end

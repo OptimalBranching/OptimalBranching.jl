@@ -92,64 +92,136 @@ function bisect_solve(f, a, fa, b, fb)
 end
 
 """
-    minimize_γ(candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}, solver) where{INT, TF}
+    OptimalBranchingResult{INT <: Integer}
+
+The result type for the optimal branching rule.
+
+### Fields
+- `selected_ids::Vector{Int}`: The indices of the selected rows in the branching table.
+- `optimal_rule::DNF{INT}`: The optimal branching rule.
+- `branching_vector::Vector{T<:Real}`: The branching vector that records the size reduction in each subproblem.
+- `γ::Float64`: The optimal γ value (the complexity of the branching rule).
+"""
+struct OptimalBranchingResult{INT <: Integer, T <: Real}
+    selected_ids::Vector{Int}
+    optimal_rule::DNF{INT}
+    branching_vector::Vector{T}
+    γ::Float64
+end
+
+"""
+    minimize_γ(table::BranchingTable, candidates::Vector{Clause}, Δρ::Vector, solver)
 
 Finds the optimal cover based on the provided vector of problem size reduction.
 This function implements a cover selection algorithm using an iterative process.
 It utilizes an integer programming solver to optimize the selection of sub-covers based on their complexity.
 
 ### Arguments
-- `candidate_clauses::AbstractVector{CandidateClause{INT}}`: A vector of CandidateClause structures.
-- `Δρ::Vector{TF}`: A vector of problem size reduction for each CandidateClause.
+- `table::BranchingTable`: A branching table containing clauses that need to be covered, a table entry is covered by a clause if one of its bit strings satisfies the clause. Please refer to [`covered_by`](@ref) for more details.
+- `candidates::Vector{Clause}`: A vector of candidate clauses to form the branching rule (in the form of [`DNF`](@ref)).
+- `Δρ::Vector`: A vector of problem size reduction for each candidate clause.
 - `solver`: The solver to be used. It can be an instance of `LPSolver` or `IPSolver`.
 
 ### Keyword Arguments
 - `γ0::Float64`: The initial γ value.
 
 ### Returns
-A tuple of two elements: (indices of selected clauses, γ)
+A tuple of two elements: (indices of selected subsets, γ)
 """
-function minimize_γ(num_items::Int, candidate_clauses::AbstractVector{CandidateClause{INT}}, Δρ::Vector{TF}, solver::AbstractSetCoverSolver; γ0::Float64 = 2.0) where{INT, TF}
-    @debug "solver = $(solver), sets = $(candidate_clauses), γ0 = $γ0"
+function minimize_γ(table::BranchingTable, candidates::Vector{Clause{INT}}, Δρ::Vector, solver::AbstractSetCoverSolver; γ0::Float64 = 2.0) where {INT}
+    @debug "solver = $(solver), subsets = $(subsets), γ0 = $γ0"
+    subsets = [covered_items(table.table, c) for c in candidates]
+    num_items = length(table.table)
 
     # Note: the following instance is captured for time saving, and also for it may cause IP solver to fail
-    for (k, clause) in enumerate(candidate_clauses)
-        (length(clause.covered_items) == num_items) && return [k], 1.0
+    for (k, subset) in enumerate(subsets)
+        (length(subset) == num_items) && return OptimalBranchingResult([k], DNF([candidates[k]]), [Δρ[k]], 1.0)
     end
 
     cx_old = cx = γ0
     local picked_scs
     for i = 1:solver.max_itr
         weights = 1 ./ cx_old .^ Δρ
-        picked_scs = weighted_minimum_set_cover(solver, weights, candidate_clauses, num_items)
+        picked_scs = weighted_minimum_set_cover(solver, weights, subsets, num_items)
         cx = complexity_bv(Δρ[picked_scs])
-        @debug "Iteration $i, picked indices = $(picked_scs), clauses = $(candidate_clauses[picked_scs]), branching_vector = $(Δρ[picked_scs]), γ = $cx"
+        @debug "Iteration $i, picked indices = $(picked_scs), subsets = $(subsets[picked_scs]), branching_vector = $(Δρ[picked_scs]), γ = $cx"
         cx ≈ cx_old && break  # convergence
         cx_old = cx
     end
-    return picked_scs, cx
+    return OptimalBranchingResult(picked_scs, DNF([candidates[i] for i in picked_scs]), Δρ[picked_scs], cx)
 end
 
+# TODO: we need to extend this function to trim the candidate clauses
 """
-    weighted_minimum_set_cover(solver, weights::AbstractVector, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT, TF, T}
+    candidate_clauses(tbl::BranchingTable{INT}) where {INT}
+
+Generates candidate clauses from a branching table.
+
+### Arguments
+- `tbl::BranchingTable{INT}`: The branching table containing bit strings.
+
+### Returns
+- `Vector{Clause{INT}}`: A vector of `Clause` objects generated from the branching table.
+"""
+function candidate_clauses(tbl::BranchingTable{INT}) where {INT}
+    n, bss = tbl.bit_length, tbl.table
+    bs = vcat(bss...)
+    all_clauses = Set{Clause{INT}}()
+    temp_clauses = [Clause(bmask(INT, 1:n), bs[i]) for i in 1:length(bs)]
+    while !isempty(temp_clauses)
+        c = pop!(temp_clauses)
+        if !(c in all_clauses)
+            push!(all_clauses, c)
+            idc = Set(covered_items(bss, c))
+            for i in 1:length(bss)
+                if i ∉ idc                
+                    for b in bss[i]
+                        c_new = gather2(n, c, Clause(bmask(INT, 1:n), b))
+                        if (c_new != c) && c_new.mask != 0
+                            push!(temp_clauses, c_new)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return all_clauses
+end
+# Returns the indices of the bit strings that are covered by the clause.
+function covered_items(bitstrings, clause::Clause)
+    return findall(bs -> any(x->covered_by(x, clause), bs), bitstrings)
+end
+# merge two clauses, i.e. generate a new clause covering both
+function gather2(n::Int, c1::Clause{INT}, c2::Clause{INT}) where INT
+    b1 = c1.val & c1.mask
+    b2 = c2.val & c2.mask
+    mask = (b1 ⊻ flip_all(n, b2)) & c1.mask & c2.mask
+    val = b1 & mask
+    return Clause(mask, val)
+end
+
+
+
+"""
+    weighted_minimum_set_cover(solver, weights::AbstractVector, subsets::Vector{Vector{Int}}, num_items::Int)
 
 Solves the weighted minimum set cover problem.
 
 ### Arguments
 - `solver`: The solver to be used. It can be an instance of `LPSolver` or `IPSolver`.
-- `weights::AbstractVector`: The weights of the candidate clauses.
-- `candidate_clauses::AbstractVector{CandidateClause{INT}}`: A vector of CandidateClause structures.
+- `weights::AbstractVector`: The weights of the subsets.
+- `subsets::Vector{Vector{Int}}`: A vector of subsets.
 - `num_items::Int`: The number of elements to cover.
 
 ### Returns
-A vector of indices of selected clauses.
+A vector of indices of selected subsets.
 """
-function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT}
-    nsc = length(candidate_clauses)
+function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, subsets::Vector{Vector{Int}}, num_items::Int)
+    nsc = length(subsets)
 
     sets_id = [Vector{Int}() for _=1:num_items]
     for i in 1:nsc
-        for j in candidate_clauses[i].covered_items
+        for j in subsets[i]
             push!(sets_id[j], i)
         end
     end
@@ -165,15 +237,15 @@ function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, c
 
     optimize!(model)
     @assert is_solved_and_feasible(model)
-    return pick_sets(value.(x), candidate_clauses, num_items)
+    return pick_sets(value.(x), subsets, num_items)
 end
 
-function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT}
-    nsc = length(candidate_clauses)
+function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, subsets::Vector{Vector{Int}}, num_items::Int)
+    nsc = length(subsets)
 
     sets_id = [Vector{Int}() for _=1:num_items]
     for i in 1:nsc
-        for j in candidate_clauses[i].covered_items
+        for j in subsets[i]
             push!(sets_id[j], i)
         end
     end
@@ -191,20 +263,20 @@ function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, c
 
     optimize!(model)
     @assert is_solved_and_feasible(model)
-    return pick_sets(value.(x), candidate_clauses, num_items)
+    return pick_sets(value.(x), subsets, num_items)
 end
 
 # by viewing xs as the probability of being selected, we can use a random algorithm to pick the sets
-function pick_sets(xs::Vector{TF}, candidate_clauses::AbstractVector{CandidateClause{INT}}, num_items::Int) where{INT, TF}
+function pick_sets(xs::Vector, subsets::Vector{Vector{Int}}, num_items::Int)
     picked = Set{Int}()
     picked_ids = Set{Int}()
-    nsc = length(candidate_clauses)
+    nsc = length(subsets)
     flag = true
     while flag 
         for i in 1:nsc
             if (rand() < xs[i]) && i ∉ picked
                 push!(picked, i)
-                picked_ids = union(picked_ids, candidate_clauses[i].covered_items)
+                picked_ids = union(picked_ids, subsets[i])
             end
             if length(picked_ids) == num_items
                 flag = false

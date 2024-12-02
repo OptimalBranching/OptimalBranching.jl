@@ -54,6 +54,24 @@ function BitBasis.bdistance(c::Clause{INT}, b::INT) where INT <: Integer
     c1 = c.val & c.mask
     return bdistance(b1, c1)
 end
+"""
+    literals(c::Clause)
+
+Return all literals in the clause.
+"""
+literals(c::Clause) = [Clause(readbit(c.mask, i), readbit(c.val, i)) for i=1:bsizeof(c.mask) if readbit(c.mask, i) == 1]
+"""
+    is_true_literal(c::Clause)
+
+Check if the clause is a true literal.
+"""
+is_true_literal(c::Clause) = count_ones(c.mask) == 1 && all(i->readbit(c.val, i) == readbit(c.mask, i), 1:bsizeof(c.mask))
+"""
+    is_false_literal(c::Clause)
+
+Check if the clause is a false literal.
+"""
+is_false_literal(c::Clause) = count_ones(c.mask) == 1 && iszero(c.val)
 
 # Flip all bits in `b`, `n` is the number of bits
 function flip_all(n::Int, b::INT) where INT <: Integer
