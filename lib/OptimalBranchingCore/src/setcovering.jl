@@ -129,8 +129,8 @@ It utilizes an integer programming solver to optimize the selection of sub-cover
 A tuple of two elements: (indices of selected subsets, γ)
 """
 function minimize_γ(table::BranchingTable, candidates::Vector{Clause{INT}}, Δρ::Vector, solver::AbstractSetCoverSolver; γ0::Float64 = 2.0) where {INT}
-    @debug "solver = $(solver), subsets = $(subsets), γ0 = $γ0"
     subsets = [covered_items(table.table, c) for c in candidates]
+    @debug "solver = $(solver), subsets = $(subsets), γ0 = $γ0, Δρ = $(Δρ)"
     num_items = length(table.table)
 
     # Note: the following instance is captured for time saving, and also for it may cause IP solver to fail
@@ -200,7 +200,13 @@ function gather2(n::Int, c1::Clause{INT}, c2::Clause{INT}) where INT
     return Clause(mask, val)
 end
 
-
+function is_solved(xs::Vector{T}, sets_id::Vector{Vector{Int}}, num_items::Int) where{T}
+    for i in 1:num_items
+        flag = sum(xs[j] for j in sets_id[i])
+        ((flag < 1) && !(flag ≈ 1)) && return false
+    end
+    return true
+end
 
 """
     weighted_minimum_set_cover(solver, weights::AbstractVector, subsets::Vector{Vector{Int}}, num_items::Int)
@@ -236,8 +242,9 @@ function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, s
     end
 
     optimize!(model)
-    @assert is_solved_and_feasible(model)
-    return pick_sets(value.(x), subsets, num_items)
+    xs = value.(x)
+    @assert is_solved(xs, sets_id, num_items)
+    return pick_sets(xs, subsets, num_items)
 end
 
 function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, subsets::Vector{Vector{Int}}, num_items::Int)
