@@ -108,6 +108,7 @@ struct OptimalBranchingResult{INT <: Integer, T <: Real}
     branching_vector::Vector{T}
     γ::Float64
 end
+Base.show(io::IO, results::OptimalBranchingResult{INT, T}) where {INT, T} = print(io, "OptimalBranchingResult{$INT, $T}:\n selected_ids: $(results.selected_ids)\n optimal_rule: $(results.optimal_rule)\n branching_vector: $(results.branching_vector)\n γ: $(results.γ)")
 
 """
     minimize_γ(table::BranchingTable, candidates::Vector{Clause}, Δρ::Vector, solver)

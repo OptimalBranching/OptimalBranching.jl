@@ -32,8 +32,12 @@ struct Clause{INT <: Integer}
     end
 end
 
+function clause_string(c::Clause{INT}) where INT
+    join([iszero(readbit(c.val, i)) ? "¬#$i" : "#$i" for i = 1:bsizeof(INT) if readbit(c.mask, i) == 1], " ∧ ")
+end
+
 function Base.show(io::IO, c::Clause{INT}) where INT
-    print(io, "$(typeof(c)): " * join([iszero(readbit(c.val, i)) ? "¬#$i" : "#$i" for i = 1:bsizeof(INT) if readbit(c.mask, i) == 1], " ∧ "))
+    print(io, "$(typeof(c)): " * clause_string(c))
 end
 function booleans(n::Int)
     C = (n + 63) ÷ 64
@@ -110,6 +114,8 @@ end
 DNF(c::Clause{INT}, cs::Clause{INT}...) where {INT} = DNF([c, cs...])
 Base.:(==)(x::DNF, y::DNF) = Set(x.clauses) == Set(y.clauses)
 Base.length(x::DNF) = length(x.clauses)
+
+Base.show(io::IO, dnf::DNF{INT}) where {INT} = print(io, "DNF{$INT}: " * join(["($(clause_string(c)))" for c in dnf.clauses], " ∨ "))
 
 function covered_by(s::Integer, dnf::DNF)
     any(c->covered_by(s, c), dnf.clauses)

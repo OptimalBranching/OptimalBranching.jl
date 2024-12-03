@@ -32,6 +32,9 @@ end
     @test result_ip.selected_ids == result_lp.selected_ids
     @test result_ip.branching_vector ≈ result_lp.branching_vector
     @test result_ip.γ ≈ result_lp.γ ≈ 1.1673039782614185
+
+    println(result_ip)
+    println(result_lp)
 end
 
 @testset "setcover by JuMP - normal vector type" begin
