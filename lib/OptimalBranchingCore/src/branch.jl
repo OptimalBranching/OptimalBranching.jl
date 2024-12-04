@@ -63,6 +63,7 @@ Branch the given problem using the specified solver configuration.
 The resulting value, which may have different type depending on the `result_type`.
 """
 function branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy, reducer::AbstractReducer, result_type)
+    @debug "Branching and reducing problem" problem
     isempty(problem) && return zero(result_type)
     # reduce the problem
     rp, reducedvalue = reduce_problem(result_type, problem, reducer)
