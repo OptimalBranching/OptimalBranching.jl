@@ -154,7 +154,7 @@ function Graphs.neighbors(g::SimpleGraph, vs::Vector{Int})
 end
 
 function folding(g::SimpleGraph, v::Int)
-    @debug "Folding vertex" v
+    @debug "Folding vertex $(v)"
     @assert degree(g, v) == 2
     a, b = neighbors(g, v)
     if has_edge(g, a, b)

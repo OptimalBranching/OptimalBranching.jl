@@ -101,7 +101,7 @@ function twin_filter!(g::SimpleGraph)
             add_edge!(g,nv(g),left_neighbor)  
         end
     end
-    @debug "Removing twin vertices" twin_pair[1] twin_pair[2]
+    @debug "Removing twin vertices, $(twin_pair[1]) $(twin_pair[2])"
     rem_vertices!(g, vcat([twin_pair[1],twin_pair[2]],neighbor))
 
     return true
@@ -131,7 +131,7 @@ function short_funnel_filter!(g::SimpleGraph)
     isnothing(funnel_pair) && return false
 
     a,b = funnel_pair
-    @debug "Removing short funnel vertices" a b
+    @debug "Removing short funnel vertices, $(a) $(b)"
     N_a = neighbors(g, a)
     N_b = neighbors(g, b)
     for u in setdiff(N_a,vcat(N_b,[b])), v in setdiff(N_b,vcat(N_a,[a]))
@@ -166,7 +166,7 @@ function desk_filter!(g::SimpleGraph)
     isnothing(desk_group) && return false
 
     a,b,c,d = desk_group
-    @debug "Removing desk vertices" a b c d
+    @debug "Removing desk vertices, $(a) $(b) $(c) $(d)"
     for u in setdiff(open_neighbors(g, [a,c]), closed_neighbors(g, [b,d])) # N(a, c) - N[b, d]
         for v in setdiff(open_neighbors(g, [b,d]), closed_neighbors(g, [a,c])) # N(b, d) - N[a, c]
             !has_edge(g,u,v) && add_edge!(g,u,v)

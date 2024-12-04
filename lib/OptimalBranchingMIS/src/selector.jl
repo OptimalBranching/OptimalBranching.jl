@@ -26,7 +26,7 @@ function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::Mi
             novs_min = length(ovs)
         end
     end
-    @debug "Selecting vertices" vs_min
+    @debug "Selecting vertices $(vs_min) by boundary"
     return vs_min
 end
 

@@ -84,7 +84,7 @@ function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, ::XiaoRed
 
         unconfined_vs = unconfined_vertices(g)
         if length(unconfined_vs) != 0
-            @debug "Removing unconfined vertex" unconfined_vs[1]
+            @debug "Removing unconfined vertex $(unconfined_vs[1])"
             rem_vertices!(g, [unconfined_vs[1]])
             return MISProblem(g), R(0)
         end
