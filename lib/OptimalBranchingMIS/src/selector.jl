@@ -26,6 +26,7 @@ function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::Mi
             novs_min = length(ovs)
         end
     end
+    @debug "Selecting vertices" vs_min
     return vs_min
 end
 
@@ -60,6 +61,7 @@ function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::Mi
     for v in 1:nv(g)
         if degree(g, v) ≥ high_degree_threshold
             vs_min = neighbor_cover(g, v, high_degree_neighbor)[1]
+            @debug "Selecting vertices $(vs_min) by high degree, degree $(degree(g, v))"
             return vs_min
         end
     end
@@ -72,5 +74,6 @@ function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::Mi
             novs_min = length(ovs)
         end
     end
+    @debug "Selecting vertices $(vs_min) by boundary"
     return vs_min
 end
