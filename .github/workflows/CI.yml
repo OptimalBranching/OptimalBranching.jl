@@ -68,7 +68,7 @@ jobs:
         run: julia --project .ci/run.jl test ${{ matrix.package }}
       - name: "process code coverage"
         run: julia --project .ci/codecov.jl ${{ matrix.package }}
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v5
         with:
           file: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
