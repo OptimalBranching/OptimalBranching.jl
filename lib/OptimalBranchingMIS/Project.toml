@@ -1,7 +1,7 @@
 name = "OptimalBranchingMIS"
 uuid = "1d45bab8-fbcd-445a-8de2-8d643ff389c2"
 authors = ["Xuanzhao Gao <gaoxuanzhao@gmail.com> and contributors"]
-version = "1.0.0-DEV"
+version = "0.1.0"
 
 [deps]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
@@ -13,7 +13,7 @@ OptimalBranchingCore = "c76e7b22-e1d2-40e8-b0f1-f659837787b8"
 Combinatorics = "1"
 EliminateGraphs = "0.2"
 GenericTensorNetworks = "2"
-julia = "1.6"
+julia = "1.10"
 
 [extras]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
