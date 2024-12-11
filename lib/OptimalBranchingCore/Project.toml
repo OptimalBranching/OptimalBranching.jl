@@ -1,7 +1,7 @@
 name = "OptimalBranchingCore"
 uuid = "c76e7b22-e1d2-40e8-b0f1-f659837787b8"
 authors = ["Xuanzhao Gao <xz.gao@connect.ust.hk> and Jin-Guo Liu and Yijia Wang"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 BitBasis = "50ba71b6-fa0f-514d-ae9a-0916efc90dcf"
@@ -14,7 +14,7 @@ BitBasis = "0.9"
 HiGHS = "1.12"
 JuMP = "1.23"
 SCIP = "0.11"
-julia = "1.6"
+julia = "1.10"
 
 [extras]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
