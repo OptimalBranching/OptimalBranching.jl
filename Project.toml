@@ -1,7 +1,7 @@
 name = "OptimalBranching"
 uuid = "96e750e4-2b4b-404e-96bc-6769eb2ae924"
 authors = ["Xuanzhao Gao <gaoxuanzhao@gmail.com> and contributors"]
-version = "1.0.0-DEV"
+version = "0.1.0"
 
 [deps]
 GenericTensorNetworks = "3521c873-ad32-4bb4-b63d-f4f178f42b49"
