@@ -24,9 +24,11 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Quick Start" => "quick-start.md",
         "Examples" => [
             "generated/rule_discovery.md",
         ],
+        "Benchmarks" => "benchmarks.md",
         "Manual" => Any[
             "man/core.md",
             "man/mis.md",

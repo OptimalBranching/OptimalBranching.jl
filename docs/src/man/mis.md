@@ -4,14 +4,15 @@ CurrentModule = OptimalBranchingMIS
 
 # OptimalBranchingMIS
 
-Documentation for the MIS module `OptimalBranchingMIS.jl`, which provides the maximum independent set solver based on the optimal branching algorithm.
+## The maximum independent set problem
 
+The maximum independent set problem is a classical combinatorial optimization problem, which is to find the largest subset of vertices in a graph such that no two vertices in the subset are adjacent.
+
+## Designing a branch-and-reduce algorithm using the optimal branching algorithm
+
+To solve the MIS problem, we use the framework provided by the `OptimalBranchingCore` package to design a branch-and-reduce algorithm.
 
 ## API
-
-```@index
-Pages = ["mis.md"]
-```
 
 ```@autodocs
 Modules = [OptimalBranchingMIS]
