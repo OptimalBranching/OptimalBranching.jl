@@ -4,10 +4,8 @@ CurrentModule = OptimalBranching
 
 # OptimalBranching.jl
 
-Documentation for [OptimalBranching](https://github.com/ArrogantGao/OptimalBranching.jl).
-
+Welcome to [OptimalBranching](https://github.com/ArrogantGao/OptimalBranching.jl).
 `OptimalBranching.jl` is a Julia package for automatic generation of optimal branching rule for the branch-and-bound algorithm.
-This package only supply an interface for the core algorithm, and the actual implementation of the core algorithm is in `OptimalBranchingCore.jl` and `OptimalBranchingMIS.jl`, which can be found in the `lib` directory of this repository.
 
 ## Installation
 
@@ -25,66 +23,26 @@ This will add the submodules `OptimalBranchingCore.jl` and `OptimalBranchingMIS.
 
 The relation between the submodules and the package is shown in the following diagram:
 ```
-                           |-- OptimalBranchingSAT.jl --|
-OptimalBranchingCore.jl -->|                            |--> OptimalBranching.jl
-                           |-- OptimalBranchingMIS.jl --|
+OptimalBranchingCore.jl --> OptimalBranchingMIS.jl --> OptimalBranching.jl
 ```
-where `OptimalBranching.jl` is only a package interface.
+where `OptimalBranchingCore.jl` contains the core algorithms, which convert the problem of searching the optimal branching rule into the problem of searching the optimal set cover, and `OptimalBranchingMIS.jl` is developed base on the optimal branching algorithms to solve the maximum independent set (MIS) problem, and `OptimalBranching.jl` is a package interface.
 
-## Example
+## Quick Starts
 
-This package currently provides an implementation of the branching algorithm for the Maximum Independent Set (MIS) problem, an example is shown below:
-```julia
-julia> using OptimalBranching, Graphs
+You can learn how to use `OptimalBranching.jl` with some quick examples in this section.
+The examples are about how to use the current implemented optimal branching algorithms to solve the maximum independent set (MIS) problem, and a brief introduction about extending the package to other method and problem will be provided.
 
-# define a problem, for MIS the problem is just a graph
-julia> g = random_regular_graph(20, 3)
-{20, 30} undirected simple Int64 graph
+## Manual
 
-julia> problem = MISProblem(g)
-MISProblem(20)
+*Note: This part is working in progress, for more details, please refer to the [paper](https://arxiv.org/abs/2412.07685).*
 
-# select the branching strategy
-julia> branching_strategy = BranchingStrategy(TensorNetworkSolver(), IPSolver(), EnvFilter(), MinBoundarySelector(2), D3Measure())
-BranchingStrategy
-    ├── table_solver - TensorNetworkSolver()
-    ├── set_cover_solver - IPSolver(10)
-    ├── selector - MinBoundarySelector(2)
-    └── measure - D3Measure()
-
-
-julia> config = SolverConfig(MISReducer(), branching_strategy, Int)
-SolverConfig
-├── reducer - MISReducer() 
-├── result_type - Int
-└── branching_strategy - BranchingStrategy
-    ├── table_solver - TensorNetworkSolver()
-    ├── set_cover_solver - IPSolver(10)
-    ├── selector - MinBoundarySelector(2)
-    └── measure - D3Measure()
- 
-
-# the result shows that the size of the maximum independent set is 9
-julia> branch_and_reduce(problem, config)
-9
-
-# we can also use the EliminateGraphs package to verify the result
-julia> using OptimalBranchingMIS.EliminateGraphs
-
-julia> mis2(EliminateGraph(g))
-9
+```@contents
+Pages = [
+    "man/core.md",
+    "man/mis.md",
+]
+Depth = 1
 ```
-
-Furthermore, one can check the count of branches in the following way:
-```julia
-julia> config = SolverConfig(MISReducer(), branching_strategy, MISCount)
-SolverConfig{MISReducer, BranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}, MISCount}(MISReducer(), BranchingStrategy{TensorNetworkSolver, IPSolver, EnvFilter, MinBoundarySelector, D3Measure}(TensorNetworkSolver(), IPSolver(10), EnvFilter(), MinBoundarySelector(2), D3Measure()), MISCount)
-
-julia> branch_and_reduce(problem, config)
-MISCount(9, 1)
-```
-which shows that it takes only one branch to find the maximum independent set of size 9.
-
 
 ## How to Contribute
 
@@ -93,3 +51,19 @@ If you find any bug or have any suggestion, please open an [issue](https://githu
 ## License
 
 This project is licensed under the MIT License.
+
+## Citation
+
+If you find this package useful in your research, please cite the following paper:
+
+```
+@misc{gao2024automateddiscoverybranchingrules,
+      title={Automated Discovery of Branching Rules with Optimal Complexity for the Maximum Independent Set Problem}, 
+      author={Xuan-Zhao Gao and Yi-Jia Wang and Pan Zhang and Jin-Guo Liu},
+      year={2024},
+      eprint={2412.07685},
+      archivePrefix={arXiv},
+      primaryClass={math.OC},
+      url={https://arxiv.org/abs/2412.07685}, 
+}
+```
