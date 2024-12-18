@@ -11,7 +11,7 @@ Welcome to [OptimalBranching](https://github.com/ArrogantGao/OptimalBranching.jl
 
 To install the package, one can press `]` to enter the `package` mode and enter
 ```julia
-pkg> add https://github.com/ArrogantGao/OptimalBranching.jl
+pkg> add OptimalBranching
 ```
 
 To use the latest version of the package, you can compile the source code locally by
