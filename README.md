@@ -11,7 +11,13 @@
 
 ## Installation
 
-This package has not been registered yet, so you need to add this repository manually.
+This package has already been registered, one can press `]` to enter the package manager and then enter
+```julia
+pkg> add OptimalBranching
+```
+to install the package.
+
+To use the latest version, one can install this repository manually by
 
 ```bash
 $ git clone https://github.com/ArrogantGao/OptimalBranching.jl
