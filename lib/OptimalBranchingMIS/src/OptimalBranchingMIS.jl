@@ -1,6 +1,7 @@
 module OptimalBranchingMIS
 
 using OptimalBranchingCore
+using OptimalBranchingCore: AbstractProblem
 using OptimalBranchingCore.BitBasis
 using Combinatorics
 using EliminateGraphs, EliminateGraphs.Graphs
