@@ -12,7 +12,7 @@ OptimalBranchingCore = "c76e7b22-e1d2-40e8-b0f1-f659837787b8"
 [compat]
 Combinatorics = "1"
 EliminateGraphs = "0.2"
-GenericTensorNetworks = "2"
+GenericTensorNetworks = "2, 3"
 OptimalBranchingCore = "0.1.0"
 julia = "1.10"
 
