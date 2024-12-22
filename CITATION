@@ -1,0 +1,9 @@
+@misc{Gao2024,
+      title={Automated Discovery of Branching Rules with Optimal Complexity for the Maximum Independent Set Problem}, 
+      author={Xuan-Zhao Gao and Yi-Jia Wang and Pan Zhang and Jin-Guo Liu},
+      year={2024},
+      eprint={2412.07685},
+      archivePrefix={arXiv},
+      primaryClass={math.OC},
+      url={https://arxiv.org/abs/2412.07685}, 
+}
