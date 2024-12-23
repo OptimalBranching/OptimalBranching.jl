@@ -1,6 +1,7 @@
 using OptimalBranchingSTN
+using OMEinsum, Yao
 using Test
 
 @testset "OptimalBranchingSTN.jl" begin
-    # Write your tests here.
+    include("contraction.jl")
 end
