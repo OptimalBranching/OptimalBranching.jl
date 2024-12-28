@@ -12,7 +12,7 @@ end
         [StaticBitVector([1, 0, 0, 1, 0])],
         [StaticBitVector([0, 0, 1, 0, 1])]
     ])
-    clauses = collect(OptimalBranchingCore.candidate_clauses(tbl))
+    clauses = OptimalBranchingCore.candidate_clauses(tbl)
     Δρ = [count_ones(c.mask) for c in clauses]
     result_ip = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, IPSolver(; max_itr = 10, verbose = false))
     result_lp = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, LPSolver(; max_itr = 10, verbose = false))
@@ -25,7 +25,7 @@ end
         [StaticBitVector([1, 1, 0, 1, 0])],
         [StaticBitVector([0, 0, 1, 0, 1])]
     ])
-    clauses = collect(OptimalBranchingCore.candidate_clauses(tbl))
+    clauses = OptimalBranchingCore.candidate_clauses(tbl)
     Δρ = [count_ones(c.mask) for c in clauses]
     result_ip = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, IPSolver(; max_itr = 10, verbose = false))
     result_lp = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, LPSolver(; max_itr = 10, verbose = false))
@@ -43,7 +43,7 @@ end
         [[1, 1, 0, 1, 0]],
         [[0, 0, 1, 0, 1]]
     ])
-    clauses = collect(OptimalBranchingCore.candidate_clauses(tbl))
+    clauses = OptimalBranchingCore.candidate_clauses(tbl)
     Δρ = [count_ones(c.mask) for c in clauses]
     result_ip = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, IPSolver(max_itr = 10, verbose = false))
     result_lp = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, LPSolver(max_itr = 10, verbose = false))
@@ -60,7 +60,7 @@ end
         [[1, 1, 0, 1, 0]],
         [[0, 0, 1, 1, 1]]
     ])
-    clauses = collect(OptimalBranchingCore.candidate_clauses(tbl))
+    clauses = OptimalBranchingCore.candidate_clauses(tbl)
     Δρ = [count_ones(c.mask) for c in clauses]
     result_ip = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, IPSolver(max_itr = 10, verbose = false))
     @test OptimalBranchingCore.covered_by(tbl, result_ip.optimal_rule)

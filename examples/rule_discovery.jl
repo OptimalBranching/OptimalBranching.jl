@@ -30,7 +30,7 @@ function solve_opt_rule(branching_region, graph, vs)
     @info "the length of the truth_table after pruning irrelevant entries: $(length(tbl.table))"
 
     @info "generating candidate clauses..."
-    candidate_clauses = collect(OptimalBranchingMIS.OptimalBranchingCore.candidate_clauses(tbl))
+    candidate_clauses = OptimalBranchingMIS.OptimalBranchingCore.candidate_clauses(tbl)
     @info "the length of the candidate clauses: $(length(candidate_clauses))"
 
     @info "generating the optimal branching rule via set cover..."

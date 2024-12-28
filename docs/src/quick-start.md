@@ -61,7 +61,7 @@ tbl = BranchingTable(5, [
 
 Then, we generate the candidate clauses, which are the clauses forming the branching rule (a DNF formula).
 ```@repl quick-start
-candidates = collect(OptimalBranchingCore.candidate_clauses(tbl))
+candidates = OptimalBranchingCore.candidate_clauses(tbl)
 ```
 
 For each candidate clause, we calculate the size reduction of the problem after applying the clause. Here, we use a simple measure: counting the number of variables eliminated by the clause.

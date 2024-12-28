@@ -170,27 +170,28 @@ Generates candidate clauses from a branching table.
 """
 function candidate_clauses(tbl::BranchingTable{INT}) where {INT}
     n, bss = tbl.bit_length, tbl.table
-    bs = vcat(bss...)
-    all_clauses = Set{Clause{INT}}()
+    bs = reduce(vcat, bss)
+    all_clauses = Dict{Clause{INT}, Bool}()
     temp_clauses = [Clause(bmask(INT, 1:n), bs[i]) for i in 1:length(bs)]
     while !isempty(temp_clauses)
         c = pop!(temp_clauses)
-        if !(c in all_clauses)
-            push!(all_clauses, c)
-            idc = Set(covered_items(bss, c))
-            for i in 1:length(bss)
-                if i ∉ idc                
-                    for b in bss[i]
-                        c_new = gather2(n, c, Clause(bmask(INT, 1:n), b))
-                        if (c_new != c) && c_new.mask != 0
-                            push!(temp_clauses, c_new)
-                        end
+        if haskey(all_clauses, c)
+            continue
+        end
+        all_clauses[c] = true
+        for i in 1:length(bss)
+            if !any(x->covered_by(x, c), bss[i])
+                for b in bss[i]
+                    # include a bitstring not covered by c to create a new clause
+                    c_new = gather2(n, c, Clause(bmask(INT, 1:n), b))
+                    if (c_new != c) && c_new.mask != 0
+                        push!(temp_clauses, c_new)
                     end
                 end
             end
         end
     end
-    return all_clauses
+    return collect(keys(all_clauses))
 end
 # Returns the indices of the bit strings that are covered by the clause.
 function covered_items(bitstrings, clause::Clause)
