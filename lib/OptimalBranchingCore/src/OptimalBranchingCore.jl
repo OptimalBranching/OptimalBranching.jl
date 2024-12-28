@@ -1,6 +1,6 @@
 module OptimalBranchingCore
 
-using JuMP, HiGHS, SCIP
+using JuMP, HiGHS
 using BitBasis
 
 # logic expressions
