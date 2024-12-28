@@ -29,6 +29,7 @@ makedocs(;
             "generated/rule_discovery.md",
         ],
         "Benchmarks" => "benchmarks.md",
+        "Performance Tips" => "performance_tips.md",
         "Manual" => Any[
             "man/core.md",
             "man/mis.md",

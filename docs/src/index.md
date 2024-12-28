@@ -62,13 +62,13 @@ This project is licensed under the MIT License.
 If you find this package useful in your research, please cite the following paper:
 
 ```
-@misc{gao2024automateddiscoverybranchingrules,
-      title={Automated Discovery of Branching Rules with Optimal Complexity for the Maximum Independent Set Problem}, 
-      author={Xuan-Zhao Gao and Yi-Jia Wang and Pan Zhang and Jin-Guo Liu},
-      year={2024},
-      eprint={2412.07685},
-      archivePrefix={arXiv},
-      primaryClass={math.OC},
-      url={https://arxiv.org/abs/2412.07685}, 
+@misc{Gao2024,
+    title={Automated Discovery of Branching Rules with Optimal Complexity for the Maximum Independent Set Problem}, 
+    author={Xuan-Zhao Gao and Yi-Jia Wang and Pan Zhang and Jin-Guo Liu},
+    year={2024},
+    eprint={2412.07685},
+    archivePrefix={arXiv},
+    primaryClass={math.OC},
+    url={https://arxiv.org/abs/2412.07685}, 
 }
 ```

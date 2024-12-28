@@ -7,3 +7,7 @@ LiveServer = "16fef848-5104-11e9-1b77-fb7a48bbb589"
 OptimalBranching = "96e750e4-2b4b-404e-96bc-6769eb2ae924"
 OptimalBranchingCore = "c76e7b22-e1d2-40e8-b0f1-f659837787b8"
 OptimalBranchingMIS = "1d45bab8-fbcd-445a-8de2-8d643ff389c2"
+SCIP = "82193955-e24f-5292-bf16-6f2c5261a85f"
+
+[compat]
+SCIP = "0.11"
