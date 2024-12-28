@@ -4,10 +4,13 @@
 [![Build Status](https://github.com/ArrogantGao/OptimalBranching.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/ArrogantGao/OptimalBranching.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/ArrogantGao/OptimalBranching.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ArrogantGao/OptimalBranching.jl)
 
+`OptimalBranching.jl` is a collection of tools for solving combinatorial optimization problems with branch-and-reduce method.
+It is written in Julia and features automatically generated branching rules with provable optimality (arXiv: 2412.07685).
+The rule generation is problem agnostic, and it can be easily extended to other problems.
+It contains two submodules:
+* `OptimalBranchingCore.jl`: the core algorithms, which convert the problem of searching the optimal branching rule into the problem of searching the optimal set cover.
+* `OptimalBranchingMIS.jl`: the maximum independent set (MIS) problem solver based on the optimal branching algorithms.
 
-`OptimalBranching.jl` is a Julia package that implements the optimal branching algorithm (arXiv: 2412.07685). It is a meta package that contains the following submodules in the `lib` directory:
-- `OptimalBranchingCore.jl`: the core algorithms for automatically generating optimal branching rules.
-- `OptimalBranchingMIS.jl`: the maximum independent set solver based on the optimal branching algorithm.
 
 ## Installation
 
