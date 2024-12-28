@@ -175,9 +175,7 @@ function candidate_clauses(tbl::BranchingTable{INT}) where {INT}
     temp_clauses = [Clause(bmask(INT, 1:n), bs[i]) for i in 1:length(bs)]
     while !isempty(temp_clauses)
         c = pop!(temp_clauses)
-        if haskey(all_clauses, c)
-            continue
-        end
+        haskey(all_clauses, c) && continue
         all_clauses[c] = true
         for i in 1:length(bss)
             if !any(x->covered_by(x, c), bss[i])
