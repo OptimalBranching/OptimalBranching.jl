@@ -7,30 +7,34 @@ abstract type AbstractSetCoverSolver end
 
 """
     LPSolver <: AbstractSetCoverSolver
-    LPSolver(; max_itr::Int = 5, verbose::Bool = false)
+    LPSolver(; optimizer = HiGHS.Optimizer, max_itr::Int = 5, verbose::Bool = false)
 
 A linear programming solver for set covering problems.
 
 ### Fields
+- `optimizer`: The optimizer to be used.
 - `max_itr::Int`: The maximum number of iterations to be performed.
 - `verbose::Bool`: Whether to print the solver's output.
 """
 Base.@kwdef struct LPSolver <: AbstractSetCoverSolver 
+    optimizer = HiGHS.Optimizer
     max_itr::Int = 5
     verbose::Bool = false
 end
 
 """
     IPSolver <: AbstractSetCoverSolver
-    IPSolver(; max_itr::Int = 5, verbose::Bool = false)
+    IPSolver(; optimizer = HiGHS.Optimizer, max_itr::Int = 5, verbose::Bool = false)
 
 An integer programming solver for set covering problems.
 
 ### Fields
+- `optimizer`: The optimizer to be used.
 - `max_itr::Int`: The maximum number of iterations to be performed.
 - `verbose::Bool`: Whether to print the solver's output.
 """
 Base.@kwdef struct IPSolver <: AbstractSetCoverSolver 
+    optimizer = HiGHS.Optimizer
     max_itr::Int = 5
     verbose::Bool = false
 end
@@ -234,7 +238,7 @@ function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, s
     end
 
     # LP by JuMP
-    model = Model(HiGHS.Optimizer)
+    model = Model(solver.optimizer)
     !solver.verbose && set_silent(model)
     @variable(model, 0 <= x[i = 1:nsc] <= 1)
     @objective(model, Min, sum(x[i] * weights[i] for i in 1:nsc))
@@ -259,9 +263,8 @@ function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, s
     end
 
     # IP by JuMP
-    model = Model(SCIP.Optimizer)
-    !solver.verbose && set_attribute(model, "display/verblevel", 0)
-    set_attribute(model, "limits/gap", 0.05)
+    model = Model(solver.optimizer)
+    !solver.verbose && set_silent(model)
 
     @variable(model, 0 <= x[i = 1:nsc] <= 1, Int)
     @objective(model, Min, sum(x[i] * weights[i] for i in 1:nsc))
