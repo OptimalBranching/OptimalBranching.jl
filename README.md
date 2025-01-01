@@ -1,8 +1,8 @@
 # OptimalBranching.jl
 
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ArrogantGao.github.io/OptimalBranching.jl/dev/)
-[![Build Status](https://github.com/ArrogantGao/OptimalBranching.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/ArrogantGao/OptimalBranching.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/ArrogantGao/OptimalBranching.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ArrogantGao/OptimalBranching.jl)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://OptimalBranching.github.io/OptimalBranching.jl/dev/)
+[![Build Status](https://github.com/OptimalBranching/OptimalBranching.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/OptimalBranching/OptimalBranching.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Coverage](https://codecov.io/gh/OptimalBranching/OptimalBranching.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/OptimalBranching/OptimalBranching.jl)
 
 `OptimalBranching.jl` is a collection of tools for solving combinatorial optimization problems with branch-and-reduce method.
 It is written in Julia and features automatically generated branching rules with provable optimality (arXiv: 2412.07685).
@@ -31,7 +31,7 @@ pkg> add OptimalBranchingCore  # for the core algorithms
 pkg> add OptimalBranching      # for utilities based on the core algorithms
 ```
 
-If you have problem to install the package, please [file us an issue](https://github.com/ArrogantGao/OptimalBranching.jl/issues/new).
+If you have problem to install the package, please [file us an issue](https://github.com/OptimalBranching/OptimalBranching.jl/issues/new).
 
 ## Get started
 
@@ -46,12 +46,12 @@ julia> mis_branch_count(graph)
 ```
 In this example, the maximum independent set size of the Tutte graph is 19, and the optimal branching strategy only generates 2 branches in the branching tree.
 
-For advanced usage, please refer to the [documentation](https://ArrogantGao.github.io/OptimalBranching.jl/dev/).
+For advanced usage, please refer to the [documentation](https://OptimalBranching.github.io/OptimalBranching.jl/dev/).
 
 ## How to Contribute
 
-If you find any bug or have any suggestion, please open an [issue](https://github.com/ArrogantGao/OptimalBranching.jl/issues).
+If you find any bug or have any suggestion, please open an [issue](https://github.com/OptimalBranching/OptimalBranching.jl/issues).
 
 ## Citation
 
-If you find this package useful in your research, please cite the relevant paper in the [CITATION](CITATION) file.
+If you find this package useful in your research, please cite the relevant paper in the [CITATION.bib](CITATION.bib) file.

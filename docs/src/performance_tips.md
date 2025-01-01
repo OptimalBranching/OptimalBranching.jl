@@ -6,7 +6,7 @@ Solving the optimal branching rule involves solving a weighted minimum set cover
 For branching regions with a large number of variables, the performance of the solver may be the bottleneck of the whole algorithm.
 We set the default integer programming solver to `HiGHS`, which can be ~10x slower comparing with the state-of-the-art commercial solvers such as Gurobi and CPLEX.
 
-To get a better understanding of the performance of different integer programming solvers, we recommend reading [this issue](https://github.com/ArrogantGao/OptimalBranching.jl/issues/36).
+To get a better understanding of the performance of different integer programming solvers, we recommend reading [this issue](https://github.com/OptimalBranching/OptimalBranching.jl/issues/36).
 
 In the following example, we switch the integer programming solver to `SCIP` (at version 0.11) to solve the problem.
 

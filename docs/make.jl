@@ -18,7 +18,7 @@ makedocs(;
     authors="Xuanzhao Gao <gaoxuanzhao@gmail.com> and contributors",
     sitename="OptimalBranching.jl",
     format=Documenter.HTML(;
-        canonical="https://ArrogantGao.github.io/OptimalBranching.jl",
+        canonical="https://OptimalBranching.github.io/OptimalBranching.jl",
         edit_link="main",
         assets=String[],
     ),
@@ -38,6 +38,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/ArrogantGao/OptimalBranching.jl",
+    repo="github.com/OptimalBranching/OptimalBranching.jl",
     devbranch="main",
 )

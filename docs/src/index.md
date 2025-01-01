@@ -4,7 +4,7 @@ CurrentModule = OptimalBranching
 
 # OptimalBranching.jl
 
-Welcome to [OptimalBranching](https://github.com/ArrogantGao/OptimalBranching.jl).
+Welcome to [OptimalBranching](https://github.com/OptimalBranching/OptimalBranching.jl).
 `OptimalBranching.jl` is a collection of tools for solving combinatorial optimization problems with branch-and-reduce method.
 It is written in Julia and features automatically generated branching rules with provable optimality (arXiv: 2412.07685).
 The rule generation is problem agnostic, and it can be easily extended to other problems.
@@ -31,7 +31,7 @@ pkg> add OptimalBranchingCore  # for the core algorithms
 pkg> add OptimalBranching      # for utilities based on the core algorithms
 ```
 
-If you have problem to install the package, please [file us an issue](https://github.com/ArrogantGao/OptimalBranching.jl/issues/new).
+If you have problem to install the package, please [file us an issue](https://github.com/OptimalBranching/OptimalBranching.jl/issues/new).
 
 ## Manual
 
@@ -47,11 +47,11 @@ Depth = 1
 
 ## How to Contribute
 
-If you find any bug or have any suggestion, please open an [issue](https://github.com/ArrogantGao/OptimalBranching.jl/issues).
+If you find any bug or have any suggestion, please open an [issue](https://github.com/OptimalBranching/OptimalBranching.jl/issues).
 To develop the package, just download the source code by
 
 ```bash
-$ git clone https://github.com/ArrogantGao/OptimalBranching.jl
+$ git clone https://github.com/OptimalBranching/OptimalBranching.jl
 $ cd OptimalBranching.jl
 $ make
 ```
