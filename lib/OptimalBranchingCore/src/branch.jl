@@ -14,7 +14,7 @@ Generate an optimal branching rule from a given branching table.
 A [`OptimalBranchingResult`](@ref) object representing the optimal branching rule.
 """
 function optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, m::AbstractMeasure, solver::AbstractSetCoverSolver)
-    candidates = collect(candidate_clauses(table))
+    candidates = candidate_clauses(table)
     size_reductions = [measure(problem, m) - measure(first(apply_branch(problem, candidate, variables)), m) for candidate in candidates]
     return minimize_γ(table, candidates, size_reductions, solver; γ0=2.0)
 end
