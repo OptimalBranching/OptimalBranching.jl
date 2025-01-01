@@ -5,7 +5,7 @@
 [![Coverage](https://codecov.io/gh/OptimalBranching/OptimalBranching.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/OptimalBranching/OptimalBranching.jl)
 
 `OptimalBranching.jl` is a collection of tools for solving combinatorial optimization problems with branch-and-reduce method.
-It is written in Julia and features automatically generated branching rules with provable optimality (arXiv: 2412.07685).
+It is written in Julia and features automatically generated branching rules with provable optimality ([arXiv: 2412.07685](https://arxiv.org/abs/2412.07685)).
 The rule generation is problem agnostic, and it can be easily extended to other problems.
 It contains two submodules:
 * `OptimalBranchingCore.jl`: the core algorithms, which convert the problem of searching the optimal branching rule into the problem of searching the optimal set cover.
