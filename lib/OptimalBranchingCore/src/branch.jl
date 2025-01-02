@@ -73,7 +73,7 @@ function branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy, 
     variables = select_variables(rp, config.measure, config.selector)  # select a subset of variables
     tbl = branching_table(rp, config.table_solver, variables)      # compute the BranchingTable
     result = optimal_branching_rule(tbl, variables, rp, config.measure, config.set_cover_solver)  # compute the optimal branching rule
-    return sum(result.optimal_rule.clauses) do branch  # branch and recurse
+    return sum(get_clauses(result)) do branch  # branch and recurse
         subproblem, localvalue = apply_branch(rp, branch, variables)
         branch_and_reduce(subproblem, config, reducer, result_type) * result_type(localvalue) * reducedvalue
     end

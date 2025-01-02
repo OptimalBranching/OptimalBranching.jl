@@ -30,5 +30,5 @@ include("interfaces.jl")
 include("branching_table.jl")
 include("setcovering.jl")
 include("branch.jl")
-
+include("greedymerge.jl")
 end

@@ -1,5 +1,5 @@
 using OptimalBranchingCore, GenericTensorNetworks
-using BitBasis
+using OptimalBranchingCore.BitBasis
 using Test
 
 @testset "branching table" begin
