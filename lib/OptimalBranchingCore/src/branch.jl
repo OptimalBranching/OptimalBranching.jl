@@ -15,7 +15,7 @@ A [`OptimalBranchingResult`](@ref) object representing the optimal branching rul
 """
 function optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, m::AbstractMeasure, solver::AbstractSetCoverSolver)
     candidates = candidate_clauses(table)
-    size_reductions = [measure(problem, m) - measure(first(apply_branch(problem, candidate, variables)), m) for candidate in candidates]
+    size_reductions = [size_reduction(problem,m,candidate,variables) for candidate in candidates]
     return minimize_γ(table, candidates, size_reductions, solver; γ0=2.0)
 end
 

@@ -29,17 +29,15 @@ Random.seed!(1234)
 end
 
 @testset "mis" begin
-    num = 10
-	for _ in 1:num
-		g = random_regular_graph(60, 3)
-
+	for _num in 60:10:100
+		g = random_regular_graph(_num, 3)
+        reducer = NoReducer()
 		bs = BranchingStrategy(table_solver = TensorNetworkSolver(), selector = MinBoundaryHighDegreeSelector(2, 6, 0), measure = D3Measure(), set_cover_solver = OptimalBranchingCore.GreedyMerge())
-		mis1,count1 = mis_branch_count(g; bs)
-        mis2,count2 = mis_branch_count(g)
+		mis1,count1 = mis_branch_count(g; bs, reducer)
+        mis2,count2 = mis_branch_count(g;reducer)
         if mis1 != mis2 
             println("g")
         end
         @show count1,count2
 	end
-
 end

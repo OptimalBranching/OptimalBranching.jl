@@ -23,6 +23,9 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
 			for ii in 1:length(cls[i]), jj in 1:length(cls[j])
 				if bdistance(cls[i][ii], cls[j][jj]) == 1
 					cl12 = gather2(n, cls[i][ii], cls[j][jj])
+                    if cl12.mask == 0
+                        continue
+                    end
 					l12 = size_reduction(problem,m,cl12,variables)
 					if γ^(-size_reductions[i]) + γ^(-size_reductions[j]) >= γ^(-l12) + 1e-8
 						push!(cls, [cl12])
