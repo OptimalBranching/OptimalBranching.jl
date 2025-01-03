@@ -66,3 +66,35 @@ end
     @test OptimalBranchingCore.covered_by(tbl, result_ip.optimal_rule)
     @test result_ip.γ ≈ 1.0
 end
+
+@testset "covered_by" begin
+    tbl = BranchingTable(9, [
+        [[0,0,0,0,0,1,1,0,0], [0,0,0,0,0,0,1,1,0]],
+        [[0,0,0,0,1,1,1,0,0]],
+        [[0,0,1,1,0,0,0,0,1], [0,0,1,1,0,1,0,0,0], [0,0,1,1,0,0,0,1,0]],
+        [[0,0,1,1,1,0,0,0,1], [0,0,1,1,1,1,0,0,0]],
+        [[0,1,0,0,0,0,1,1,0]],
+        [[0,1,0,1,1,0,0,0,1]],
+        [[0,1,1,0,1,0,0,0,1]],
+        [[0,1,1,1,0,0,0,0,1], [0,1,1,1,0,0,0,1,0]],
+        [[0,1,1,1,1,0,0,0,1]],
+        [[1,0,0,0,0,0,1,1,0]],
+        [[1,0,0,1,1,0,0,0,1]],
+        [[1,0,1,0,1,0,0,0,1]],
+        [[1,0,1,1,0,0,0,0,1], [1,0,1,1,0,0,0,1,0]],
+        [[1,0,1,1,1,0,0,0,1]],
+        [[1,1,0,0,0,0,1,1,0]],
+        [[1,1,0,1,1,0,0,0,1]],
+        [[1,1,1,0,1,0,0,0,1]],
+        [[1,1,1,1,0,0,0,0,1], [1,1,1,1,0,0,0,1,0]],
+        [[1,1,1,1,1,0,0,0,1]]
+    ])
+    clauses = OptimalBranchingCore.candidate_clauses(tbl)
+    Δρ = [count_ones(c.mask) for c in clauses]
+    result_ip = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, IPSolver(max_itr = 10, verbose = false))
+    @test OptimalBranchingCore.covered_by(tbl, result_ip.optimal_rule)
+
+    cls = OptimalBranchingCore.bit_clauses(tbl)
+    clsf = OptimalBranchingCore.greedymerge(cls, p, [1, 2, 3, 4, 5], D3Measure())
+    @test OptimalBranchingCore.covered_by(tbl, DNF(clsf))
+end
