@@ -83,3 +83,31 @@ branching_region = SimpleGraph(Graphs.SimpleEdge.(edges))
 graph = tree_like_N3_neighborhood(branching_region)
 
 solve_opt_rule(branching_region, graph, vs)
+
+
+# ## Generating rules for large scale problems
+# For large scale problems, we can use the greedy merge rule to generate rules, which avoids generating all candidate clauses.
+function solve_greedy_rule(branching_region, graph, vs)
+    ## Use default solver and measure
+    m = D3Measure()
+    table_solver = TensorNetworkSolver(; prune_by_env=true)
+
+    ## Pruning irrelevant entries
+    ovs = OptimalBranchingMIS.open_vertices(graph, vs)
+    subg, vmap = induced_subgraph(graph, vs)
+    @info "solving the branching table..."
+    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, Int[findfirst(==(v), vs) for v in ovs])
+    @info "the length of the truth_table after pruning irrelevant entries: $(length(tbl.table))"
+
+    @info "generating the optimal branching rule via greedy merge..."
+    # greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem, variables::Vector, m::AbstractMeasure) where {INT}
+    candidates = OptimalBranchingCore.bit_clauses(tbl)
+    result = OptimalBranchingMIS.OptimalBranchingCore.greedymerge(candidates, MISProblem(graph), vs, m)
+    return result
+    @info "the greedily minimized gamma: $(result.γ)"
+
+    @info "the branching rule on R:"
+    viz_dnf(result.optimal_rule, vs)
+end
+
+result = solve_greedy_rule(branching_region, graph, vs)

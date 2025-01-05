@@ -16,7 +16,6 @@ end
     Δρ = [count_ones(c.mask) for c in clauses]
     result_ip = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, IPSolver(; max_itr = 10, verbose = false))
     result_lp = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, LPSolver(; max_itr = 10, verbose = false))
-    @test result_ip.selected_ids == result_lp.selected_ids
     @test result_ip.branching_vector ≈ result_lp.branching_vector
     @test result_ip.γ ≈ result_lp.γ ≈ 1.0
 
@@ -29,7 +28,6 @@ end
     Δρ = [count_ones(c.mask) for c in clauses]
     result_ip = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, IPSolver(; max_itr = 10, verbose = false))
     result_lp = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, LPSolver(; max_itr = 10, verbose = false))
-    @test result_ip.selected_ids == result_lp.selected_ids
     @test result_ip.branching_vector ≈ result_lp.branching_vector
     @test result_ip.γ ≈ result_lp.γ ≈ 1.1673039782614185
 
@@ -47,7 +45,6 @@ end
     Δρ = [count_ones(c.mask) for c in clauses]
     result_ip = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, IPSolver(max_itr = 10, verbose = false))
     result_lp = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, LPSolver(max_itr = 10, verbose = false))
-    @test result_ip.selected_ids == result_lp.selected_ids
     @test result_ip.branching_vector ≈ result_lp.branching_vector
     @test OptimalBranchingCore.covered_by(tbl, result_ip.optimal_rule)
     @test OptimalBranchingCore.covered_by(tbl, result_lp.optimal_rule)

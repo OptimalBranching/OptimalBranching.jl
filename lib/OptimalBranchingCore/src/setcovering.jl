@@ -101,18 +101,16 @@ end
 The result type for the optimal branching rule.
 
 ### Fields
-- `selected_ids::Vector{Int}`: The indices of the selected rows in the branching table.
 - `optimal_rule::DNF{INT}`: The optimal branching rule.
 - `branching_vector::Vector{T<:Real}`: The branching vector that records the size reduction in each subproblem.
 - `γ::Float64`: The optimal γ value (the complexity of the branching rule).
 """
 struct OptimalBranchingResult{INT <: Integer, T <: Real}
-    selected_ids::Vector{Int}
     optimal_rule::DNF{INT}
     branching_vector::Vector{T}
     γ::Float64
 end
-Base.show(io::IO, results::OptimalBranchingResult{INT, T}) where {INT, T} = print(io, "OptimalBranchingResult{$INT, $T}:\n selected_ids: $(results.selected_ids)\n optimal_rule: $(results.optimal_rule)\n branching_vector: $(results.branching_vector)\n γ: $(results.γ)")
+Base.show(io::IO, results::OptimalBranchingResult{INT, T}) where {INT, T} = print(io, "OptimalBranchingResult{$INT, $T}:\n optimal_rule: $(results.optimal_rule)\n branching_vector: $(results.branching_vector)\n γ: $(results.γ)")
 get_clauses(results::OptimalBranchingResult) = results.optimal_rule.clauses
 get_clauses(res::AbstractArray) = res
 
@@ -142,7 +140,7 @@ function minimize_γ(table::BranchingTable, candidates::Vector{Clause{INT}}, Δ�
 
     # Note: the following instance is captured for time saving, and also for it may cause IP solver to fail
     for (k, subset) in enumerate(subsets)
-        (length(subset) == num_items) && return OptimalBranchingResult([k], DNF([candidates[k]]), [Δρ[k]], 1.0)
+        (length(subset) == num_items) && return OptimalBranchingResult(DNF([candidates[k]]), [Δρ[k]], 1.0)
     end
 
     cx_old = cx = γ0
@@ -155,7 +153,7 @@ function minimize_γ(table::BranchingTable, candidates::Vector{Clause{INT}}, Δ�
         cx ≈ cx_old && break  # convergence
         cx_old = cx
     end
-    return OptimalBranchingResult(picked_scs, DNF([candidates[i] for i in picked_scs]), Δρ[picked_scs], cx)
+    return OptimalBranchingResult(DNF([candidates[i] for i in picked_scs]), Δρ[picked_scs], cx)
 end
 
 # TODO: we need to extend this function to trim the candidate clauses

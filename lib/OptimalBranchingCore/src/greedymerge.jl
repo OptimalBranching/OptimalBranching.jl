@@ -21,32 +21,26 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
 		i, j = popfirst!(merging_pairs)
 		if i in active_cls && j in active_cls
 			for ii in 1:length(cls[i]), jj in 1:length(cls[j])
-				if bdistance(cls[i][ii], cls[j][jj]) == 1
-					cl12 = gather2(n, cls[i][ii], cls[j][jj])
-					if cl12.mask == 0
-						continue
-					end
-					l12 = size_reduction(problem, m, cl12, variables)
-					if γ^(-size_reductions[i]) + γ^(-size_reductions[j]) >= γ^(-l12) + 1e-8
-						push!(cls, [cl12])
-						k = length(cls)
-						deleteat!(active_cls, findfirst(==(i), active_cls))
-						deleteat!(active_cls, findfirst(==(j), active_cls))
-						for ii in active_cls
-							push!(merging_pairs, (ii, k))
-						end
-						push!(active_cls, k)
-						push!(size_reductions, l12)
-						γ = complexity_bv(size_reductions[active_cls])
-						break
-					end
-				end
+                cl12 = gather2(n, cls[i][ii], cls[j][jj])
+                if cl12.mask == 0
+                    continue
+                end
+                l12 = size_reduction(problem, m, cl12, variables)
+                if γ^(-size_reductions[i]) + γ^(-size_reductions[j]) >= γ^(-l12) + 1e-12
+                    push!(cls, [cl12])
+                    k = length(cls)
+                    deleteat!(active_cls, findfirst(==(i), active_cls))
+                    deleteat!(active_cls, findfirst(==(j), active_cls))
+                    for ii in active_cls
+                        push!(merging_pairs, (ii, k))
+                    end
+                    push!(active_cls, k)
+                    push!(size_reductions, l12)
+                    γ = complexity_bv(size_reductions[active_cls])
+                    break
+                end
 			end
 		end
 	end
-	return [cl[1] for cl in cls[active_cls]]
-end
-
-function size_reduction(p::AbstractProblem, m::AbstractMeasure, cl::Clause{INT}, variables::Vector) where {INT}
-	return measure(p, m) - measure(first(apply_branch(p, cl, variables)), m)
+    return OptimalBranchingResult(DNF([cl[1] for cl in cls[active_cls]]), [size_reductions[i] for i in active_cls], γ)
 end
