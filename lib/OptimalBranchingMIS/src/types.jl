@@ -87,6 +87,7 @@ end
 
 function OptimalBranchingCore.size_reduction(p::MISProblem, m::D3Measure, cl::Clause{INT}, variables::Vector) where {INT}
     vertices_removed = removed_vertices(variables, p.g, cl)
+    isempty(vertices_removed) && return 0
     sum = 0
     for v in vertices_removed
         sum += max(degree(p.g, v) - 2, 0)

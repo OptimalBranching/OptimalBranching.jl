@@ -11,36 +11,30 @@ function bit_clauses(tbl::BranchingTable{INT}) where {INT}
 end
 
 function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem, variables::Vector, m::AbstractMeasure) where {INT}
-	active_cls = collect(1:length(cls))
-	cls = copy(cls)
-	merging_pairs = [(i, j) for i in active_cls, j in active_cls if i < j]
-	n = length(variables)
-	size_reductions = [size_reduction(problem, m, candidate[1], variables) for candidate in cls]
-	γ = complexity_bv(size_reductions)
-	while !isempty(merging_pairs)
-		i, j = popfirst!(merging_pairs)
-		if i in active_cls && j in active_cls
-			for ii in 1:length(cls[i]), jj in 1:length(cls[j])
-                cl12 = gather2(n, cls[i][ii], cls[j][jj])
-                if cl12.mask == 0
-                    continue
+    cls = copy(cls)
+	size_reductions = [size_reduction(problem, m, first(candidate), variables) for candidate in cls]
+    local γ
+    while true
+        γ = complexity_bv(size_reductions)
+        minval = zero(γ)
+        minidx = (-1, -1, -1, -1)
+        local minclause
+        local minred
+        for i = 1:length(cls), j = i+1:length(cls)
+            for ii in 1:length(cls[i]), jj in 1:length(cls[j])
+                cl12 = gather2(length(variables), cls[i][ii], cls[j][jj])
+                reduction = size_reduction(problem, m, cl12, variables)
+                val = γ^(-reduction) - γ^(-size_reductions[i]) - γ^(-size_reductions[j])
+                if val < minval
+                    minval, minidx, minclause, minred = val, (i, j, ii, jj), cl12, reduction
                 end
-                l12 = size_reduction(problem, m, cl12, variables)
-                if γ^(-size_reductions[i]) + γ^(-size_reductions[j]) >= γ^(-l12) + 1e-12
-                    push!(cls, [cl12])
-                    k = length(cls)
-                    deleteat!(active_cls, findfirst(==(i), active_cls))
-                    deleteat!(active_cls, findfirst(==(j), active_cls))
-                    for ii in active_cls
-                        push!(merging_pairs, (ii, k))
-                    end
-                    push!(active_cls, k)
-                    push!(size_reductions, l12)
-                    γ = complexity_bv(size_reductions[active_cls])
-                    break
-                end
-			end
-		end
-	end
-    return OptimalBranchingResult(DNF([cl[1] for cl in cls[active_cls]]), [size_reductions[i] for i in active_cls], γ)
+            end
+        end
+        minidx == (-1, -1, -1, -1) && break  # no more merging
+        deleteat!(cls, minidx[1:2])
+        deleteat!(size_reductions, minidx[1:2])
+        push!(cls, [minclause])
+        push!(size_reductions, minred)
+    end
+    return OptimalBranchingResult(DNF([cl[1] for cl in cls]), size_reductions, γ)
 end
