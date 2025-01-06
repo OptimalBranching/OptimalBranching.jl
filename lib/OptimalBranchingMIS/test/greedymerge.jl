@@ -20,7 +20,8 @@ Random.seed!(1234)
         [StaticElementVector(2, [1, 1, 1, 0, 0])],
     ])
     cls = bit_clauses(tbl)
-    clsf = OptimalBranchingCore.greedymerge(cls, p, [1, 2, 3, 4, 5], D3Measure())
+    res = OptimalBranchingCore.greedymerge(cls, p, [1, 2, 3, 4, 5], NumOfVertices())
+    clsf = res.optimal_rule.clauses
     @test clsf[1].mask == cls[3][1].mask
     @test clsf[1].val == cls[3][1].val
     @test clsf[2].mask == cls[4][1].mask

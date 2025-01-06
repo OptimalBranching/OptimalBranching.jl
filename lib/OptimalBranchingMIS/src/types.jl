@@ -1,5 +1,5 @@
 """
-mutable struct MISProblem <: AbstractProblem
+    mutable struct MISProblem <: AbstractProblem
 
 Represents a Maximum Independent Set (MIS) problem.
 
@@ -19,8 +19,8 @@ Base.show(io::IO, p::MISProblem) = print(io, "MISProblem($(nv(p.g)))")
 Base.isempty(p::MISProblem) = nv(p.g) == 0
 
 """
-TensorNetworkSolver
-TensorNetworkSolver(; prune_by_env::Bool = true)
+    TensorNetworkSolver
+    TensorNetworkSolver(; prune_by_env::Bool = true)
 
 A struct representing a solver for tensor network problems. 
 This struct serves as a specific implementation of the `AbstractTableSolver` type.
@@ -30,7 +30,7 @@ This struct serves as a specific implementation of the `AbstractTableSolver` typ
 end
 
 """
-NumOfVertices
+    NumOfVertices
 
 A struct representing a measure that counts the number of vertices in a graph. 
 Each vertex is counted as 1.
@@ -41,7 +41,7 @@ Each vertex is counted as 1.
 struct NumOfVertices <: AbstractMeasure end
 
 """
-measure(p::MISProblem, ::NumOfVertices)
+    measure(p::MISProblem, ::NumOfVertices)
 
 Calculates the number of vertices in the given `MISProblem`.
 
@@ -54,7 +54,7 @@ Calculates the number of vertices in the given `MISProblem`.
 OptimalBranchingCore.measure(p::MISProblem, ::NumOfVertices) = nv(p.g)
 
 """
-D3Measure
+    D3Measure
 
 A struct representing a measure that calculates the sum of the maximum degree minus 2 for each vertex in the graph.
 
@@ -64,7 +64,7 @@ A struct representing a measure that calculates the sum of the maximum degree mi
 struct D3Measure <: AbstractMeasure end
 
 """
-measure(p::MISProblem, ::D3Measure)
+    measure(p::MISProblem, ::D3Measure)
 
 Calculates the D3 measure for the given `MISProblem`, which is defined as the sum of 
 the maximum degree of each vertex minus 2, for all vertices in the graph.
@@ -94,7 +94,7 @@ function OptimalBranchingCore.size_reduction(p::MISProblem, m::D3Measure, cl::Cl
     end
     vertices_removed_neighbors = setdiff(mapreduce(v -> neighbors(p.g, v), ∪, vertices_removed), vertices_removed)
     for v in vertices_removed_neighbors
-        sum += max(degree(p.g, v) - 2) - max(degree(p.g, v) - 2 - count(vx -> vx ∈ vertices_removed, neighbors(p.g, v)), 0)
+        sum += max(degree(p.g, v) - 2,0) - max(degree(p.g, v) - 2 - count(vx -> vx ∈ vertices_removed, neighbors(p.g, v)), 0)
     end
     return sum
 end
