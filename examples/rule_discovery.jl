@@ -100,7 +100,6 @@ function solve_greedy_rule(branching_region, graph, vs)
     @info "the length of the truth_table after pruning irrelevant entries: $(length(tbl.table))"
 
     @info "generating the optimal branching rule via greedy merge..."
-    # greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem, variables::Vector, m::AbstractMeasure) where {INT}
     candidates = OptimalBranchingCore.bit_clauses(tbl)
     result = OptimalBranchingMIS.OptimalBranchingCore.greedymerge(candidates, MISProblem(graph), vs, m)
     return result
