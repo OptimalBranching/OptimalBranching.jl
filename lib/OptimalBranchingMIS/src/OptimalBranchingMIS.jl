@@ -6,10 +6,12 @@ using OptimalBranchingCore.BitBasis
 using Combinatorics
 using EliminateGraphs, EliminateGraphs.Graphs
 using GenericTensorNetworks
+using SparseArrays
+using KaHyPar
 
 export MISProblem
 export MISReducer, XiaoReducer
-export MinBoundarySelector, MinBoundaryHighDegreeSelector
+export MinBoundarySelector, MinBoundaryHighDegreeSelector,KaHyParSelector
 export TensorNetworkSolver
 export NumOfVertices, D3Measure
 

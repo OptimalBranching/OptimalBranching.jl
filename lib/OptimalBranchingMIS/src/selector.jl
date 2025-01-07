@@ -77,3 +77,39 @@ function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::Mi
     @debug "Selecting vertices $(vs_min) by boundary"
     return vs_min
 end
+
+struct KaHyParSelector <: AbstractSelector 
+    app_domain_size::Int
+end
+
+function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::KaHyParSelector) where {M <: AbstractMeasure}
+    nv(p.g) <= selector.app_domain_size && return collect(1:nv(p.g))
+    h = KaHyPar.HyperGraph(edge2vertex(p))
+    imbalance = 1-2*selector.app_domain_size/nv(p.g)
+    
+    parts = KaHyPar.partition(h, 2; configuration = pkgdir(@__MODULE__, "src", "cut_kKaHyPar_sea20.ini"), imbalance)
+
+    zero_num = count(x-> x ≈ 0,parts)
+    one_num = length(parts)-zero_num
+    @info "Selecting vertices by KaHyPar, sizes: $(zero_num), $(one_num)"
+
+    return abs(zero_num-selector.app_domain_size) < abs(one_num-selector.app_domain_size) ? findall(iszero,parts) : findall(!iszero,parts)
+end
+
+function edge2vertex(p::MISProblem)
+    I = Int[]
+    J = Int[]
+    edgecount = 0
+    for i in 1:nv(p.g)-1
+        for j in p.g.fadjlist[i]
+            if j >i
+                edgecount += 1
+                push!(I,i)
+                push!(I,j)
+                push!(J, edgecount)
+                push!(J, edgecount)
+            end
+        end
+    end
+    return sparse(I, J, ones(length(I)))
+end

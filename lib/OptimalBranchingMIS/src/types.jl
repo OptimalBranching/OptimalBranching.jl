@@ -86,15 +86,25 @@ function OptimalBranchingCore.measure(p::MISProblem, ::D3Measure)
 end
 
 function OptimalBranchingCore.size_reduction(p::MISProblem, m::D3Measure, cl::Clause{INT}, variables::Vector) where {INT}
-    vertices_removed = removed_vertices(variables, p.g, cl)
+    vertices_removed = Set(removed_vertices(variables, p.g, cl))
     isempty(vertices_removed) && return 0
+    # sum = 0
+    # for v in vertices_removed
+    #     sum += max(degree(p.g, v) - 2, 0)
+    # end
+    # vertices_removed_neighbors = setdiff(mapreduce(v -> neighbors(p.g, v), ∪, vertices_removed), vertices_removed)
+    # for v in vertices_removed_neighbors
+    #     sum += max(degree(p.g, v) - 2,0) - max(degree(p.g, v) - 2 - count(vx -> vx ∈ vertices_removed, neighbors(p.g, v)), 0)
+    # end
+    # return sum
+    # measure(p, m) - measure(first(apply_branch(p, cl, variables)), m)
+
     sum = 0
-    for v in vertices_removed
-        sum += max(degree(p.g, v) - 2, 0)
+    for i in 1:nv(p.g)
+        i in vertices_removed && continue
+        neighbor = neighbors(p.g, i)
+        countneighbor = count(v -> v ∉ vertices_removed, neighbor) 
+        sum += max(countneighbor - 2, 0)
     end
-    vertices_removed_neighbors = setdiff(mapreduce(v -> neighbors(p.g, v), ∪, vertices_removed), vertices_removed)
-    for v in vertices_removed_neighbors
-        sum += max(degree(p.g, v) - 2,0) - max(degree(p.g, v) - 2 - count(vx -> vx ∈ vertices_removed, neighbors(p.g, v)), 0)
-    end
-    return sum
+    return measure(p, m) - sum
 end

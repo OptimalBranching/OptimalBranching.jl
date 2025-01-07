@@ -1,7 +1,15 @@
 struct GreedyMerge <: AbstractSetCoverSolver end
+struct NaiveBranch <: AbstractSetCoverSolver end
 function optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, m::AbstractMeasure, solver::GreedyMerge)
     candidates = bit_clauses(table)
     return greedymerge(candidates, problem, variables, m)
+end
+
+function optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, m::AbstractMeasure, solver::NaiveBranch)
+    candidates = bit_clauses(table)
+	size_reductions = [size_reduction(problem, m, first(candidate), variables) for candidate in candidates]
+	γ = complexity_bv(size_reductions)
+    return OptimalBranchingResult(DNF(first.(candidates)), size_reductions, γ)
 end
 
 function bit_clauses(tbl::BranchingTable{INT}) where {INT}
