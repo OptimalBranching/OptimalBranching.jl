@@ -12,4 +12,9 @@ using GenericTensorNetworks
 	])
 
 	bc = bit_clauses(tbl)
+	@test bc[1][1].mask == 31
+	@test bc[1][1].val == 4
+
+	@test length(bc) == 3
+	@test length(bc[1]) == 2
 end

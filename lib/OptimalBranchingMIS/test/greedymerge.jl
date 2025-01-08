@@ -6,6 +6,7 @@ using OptimalBranchingCore
 using OptimalBranchingCore.BitBasis
 using GenericTensorNetworks
 using OptimalBranchingCore: bit_clauses
+using OptimalBranchingCore: size_reduction, apply_branch
 Random.seed!(1234)
 
 # Example from arXiv:2412.07685 Fig. 1
@@ -40,4 +41,37 @@ end
             @test mis1 == mis_num
         end
     end
+end
+
+@testset "covered_by" begin
+    tbl = BranchingTable(9, [
+        [[0,0,0,0,0,1,1,0,0], [0,0,0,0,0,0,1,1,0]],
+        [[0,0,0,0,1,1,1,0,0]],
+        [[0,0,1,1,0,0,0,0,1], [0,0,1,1,0,1,0,0,0], [0,0,1,1,0,0,0,1,0]],
+        [[0,0,1,1,1,0,0,0,1], [0,0,1,1,1,1,0,0,0]],
+        [[0,1,0,0,0,0,1,1,0]],
+        [[0,1,0,1,1,0,0,0,1]],
+        [[0,1,1,0,1,0,0,0,1]],
+        [[0,1,1,1,0,0,0,0,1], [0,1,1,1,0,0,0,1,0]],
+        [[0,1,1,1,1,0,0,0,1]],
+        [[1,0,0,0,0,0,1,1,0]],
+        [[1,0,0,1,1,0,0,0,1]],
+        [[1,0,1,0,1,0,0,0,1]],
+        [[1,0,1,1,0,0,0,0,1], [1,0,1,1,0,0,0,1,0]],
+        [[1,0,1,1,1,0,0,0,1]],
+        [[1,1,0,0,0,0,1,1,0]],
+        [[1,1,0,1,1,0,0,0,1]],
+        [[1,1,1,0,1,0,0,0,1]],
+        [[1,1,1,1,0,0,0,0,1], [1,1,1,1,0,0,0,1,0]],
+        [[1,1,1,1,1,0,0,0,1]]
+    ])
+    clauses = OptimalBranchingCore.candidate_clauses(tbl)
+    Δρ = [count_ones(c.mask) for c in clauses]
+    result_ip = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, IPSolver(max_itr = 10, verbose = false))
+    @test OptimalBranchingCore.covered_by(tbl, result_ip.optimal_rule)
+
+    p = MISProblem(random_regular_graph(20, 3))
+    cls = OptimalBranchingCore.bit_clauses(tbl)
+    res = OptimalBranchingCore.greedymerge(cls, p, [1, 2, 3, 4, 5], D3Measure())
+    @test OptimalBranchingCore.covered_by(tbl, res.optimal_rule)
 end
