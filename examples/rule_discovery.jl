@@ -110,25 +110,3 @@ function solve_greedy_rule(branching_region, graph, vs)
 end
 
 result = solve_greedy_rule(branching_region, graph, vs)
-
-
-function solve_simulated_annealing_rule(branching_region, graph, vs)
-    ## Use default solver and measure
-    m = D3Measure()
-    table_solver = TensorNetworkSolver(; prune_by_env=true)
-
-    ## Pruning irrelevant entries
-    ovs = OptimalBranchingMIS.open_vertices(graph, vs)
-    subg, vmap = induced_subgraph(graph, vs)
-    @info "solving the branching table..."
-    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, Int[findfirst(==(v), vs) for v in ovs])
-    @info "the length of the truth_table after pruning irrelevant entries: $(length(tbl.table))"
-
-    @info "generating the optimal branching rule via simulated annealing..."
-    candidates = OptimalBranchingCore.bit_clauses(tbl)
-    result = OptimalBranchingMIS.OptimalBranchingCore.localsearch(candidates, MISProblem(graph), vs, m)
-    return result
-end
-
-
-result = solve_simulated_annealing_rule(branching_region, graph, vs)
