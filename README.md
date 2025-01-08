@@ -1,4 +1,4 @@
-# OptimalBranching.jl
+<img src="logo-wide.svg" width=500>
 
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://optimalbranching.github.io/OptimalBranching.jl/dev/)
 [![Build Status](https://github.com/OptimalBranching/OptimalBranching.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/OptimalBranching/OptimalBranching.jl/actions/workflows/CI.yml?query=branch%3Amain)
