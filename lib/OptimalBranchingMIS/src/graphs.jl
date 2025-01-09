@@ -34,6 +34,21 @@ function removed_vertices(vertices::Vector{Int}, g::SimpleGraph, clause::Clause{
     return unique!(rvs)
 end
 
+function removed_mask(vertices::Vector{Int}, g::SimpleGraph, clause::Clause{INT}) where INT
+    mask = zero(INT)
+    for (k, v) in enumerate(vertices)
+        if readbit(clause.mask, k) == 1
+            mask |= INT(1) << (v - 1)
+            if readbit(clause.val, k) == 1
+                for n in neighbors(g, v)
+                    mask |= INT(1) << (n - 1)
+                end
+            end
+        end
+    end
+    return mask
+end
+
 function remove_vertices(g, v)
     g, vs = induced_subgraph(g, setdiff(vertices(g), v))
     return g
