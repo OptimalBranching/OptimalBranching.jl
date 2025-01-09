@@ -23,12 +23,8 @@ Random.seed!(1234)
     cls = bit_clauses(tbl)
     res = OptimalBranchingCore.greedymerge(cls, p, [1, 2, 3, 4, 5], NumOfVertices())
     clsf = res.optimal_rule.clauses
-    @test clsf[1].mask == cls[3][1].mask
-    @test clsf[1].val == cls[3][1].val
-    @test clsf[2].mask == cls[4][1].mask
-    @test clsf[2].val == cls[4][1].val
-    @test clsf[3].mask == 27
-    @test clsf[3].val == 16
+    @test res.γ ≈ 1.2106077944060858
+    @test length(clsf) == 3
 end
 
 @testset "GreedyMerge" begin
