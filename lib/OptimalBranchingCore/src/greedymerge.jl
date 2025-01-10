@@ -7,7 +7,7 @@ end
 
 function optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, m::AbstractMeasure, solver::NaiveBranch)
     candidates = bit_clauses(table)
-	size_reductions = [size_reduction(problem, m, first(candidate), variables) for candidate in candidates]
+	size_reductions = [Float64(size_reduction(problem, m, first(candidate), variables)) for candidate in candidates]
 	γ = complexity_bv(size_reductions)
     return OptimalBranchingResult(DNF(first.(candidates)), size_reductions, γ)
 end
@@ -20,38 +20,32 @@ end
 
 function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem, variables::Vector, m::AbstractMeasure) where {INT}
     function reduction_merge(cli, clj)
-        iimax, jjmax, reductionmax = -1, -1, 0.0
+        clmax, iimax, jjmax, reductionmax = Clause(zero(INT), zero(INT)), -1, -1, 0.0
         for ii = 1:length(cli), jj = 1:length(clj)
             cl12 = gather2(length(variables), cli[ii], clj[jj])
             iszero(cl12.mask) && continue
-            reduction = size_reduction(problem, m, cl12, variables)
+            reduction = Float64(size_reduction(problem, m, cl12, variables))
             if reduction > reductionmax
-                iimax, jjmax, reductionmax = ii, jj, reduction
+                clmax, iimax, jjmax, reductionmax = cl12, ii, jj, reduction
             end
         end
-        return iimax, jjmax, reductionmax
+        return clmax, iimax, jjmax, reductionmax
     end
     cls = copy(cls)
-    size_reductions = [size_reduction(problem, m, first(candidate), variables) for candidate in cls]
-    II = zeros(Int, length(cls), length(cls))
-    JJ = zeros(Int, length(cls), length(cls))
-    RD = zeros(length(cls), length(cls))
-    for i = 1:length(cls), j = i+1:length(cls)
-        II[i, j], JJ[i, j], RD[i, j] = reduction_merge(cls[i], cls[j])
-    end
+    size_reductions = [Float64(size_reduction(problem, m, first(candidate), variables)) for candidate in cls]
     while true
         nc = length(cls)
         mask = trues(nc)
         γ = complexity_bv(size_reductions)
+        weights = map(s -> γ^(-s), size_reductions)
         queue = PriorityQueue{NTuple{2, Int}, Float64}()  # from small to large
         for i ∈ 1:nc, j ∈ i+1:nc
-            dE = γ^(-RD[i, j]) - γ^(-size_reductions[i]) - γ^(-size_reductions[j])
+            _, _, _, reduction = reduction_merge(cls[i], cls[j])
+            dE = γ^(-reduction) - weights[i] - weights[j]
             dE <= -1e-12 && enqueue!(queue, (i, j), dE)
         end
         isempty(queue) && return OptimalBranchingResult(DNF(first.(cls)), size_reductions, γ)
-        @show "!"
         while !isempty(queue)
-            @show peek(queue)
             (i, j) = dequeue!(queue)
             # remove i, j-th row
             for rowid in (i, j)
@@ -65,17 +59,18 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
             end
             # add i-th row
             mask[i] = true
-            cls[i] = [gather2(length(variables), cls[i][II[i, j]], cls[j][JJ[i, j]])]
-            size_reductions[i] = RD[i, j]
+            clij, _, _, size_reductions[i] = reduction_merge(cls[i], cls[j])
+            cls[i] = [clij]
+            weights[i] = γ^(-size_reductions[i])
             for k = 1:nc
                 if i !== k && mask[k]
                     a, b = minmax(i, k)
-                    II[a, b], JJ[a, b], RD[a, b] = reduction_merge(cls[a], cls[b])
-                    dE = γ^(-RD[a, b]) - γ^(-size_reductions[a]) - γ^(-size_reductions[b])
+                    _, _, _, reduction = reduction_merge(cls[a], cls[b])
+                    dE = γ^(-reduction) - weights[a] - weights[b]
                     dE <= -1e-12 && enqueue!(queue, (a, b), dE)
                 end
             end
         end
-        cls, size_reductions, II, JJ, RD = cls[mask], size_reductions[mask], II[mask, mask], JJ[mask, mask], RD[mask, mask]
+        cls, size_reductions = cls[mask], size_reductions[mask]
     end
 end

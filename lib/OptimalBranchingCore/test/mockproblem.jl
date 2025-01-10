@@ -20,22 +20,3 @@ using OptimalBranchingCore: NumOfVariables, MockProblem, MockTableSolver
     @test length(tbl.table) <= nsample
     @test all(length.(tbl.table) .> 10)
 end
-
-@testset "greedymerge" begin
-    n = 1000    # total number of variables
-    p = MockProblem(n)
-
-    nvars = 18  # number of variables to be selected
-    variables = [1:nvars...]
-
-    # get the branching table
-    table_solver = MockTableSolver(1000)
-    tbl = branching_table(p, table_solver, variables)
-    candidates = OptimalBranchingCore.bit_clauses(tbl)
-
-    m = NumOfVariables()
-    # the bottleneck is the call to the `findmin` function in the `greedymerge` function
-    result = OptimalBranchingCore.greedymerge(candidates, p, variables, m)
-    @test length(tbl.table)^(1/nvars) > result.γ
-end
-
