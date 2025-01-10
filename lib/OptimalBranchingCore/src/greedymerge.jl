@@ -21,7 +21,7 @@ end
 function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem, variables::Vector, m::AbstractMeasure) where {INT}
     function reduction_merge(cli, clj)
         clmax, iimax, jjmax, reductionmax = Clause(zero(INT), zero(INT)), -1, -1, 0.0
-        for ii = 1:length(cli), jj = 1:length(clj)
+        @inbounds for ii = 1:length(cli), jj = 1:length(clj)
             cl12 = gather2(length(variables), cli[ii], clj[jj])
             iszero(cl12.mask) && continue
             reduction = Float64(size_reduction(problem, m, cl12, variables))
@@ -33,7 +33,7 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
     end
     cls = copy(cls)
     size_reductions = [Float64(size_reduction(problem, m, first(candidate), variables)) for candidate in cls]
-    while true
+    @inbounds while true
         nc = length(cls)
         mask = trues(nc)
         γ = complexity_bv(size_reductions)
