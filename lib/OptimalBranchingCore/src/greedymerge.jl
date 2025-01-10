@@ -36,7 +36,6 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
     II = zeros(Int, length(cls), length(cls))
     JJ = zeros(Int, length(cls), length(cls))
     RD = zeros(length(cls), length(cls))
-    ΔE = zeros(length(cls), length(cls))  # as cache
     for i = 1:length(cls), j = i+1:length(cls)
         II[i, j], JJ[i, j], RD[i, j] = reduction_merge(cls[i], cls[j])
     end
@@ -44,28 +43,36 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
         nc = length(cls)
         mask = trues(nc)
         γ = complexity_bv(size_reductions)
+        queue = PriorityQueue{NTuple{2, Int}, Float64}()  # from small to large
         for i ∈ 1:nc, j ∈ i+1:nc
-            ΔE[i, j] = γ^(-RD[i, j]) - γ^(-size_reductions[i]) - γ^(-size_reductions[j])
+            dE = γ^(-RD[i, j]) - γ^(-size_reductions[i]) - γ^(-size_reductions[j])
+            dE <= -1e-12 && enqueue!(queue, (i, j), dE)
         end
-        all(x-> x > -1e-12, ΔE) && return OptimalBranchingResult(DNF(first.(cls)), size_reductions, γ)
-        while true
-            minval, minidx = findmin(view(ΔE, 1:nc, 1:nc))
-            minval > -1e-12 && break
-            i, j = minidx.I
-
-            # remove j-th row
-            mask[j] = false
-            ΔE[j, 1:nc] .= 0.0
-            ΔE[1:nc, j] .= 0.0
-
-            # update i-th row
+        isempty(queue) && return OptimalBranchingResult(DNF(first.(cls)), size_reductions, γ)
+        @show "!"
+        while !isempty(queue)
+            @show peek(queue)
+            (i, j) = dequeue!(queue)
+            # remove i, j-th row
+            for rowid in (i, j)
+                mask[rowid] = false
+                for k = 1:nc
+                    if mask[k]
+                        a, b = minmax(rowid, k)
+                        haskey(queue, (a, b)) && delete!(queue, (a, b))
+                    end
+                end
+            end
+            # add i-th row
+            mask[i] = true
             cls[i] = [gather2(length(variables), cls[i][II[i, j]], cls[j][JJ[i, j]])]
             size_reductions[i] = RD[i, j]
             for k = 1:nc
                 if i !== k && mask[k]
                     a, b = minmax(i, k)
                     II[a, b], JJ[a, b], RD[a, b] = reduction_merge(cls[a], cls[b])
-                    ΔE[a, b] = γ^(-RD[a, b]) - γ^(-size_reductions[a]) - γ^(-size_reductions[b])
+                    dE = γ^(-RD[a, b]) - γ^(-size_reductions[a]) - γ^(-size_reductions[b])
+                    dE <= -1e-12 && enqueue!(queue, (a, b), dE)
                 end
             end
         end
