@@ -1,7 +1,7 @@
 module OptimalBranchingMIS
 
 using OptimalBranchingCore
-using OptimalBranchingCore: AbstractProblem
+using OptimalBranchingCore: AbstractProblem,ClauseTree
 using OptimalBranchingCore.BitBasis
 using Combinatorics
 using EliminateGraphs, EliminateGraphs.Graphs
@@ -29,4 +29,5 @@ include("branch.jl")
 
 include("interfaces.jl")
 
+include("treesa.jl")
 end

@@ -33,5 +33,5 @@ include("setcovering.jl")
 include("branch.jl")
 include("greedymerge.jl")
 include("mockproblem.jl")
-
+include("treesa.jl")
 end
