@@ -67,19 +67,20 @@ Branch the given problem using the specified solver configuration.
 ### Returns
 The resulting value, which may have different type depending on the `result_type`.
 """
-function branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy, reducer::AbstractReducer, result_type)
+function branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy, reducer::AbstractReducer, result_type; level=0)
     @debug "Branching and reducing problem" problem
     isempty(problem) && return zero(result_type)
     # reduce the problem
     rp, reducedvalue = reduce_problem(result_type, problem, reducer)
-    rp !== problem && return branch_and_reduce(rp, config, reducer, result_type) * reducedvalue
+    rp !== problem && return branch_and_reduce(rp, config, reducer, result_type; level=level) * reducedvalue
 
     # branch the problem
     variables = select_variables(rp, config.measure, config.selector)  # select a subset of variables
     tbl = branching_table(rp, config.table_solver, variables)      # compute the BranchingTable
     result = optimal_branching_rule(tbl, variables, rp, config.measure, config.set_cover_solver)  # compute the optimal branching rule
-    return sum(get_clauses(result)) do branch  # branch and recurse
+    return sum(enumerate(get_clauses(result))) do (i, branch)  # branch and recurse
+        @info "Level $level: Entering branch $i/$(length(get_clauses(result)))"
         subproblem, localvalue = apply_branch(rp, branch, variables)
-        branch_and_reduce(subproblem, config, reducer, result_type) * result_type(localvalue) * reducedvalue
+        branch_and_reduce(subproblem, config, reducer, result_type; level=level+1) * result_type(localvalue) * reducedvalue
     end
 end
