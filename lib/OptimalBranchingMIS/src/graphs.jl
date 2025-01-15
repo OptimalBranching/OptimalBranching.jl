@@ -185,3 +185,23 @@ function folding(g::SimpleGraph, v::Int)
         return (induced_subgraph(g, setdiff(1:nv(g), [v, a, b]))[1], 1)
     end
 end
+
+function graph_product(g1::SimpleGraph, g2::SimpleGraph)
+    g = SimpleGraph(nv(g1) * nv(g2))
+    for i in 1:nv(g1)
+        for j in 1:nv(g2)
+            for n1 in neighbors(g1, i)
+                add_edge!(g, (i - 1) * nv(g2) + j, (n1 - 1) * nv(g2) + j)
+            end
+            for n2 in neighbors(g2, j)
+                add_edge!(g, (i - 1) * nv(g2) + j, (i - 1) * nv(g2) + n2)
+            end
+            for n1 in neighbors(g1, i)
+                for n2 in neighbors(g2, j)
+                    add_edge!(g, (i - 1) * nv(g2) + j, (n1 - 1) * nv(g2) + n2)
+                end
+            end
+        end
+    end
+    return g
+end

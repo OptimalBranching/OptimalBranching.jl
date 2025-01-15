@@ -33,3 +33,16 @@ end
     @test collect_configs.(cfgs) == reshape([[BitVector((0, 0, 1))], [], [], []], 2, 2)
     @test BranchingTable(cfgs) == BranchingTable(3, [[StaticElementVector(2, [0, 0, 1])]])
 end
+
+@testset "graph_product" begin
+    bs = BranchingStrategy(table_solver = TensorNetworkSolver(), selector = KaHyParSelector(15), measure = D3Measure())
+
+    c7 = cycle_graph(7)
+    @test mis_size(c7) == 3
+
+    g2 = OptimalBranchingMIS.graph_product(c7, c7)
+    @test mis_size(g2) == 10
+
+    g3 = OptimalBranchingMIS.graph_product(g2, c7)
+    # @test mis_size(g3;branching_strategy=bs) == 33
+end
