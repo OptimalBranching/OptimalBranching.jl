@@ -67,7 +67,7 @@ Branch the given problem using the specified solver configuration.
 ### Returns
 The resulting value, which may have different type depending on the `result_type`.
 """
-function branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy, reducer::AbstractReducer, result_type; show_progress=false, tag="")
+function branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy, reducer::AbstractReducer, result_type; show_progress=false, tag=Tuple{Int,Int}[])
     @debug "Branching and reducing problem" problem
     is_solved(problem) && return zero(result_type)
     # reduce the problem
@@ -79,8 +79,20 @@ function branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy, 
     tbl = branching_table(rp, config.table_solver, variables)      # compute the BranchingTable
     result = optimal_branching_rule(tbl, variables, rp, config.measure, config.set_cover_solver)  # compute the optimal branching rule
     return sum(enumerate(get_clauses(result))) do (i, branch)  # branch and recurse
-        show_progress && @info "Entering branch $tag($i/$(length(get_clauses(result))))/"
+        show_progress && (print_sequence(stdout, tag); println(stdout))
         subproblem, localvalue = apply_branch(rp, branch, variables)
-        branch_and_reduce(subproblem, config, reducer, result_type; tag="$tag($i/$(length(get_clauses(result))))/") * result_type(localvalue) * reducedvalue
+        branch_and_reduce(subproblem, config, reducer, result_type; tag=[tag..., (i, length(get_clauses(result)))], show_progress) * result_type(localvalue) * reducedvalue
+    end
+end
+
+function print_sequence(io::IO, sequence::Vector{Tuple{Int,Int}})
+    for (i, n) in sequence
+        if i == n
+            print(io, "■")
+        elseif i == 1
+            print(io, "□")
+        else
+            print(io, "▦")
+        end
     end
 end

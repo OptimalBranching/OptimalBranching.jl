@@ -26,5 +26,13 @@ end
     nsample = 3
     p = MockProblem(rand(Bool, n))
     config = BranchingStrategy(table_solver=MockTableSolver(nsample), measure=NumOfVariables(), selector=RandomSelector(16))
-    @test branch_and_reduce(p, config, NoReducer(), MaxSize; show_progress=true).size == 100
+    @test branch_and_reduce(p, config, NoReducer(), MaxSize).size == 100
+    res1 = branch_and_reduce(p, config, NoReducer(), MaxSizeBranchCount; show_progress=true)
+    @test res1.size == 100
+
+    config = BranchingStrategy(table_solver=MockTableSolver(nsample),  measure=NumOfVariables(), selector=RandomSelector(16), set_cover_solver=NaiveBranch())
+    res2 = branch_and_reduce(p, config, NoReducer(), MaxSizeBranchCount; show_progress=true)
+    @show res1.count res2.count
+    @test res2.size == 100
+    @test res1.count < res2.count
 end

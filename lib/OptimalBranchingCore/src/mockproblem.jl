@@ -67,7 +67,6 @@ function branching_table(p::MockProblem, table_solver::MockTableSolver, variable
 end
 
 function OptimalBranchingCore.apply_branch(p::MockProblem, clause::Clause{INT}, variables::Vector{T}) where {INT<:Integer, T<:Integer}
-    @show clause
     return MockProblem([p.optimal[i] for i in 1:length(p.optimal) if (i ∉ variables || iszero(readbit(clause.mask, findfirst(==(i), variables))))]), count(i -> isone(readbit(clause.mask, i)) && (readbit(clause.val, i) == p.optimal[variables[i]]), 1:length(variables))
 end
 is_solved(p::MockProblem) = measure(p, NumOfVariables()) == 0
