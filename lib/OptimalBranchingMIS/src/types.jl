@@ -16,7 +16,7 @@ mutable struct MISProblem <: AbstractProblem
 end
 Base.copy(p::MISProblem) = MISProblem(copy(p.g))
 Base.show(io::IO, p::MISProblem) = print(io, "MISProblem($(nv(p.g)))")
-Base.isempty(p::MISProblem) = nv(p.g) == 0
+OptimalBranchingCore.is_solved(p::MISProblem) = nv(p.g) == 0
 
 """
     TensorNetworkSolver

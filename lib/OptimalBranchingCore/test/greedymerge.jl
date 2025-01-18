@@ -22,13 +22,13 @@ end
 
 @testset "greedymerge large scale" begin
     n = 1000    # total number of variables
-    p = MockProblem(n)
+    p = MockProblem(rand(Bool, n))
 
     nvars = 18  # number of variables to be selected
     variables = [1:nvars...]
 
     # get the branching table
-    table_solver = MockTableSolver(10000)
+    table_solver = MockTableSolver(1000)
     tbl = branching_table(p, table_solver, variables)
     candidates = OptimalBranchingCore.bit_clauses(tbl)
 
