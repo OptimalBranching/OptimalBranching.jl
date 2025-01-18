@@ -20,3 +20,15 @@ end
 @testset "interfaces" begin
     include("interfaces.jl")
 end
+
+@testset "types" begin
+    include("types.jl")
+end
+
+@testset "selector" begin
+    include("selector.jl")
+end
+
+@testset "greedymerge" begin
+    include("greedymerge.jl")
+end

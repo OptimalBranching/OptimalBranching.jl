@@ -15,9 +15,14 @@ A [`OptimalBranchingResult`](@ref) object representing the optimal branching rul
 """
 function optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, m::AbstractMeasure, solver::AbstractSetCoverSolver)
     candidates = candidate_clauses(table)
-    size_reductions = [measure(problem, m) - measure(first(apply_branch(problem, candidate, variables)), m) for candidate in candidates]
-    return minimize_γ(table, candidates, size_reductions, solver; γ0=2.0)
+    size_reductions = [size_reduction(problem, m, candidate, variables) for candidate in candidates]
+    return minimize_γ(table, candidates, size_reductions, solver; γ0 = 2.0)
 end
+
+function size_reduction(p::AbstractProblem, m::AbstractMeasure, cl::Clause{INT}, variables::Vector) where {INT}
+    return measure(p, m) - measure(first(apply_branch(p, cl, variables)), m)
+end
+
 
 """
     BranchingStrategy
@@ -31,23 +36,23 @@ A struct representing the configuration for a solver, including the reducer and 
 - `selector::AbstractSelector`: The selector to select the next branching variable or decision.
 - `m::AbstractMeasure`: The measure to evaluate the performance of the branching strategy.
 """
-@kwdef struct BranchingStrategy{TS<:AbstractTableSolver, SCS<:AbstractSetCoverSolver, SL<:AbstractSelector, M<:AbstractMeasure}
+@kwdef struct BranchingStrategy{TS <: AbstractTableSolver, SCS <: AbstractSetCoverSolver, SL <: AbstractSelector, M <: AbstractMeasure}
     set_cover_solver::SCS = IPSolver()
     table_solver::TS
     selector::SL
     measure::M
 end
-Base.show(io::IO, config::BranchingStrategy) = print(io, 
-"""
-BranchingStrategy
-├── table_solver - $(config.table_solver)
-├── set_cover_solver - $(config.set_cover_solver)
-├── selector - $(config.selector)
-└── measure - $(config.measure)
-""")
+Base.show(io::IO, config::BranchingStrategy) = print(io,
+    """
+    BranchingStrategy
+    ├── table_solver - $(config.table_solver)
+    ├── set_cover_solver - $(config.set_cover_solver)
+    ├── selector - $(config.selector)
+    └── measure - $(config.measure)
+    """)
 
 """
-    branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy; reducer::AbstractReducer=NoReducer(), result_type=Int)
+    branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy; reducer::AbstractReducer=NoReducer(), result_type=Int, show_progress=false)
 
 Branch the given problem using the specified solver configuration.
 
@@ -62,19 +67,34 @@ Branch the given problem using the specified solver configuration.
 ### Returns
 The resulting value, which may have different type depending on the `result_type`.
 """
-function branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy, reducer::AbstractReducer, result_type)
+function branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy, reducer::AbstractReducer, result_type; show_progress=false, tag=Tuple{Int,Int}[])
     @debug "Branching and reducing problem" problem
-    isempty(problem) && return zero(result_type)
+    has_zero_size(problem) && return zero(result_type)
     # reduce the problem
     rp, reducedvalue = reduce_problem(result_type, problem, reducer)
-    rp !== problem && return branch_and_reduce(rp, config, reducer, result_type) * reducedvalue
+    rp !== problem && return branch_and_reduce(rp, config, reducer, result_type; tag) * reducedvalue
 
     # branch the problem
     variables = select_variables(rp, config.measure, config.selector)  # select a subset of variables
     tbl = branching_table(rp, config.table_solver, variables)      # compute the BranchingTable
     result = optimal_branching_rule(tbl, variables, rp, config.measure, config.set_cover_solver)  # compute the optimal branching rule
-    return sum(result.optimal_rule.clauses) do branch  # branch and recurse
+    return sum(enumerate(get_clauses(result))) do (i, branch)  # branch and recurse
+        show_progress && (print_sequence(stdout, tag); println(stdout))
         subproblem, localvalue = apply_branch(rp, branch, variables)
-        branch_and_reduce(subproblem, config, reducer, result_type) * result_type(localvalue) * reducedvalue
+        branch_and_reduce(subproblem, config, reducer, result_type;
+                tag=(show_progress ? [tag..., (i, length(get_clauses(result)))] : tag),
+                show_progress) * result_type(localvalue) * reducedvalue
+    end
+end
+
+function print_sequence(io::IO, sequence::Vector{Tuple{Int,Int}})
+    for (i, n) in sequence
+        if i == n
+            print(io, "■")
+        elseif i == 1
+            print(io, "□")
+        else
+            print(io, "▦")
+        end
     end
 end

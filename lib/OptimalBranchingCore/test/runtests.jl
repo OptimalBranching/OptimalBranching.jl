@@ -21,4 +21,12 @@ end
     include("setcovering.jl")
 end
 
+@testset "greedymerge" begin
+    include("greedymerge.jl")
+end
+
+@testset "mockproblem" begin
+    include("mockproblem.jl")
+end
+
 Documenter.doctest(OptimalBranchingCore; manual=false)

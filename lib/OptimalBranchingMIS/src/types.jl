@@ -12,11 +12,11 @@ Represents a Maximum Independent Set (MIS) problem.
 
 """
 mutable struct MISProblem <: AbstractProblem
-    g::SimpleGraph
+    g::SimpleGraph{Int}
 end
 Base.copy(p::MISProblem) = MISProblem(copy(p.g))
 Base.show(io::IO, p::MISProblem) = print(io, "MISProblem($(nv(p.g)))")
-Base.isempty(p::MISProblem) = nv(p.g) == 0
+OptimalBranchingCore.has_zero_size(p::MISProblem) = nv(p.g) == 0
 
 """
     TensorNetworkSolver
@@ -83,4 +83,21 @@ function OptimalBranchingCore.measure(p::MISProblem, ::D3Measure)
         dg = degree(g)
         return Int(sum(max(d - 2, 0) for d in dg))
     end
+end
+
+function OptimalBranchingCore.size_reduction(p::MISProblem, m::D3Measure, cl::Clause{INT}, variables::Vector) where {INT}
+    remove_mask = removed_mask(variables, p.g, cl)
+    iszero(remove_mask) && return 0
+    sum = 0
+    for i in 1:nv(p.g)
+        deg = degree(p.g, i)
+        deg <= 2 && continue
+        if readbit(remove_mask, i) == 1
+            sum += max(deg - 2, 0)
+        else
+            countneighbor = count(v -> readbit(remove_mask, v) == 0, neighbors(p.g, i)) 
+            sum += max(deg - 2, 0) - max(countneighbor - 2, 0)
+        end
+    end
+    return sum
 end

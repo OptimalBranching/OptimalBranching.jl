@@ -2,6 +2,7 @@ module OptimalBranchingCore
 
 using JuMP, HiGHS
 using BitBasis
+using DataStructures
 
 # logic expressions
 export Clause, BranchingTable, DNF, booleans, ∨, ∧, ¬, covered_by, literals, is_true_literal, is_false_literal
@@ -16,7 +17,7 @@ export AbstractProblem, branch_and_reduce, BranchingStrategy
 # variable selector interface
 export select_variable, AbstractSelector
 # branching table solver interface
-export branching_table, AbstractTableSolver
+export branching_table, AbstractTableSolver, NaiveBranch, GreedyMerge
 # measure interface
 export measure, AbstractMeasure
 # reducer interface
@@ -30,5 +31,7 @@ include("interfaces.jl")
 include("branching_table.jl")
 include("setcovering.jl")
 include("branch.jl")
+include("greedymerge.jl")
+include("mockproblem.jl")
 
 end
