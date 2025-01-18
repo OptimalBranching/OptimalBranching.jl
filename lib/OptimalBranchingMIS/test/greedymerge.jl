@@ -66,8 +66,11 @@ end
     result_ip = OptimalBranchingCore.minimize_γ(tbl, clauses, Δρ, IPSolver(max_itr = 10, verbose = false))
     @test OptimalBranchingCore.covered_by(tbl, result_ip.optimal_rule)
 
-    p = MISProblem(random_regular_graph(20, 3))
-    cls = OptimalBranchingCore.bit_clauses(tbl)
-    res = OptimalBranchingCore.greedymerge(cls, p, [1, 2, 3, 4, 5], D3Measure())
-    @test OptimalBranchingCore.covered_by(tbl, res.optimal_rule)
+    for i=1:100
+        Random.seed!(i)
+        p = MISProblem(random_regular_graph(20, 3))
+        cls = OptimalBranchingCore.bit_clauses(tbl)
+        res = OptimalBranchingCore.greedymerge(cls, p, Random.shuffle(1:20)[1:9], D3Measure())
+        @test OptimalBranchingCore.covered_by(tbl, res.optimal_rule)
+    end
 end
