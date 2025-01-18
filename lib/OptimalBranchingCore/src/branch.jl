@@ -69,7 +69,7 @@ The resulting value, which may have different type depending on the `result_type
 """
 function branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy, reducer::AbstractReducer, result_type; show_progress=false, tag=Tuple{Int,Int}[])
     @debug "Branching and reducing problem" problem
-    is_solved(problem) && return zero(result_type)
+    has_zero_size(problem) && return zero(result_type)
     # reduce the problem
     rp, reducedvalue = reduce_problem(result_type, problem, reducer)
     rp !== problem && return branch_and_reduce(rp, config, reducer, result_type; tag) * reducedvalue

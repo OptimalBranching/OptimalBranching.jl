@@ -73,4 +73,4 @@ function apply_branch(p::MockProblem, clause::Clause{INT}, variables::Vector{T})
     end
     return MockProblem(p.optimal[remain_mask]), count(i -> isone(readbit(clause.mask, i)) && (readbit(clause.val, i) == p.optimal[variables[i]]), 1:length(variables))
 end
-is_solved(p::MockProblem) = measure(p, NumOfVariables()) == 0
+has_zero_size(p::MockProblem) = measure(p, NumOfVariables()) == 0
