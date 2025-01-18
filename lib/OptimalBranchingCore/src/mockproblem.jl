@@ -54,7 +54,7 @@ function branching_table(p::MockProblem, table_solver::MockTableSolver, variable
         return bs
     end
     rows = unique!([[rand_fib()] for _ in 1:table_solver.n])
-    for i in 1:table_solver.n
+    for i in 1:length(rows)
         for _ = 1:100
             if rand() < table_solver.p
                 push!(rows[i], rand_fib())
