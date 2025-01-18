@@ -13,7 +13,7 @@ using OptimalBranchingCore: size_reduction, apply_branch
     cl = Clause(bit"1111111111", bit"1011010111")
     p = MISProblem(g)
     m = D3Measure()
-    @test size_reduction(p, m, cl, vs) == measure(p, m) - measure(first(apply_branch(p, cl, vs)), m)
+    @test size_reduction(p, m, cl, vs) == measure(p, m) - measure(first(apply_branch(Int, p, cl, vs)), m)
 
     edges = [(1, 4), (1, 5), (3, 4), (2, 5), (4, 5), (1, 6), (2, 7), (3, 8)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))

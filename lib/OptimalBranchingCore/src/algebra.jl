@@ -1,44 +1,35 @@
 """
-    MaxSize
+    struct SolutionAndCount{INT <: Integer}
 
-A struct representing the maximum size of a result. (actually a tropical int)
+The maximum solution size, solution and the number of branches, which is the return value of a branching algorithm.
 
 ### Fields
-- `size::Int`: The maximum size value.
-
-### Constructors
-- `MaxSize(size::Int)`: Creates a `MaxSize` instance with the specified size.
-"""
-struct MaxSize
-    size::Int
-    MaxSize(size::Int) = new(size)
-end
-
-Base.:+(a::MaxSize, b::MaxSize) = MaxSize(max(a.size, b.size))
-Base.:*(a::MaxSize, b::MaxSize) = MaxSize(a.size + b.size)
-Base.zero(::Type{MaxSize}) = MaxSize(0)
-
-"""
-    struct MaxSizeBranchCount
-
-Reture both the max size of the results and number of branches.
-
-# Fields
-- `size::Int`: The max size of the results.
+- `size::Float64`: The solution size, the larger the better.
+- `solution::INT`: The optimal solution stored in an integer.
 - `count::Int`: The number of branches of that size.
-
-# Constructors
-- `MaxSizeBranchCount(size::Int)`: Creates a `MaxSizeBranchCount` with the given size and initializes the count to 1.
-- `MaxSizeBranchCount(size::Int, count::Int)`: Creates a `MaxSizeBranchCount` with the specified size and count.
-
 """
-struct MaxSizeBranchCount
-    size::Int
+struct SolutionAndCount{INT <: Integer}
+    size::Float64
+    solution::INT
     count::Int
-    MaxSizeBranchCount(size::Int) = new(size, 1)
-    MaxSizeBranchCount(size::Int, count::Int) = new(size, count)
+    SolutionAndCount(size::Real, solution::INT, count::Integer) where INT <: Integer = new{INT}(Float64(size), solution, Int(count))
 end
 
-Base.:+(a::MaxSizeBranchCount, b::MaxSizeBranchCount) = MaxSizeBranchCount(max(a.size, b.size), a.count + b.count)
-Base.:*(a::MaxSizeBranchCount, b::MaxSizeBranchCount) = MaxSizeBranchCount(a.size + b.size, (a.count * b.count))
-Base.zero(::Type{MaxSizeBranchCount}) = MaxSizeBranchCount(0, 1)
+function compare_solutions(a::SolutionAndCount, b::SolutionAndCount)
+    cc = a.count + b.count
+    a.size >= b.size ? SolutionAndCount(a.size, a.solution, cc) : SolutionAndCount(b.size, b.solution, cc)
+end
+function join_solutions(a::SolutionAndCount, b::SolutionAndCount)
+    SolutionAndCount(a.size + b.size, a.solution | b.solution, a.count * b.count)
+end
+
+"""
+    read_solution(n::Int, sol::SolutionAndCount)
+
+Reads the solution from the [`SolutionAndCount`](@ref) object.
+
+### Arguments
+- `n::Int`: The number of variables.
+- `sol::SolutionAndCount`: The solution object.
+"""
+read_solution(n::Int, sol::SolutionAndCount) = [Int(readbit(sol.solution, i)) for i in 1:n]

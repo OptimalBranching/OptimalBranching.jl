@@ -120,3 +120,13 @@ Base.show(io::IO, dnf::DNF{INT}) where {INT} = print(io, "DNF{$INT}: " * join(["
 function covered_by(s::Integer, dnf::DNF)
     any(c->covered_by(s, c), dnf.clauses)
 end
+
+# map a solution on variables `from_variables` to variables `to_variables`
+function map_solution(::Type{INT}, loc::Integer, from_variables, to_variables) where INT
+    sol = zero(INT)
+    for (f, v) in zip(from_variables, to_variables)
+        b = INT(readbit(loc, f))
+        sol = sol | (b << (v - 1))
+    end
+    return sol
+end

@@ -28,14 +28,13 @@ The function checks the number of vertices in the graph:
 - If there are two vertices, it returns an empty instance and a count based on the presence of an edge between them.
 - For graphs with more than two vertices, it calculates the degrees of the vertices and identifies the vertex with the minimum degree to determine which vertices to remove.
 """
-function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, ::MISReducer) where R
+function OptimalBranchingCore.reduce_problem(::Type{INT}, p::MISProblem, ::MISReducer) where INT
     g = p.g
-    if nv(g) == 0
-        return MISProblem(SimpleGraph(0)), R(0)
-    elseif nv(g) == 1
-        return MISProblem(SimpleGraph(0)), R(1)
+    if nv(g) == 1
+        return MISProblem(SimpleGraph(0)), ReductionInfo(true, Int[], Int[], 1.0, Dict(zero(INT) => one(INT)))
     elseif nv(g) == 2
-        return MISProblem(SimpleGraph(0)), R(2 - has_edge(g, 1, 2))
+        to_variables = ...
+        return MISProblem(SimpleGraph(0)), ReductionInfo(true, neighbor_cover(g, v, 1), to_variables, 2 - has_edge(g, 1, 2), Dict(...))
     else
         degrees = degree(g)
         degmin = minimum(degrees)
@@ -43,7 +42,7 @@ function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, ::MISRedu
 
         if degmin == 0
             all_zero_vertices = findall(==(0), degrees)
-            return MISProblem(remove_vertices(g, all_zero_vertices)), R(length(all_zero_vertices))
+            return MISProblem(remove_vertices(g, all_zero_vertices)), ReductionInfo(true, Dict{Int, Int}(...), length(all_zero_vertices))
         elseif degmin == 1
             return MISProblem(remove_vertices(g, neighbors(g, vmin) ∪ vmin)), R(1)
         elseif degmin == 2
@@ -51,7 +50,7 @@ function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, ::MISRedu
             return MISProblem(g_new), R(n)
         end
     end
-    return p, R(0)
+    return p, ReductionInfo(false, Dict{Int, Int}(), 0.0, Dict{INT, INT}())
 end
 
 struct XiaoReducer <: AbstractReducer end

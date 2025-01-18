@@ -26,18 +26,18 @@ end
     nsample = 3
     p = MockProblem(rand(Bool, n))
     config = BranchingStrategy(table_solver=MockTableSolver(nsample), measure=NumOfVariables(), selector=RandomSelector(16))
-    @test branch_and_reduce(p, config, NoReducer(), MaxSize).size == 100
-    res1 = branch_and_reduce(p, config, NoReducer(), MaxSizeBranchCount; show_progress=true)
+    res1 = branch_and_reduce(p, config; show_progress=true)
     @test res1.size == 100
+    @test read_solution(n, res1) == p.optimal
 
     config = BranchingStrategy(table_solver=MockTableSolver(nsample),  measure=NumOfVariables(), selector=RandomSelector(16), set_cover_solver=NaiveBranch())
-    res2 = branch_and_reduce(p, config, NoReducer(), MaxSizeBranchCount; show_progress=true)
-    @test res2.size == 100
+    res2 = branch_and_reduce(p, config; show_progress=true)
+    @test read_solution(n, res2) == p.optimal
     @test res1.count < res2.count
 
     config = BranchingStrategy(table_solver=MockTableSolver(nsample),  measure=NumOfVariables(), selector=RandomSelector(16), set_cover_solver=GreedyMerge())
-    res3 = branch_and_reduce(p, config, NoReducer(), MaxSizeBranchCount; show_progress=true)
-    @test res3.size == 100
+    res3 = branch_and_reduce(p, config; show_progress=true)
+    @test read_solution(n, res3) == p.optimal
     @test res2.count > res3.count
 
     @show res1.count, res2.count, res3.count

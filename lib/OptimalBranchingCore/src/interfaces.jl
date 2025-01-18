@@ -17,6 +17,7 @@ Create a branch from the given clause applied to the specified vertices.
 
 ### Returns
 - `AbstractProblem`: A new instance of `AbstractProblem` with reduced size.
+- `SolutionAndCount`: A local solution and its size (branching count is fixed to 1).
 """
 function apply_branch end
 
@@ -51,22 +52,35 @@ This serves as a base type for all specific reducer implementations.
 abstract type AbstractReducer end
 struct NoReducer <: AbstractReducer end
 
+struct ReductionInfo{INT}
+    reduced::Bool      # reduced or not
+    from_variables::Vector{Int}    # from which variable?
+    to_variables::Vector{Int}      # to which variables?
+    solution_size_gain::Float64    # how much size is reduced?
+    solution_map::Dict{INT, INT}   # from which solution, to which solution? used to extract the solution
+end
+function map_config_back(config::INT, info::ReductionInfo{INT}) where INT
+    info.reduced || return config
+    collected = map_solution(INT, config, info.to_variables, 1:length(info.variable_map))
+    return config | map_solution(INT, collected, info.from_variables, 1:length(info.solution_map))
+end
+
 """
-    reduce_problem(::Type{R}, problem::AbstractProblem, reducer::AbstractReducer) where R
+    reduce_problem(::Type{INT}, problem::AbstractProblem, reducer::AbstractReducer) where INT <: Integer
 
 Reduces the problem size directly, e.g. by graph rewriting. It is a crucial step in the reduce and branch strategy.
 
 ### Arguments
-- `R`: The element type used for computing the size of solution. The should have an additive commutative monoid structure.
+- `INT`: The integer type for storing the solution.
 - `problem`: The problem instance.
 - `reducer`: The reducer.
 
 ### Returns
 A tuple of two values:
 - `AbstractProblem`: A new instance of `AbstractProblem` with reduced size.
-- `Number`: The local gain of the reduction, which will be added to the global gain.
+- `SolutionAndCount`: A local solution and its size (branching count is fixed to 1).
 """
-reduce_problem(::Type{T}, problem::AbstractProblem, ::NoReducer) where T = (problem, zero(T))
+reduce_problem(::Type{INT}, problem::AbstractProblem, ::NoReducer) where INT <: Integer = problem, ReductionInfo(false, Int[], Int[], 0.0, Dict{INT, INT}())
 
 """
     AbstractSelector

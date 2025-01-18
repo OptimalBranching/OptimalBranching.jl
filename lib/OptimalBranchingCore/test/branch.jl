@@ -1,6 +1,17 @@
 using OptimalBranchingCore, GenericTensorNetworks, NLsolve
 using Test
 
+@testset "promote local solution" begin
+    lsol = SolutionAndCount(1.0, 7, 2)
+    sol = OptimalBranchingCore.promote_local_solution(Int, lsol, [1, 3, 5])
+    @test sol.solution == 0b10101
+
+    lsol = SolutionAndCount(1.0, 7, 2)
+    sol = OptimalBranchingCore.promote_local_solution(LongLongUInt{2}, lsol, [61, 73, 95])
+    @test count_ones(sol.solution) == 3
+end
+
+
 @testset "constructing candidate_clauses" begin
     function all_clauses_naive(n::Int, bss::AbstractVector{Vector{INT}}) where INT
         allclauses = Vector{Clause{INT}}()

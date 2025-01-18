@@ -9,7 +9,7 @@ A struct representing a measure that counts the number of variables in a problem
 Each variable is counted as 1.
 """
 struct NumOfVariables <: AbstractMeasure end
-measure(p::MockProblem, ::NumOfVariables) = length(p.optimal)
+measure(p::AbstractProblem, ::NumOfVariables) = num_variables(p)
 
 
 """
@@ -71,6 +71,7 @@ function apply_branch(p::MockProblem, clause::Clause{INT}, variables::Vector{T})
     for i in 1:length(variables)
         isone(readbit(clause.mask, i)) && (remain_mask[variables[i]] = false)
     end
-    return MockProblem(p.optimal[remain_mask]), count(i -> isone(readbit(clause.mask, i)) && (readbit(clause.val, i) == p.optimal[variables[i]]), 1:length(variables))
+    size = count(i -> isone(readbit(clause.mask, i)) && (readbit(clause.val, i) == p.optimal[variables[i]]), 1:length(variables))
+    return MockProblem(p.optimal[remain_mask]), findall(remain_mask), SolutionAndCount(size, clause.val, 1)
 end
-has_zero_size(p::MockProblem) = measure(p, NumOfVariables()) == 0
+num_variables(p::MockProblem) = length(p.optimal)

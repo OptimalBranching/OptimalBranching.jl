@@ -12,7 +12,8 @@ export minimize_γ, optimal_branching_rule, OptimalBranchingResult
 
 ##### interfaces #####
 # high-level interface
-export AbstractProblem, branch_and_reduce, BranchingStrategy
+export AbstractProblem, num_variables
+export branch_and_reduce, BranchingStrategy
 
 # variable selector interface
 export select_variable, AbstractSelector
@@ -23,7 +24,7 @@ export measure, AbstractMeasure
 # reducer interface
 export reduce_problem, AbstractReducer, NoReducer
 # return type
-export MaxSize, MaxSizeBranchCount
+export SolutionAndCount, read_solution
 
 include("algebra.jl")
 include("bitbasis.jl")

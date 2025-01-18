@@ -13,7 +13,7 @@ Calculate the size of the Maximum Independent Set (MIS) for a given graph.
 """
 function mis_size(g::AbstractGraph; branching_strategy::BranchingStrategy = BranchingStrategy(table_solver = TensorNetworkSolver(), selector = MinBoundaryHighDegreeSelector(2, 6, 0), measure = D3Measure()), reducer = MISReducer())
     p = MISProblem(g)
-    res = branch_and_reduce(p, branching_strategy, reducer, MaxSize)
+    res = branch_and_reduce(p, branching_strategy, reducer)
     return res.size
 end
 
@@ -32,6 +32,6 @@ Calculate the size and the number of branches of the Maximum Independent Set (MI
 """
 function mis_branch_count(g::AbstractGraph; branching_strategy::BranchingStrategy = BranchingStrategy(table_solver = TensorNetworkSolver(), selector = MinBoundaryHighDegreeSelector(2, 6, 0), measure = D3Measure()), reducer = MISReducer())
     p = MISProblem(g)
-    res = branch_and_reduce(p, branching_strategy, reducer, MaxSizeBranchCount)
+    res = branch_and_reduce(p, branching_strategy, reducer)
     return (res.size, res.count)
 end

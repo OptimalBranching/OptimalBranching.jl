@@ -1,12 +1,15 @@
-using OptimalBranchingCore
+using OptimalBranchingCore, OptimalBranchingCore.BitBasis
+using OptimalBranchingCore: compare_solutions, join_solutions
 using Test
 
 @testset "algebra" begin
-    @test MaxSize(1) + MaxSize(2) == MaxSize(2)
-    @test MaxSize(1) * MaxSize(2) == MaxSize(3)
-    @test zero(MaxSize) == MaxSize(0)
-
-    @test MaxSizeBranchCount(1) + MaxSizeBranchCount(2) == MaxSizeBranchCount(2, 2)
-    @test MaxSizeBranchCount(1) * MaxSizeBranchCount(2) == MaxSizeBranchCount(3, 1)
-    @test zero(MaxSizeBranchCount) == MaxSizeBranchCount(0, 1)
+    INT = LongLongUInt{2}
+    a = SolutionAndCount(1, zero(INT), 1)
+    b = SolutionAndCount(2, zero(INT), 1)
+    c = compare_solutions(a, b)
+    @test c.size == 2
+    @test c.count == 2
+    d = join_solutions(a, b)
+    @test d.size == 3
+    @test d.count == 1
 end

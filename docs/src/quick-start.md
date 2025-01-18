@@ -42,7 +42,7 @@ mis_size(g, bs = branching_strategy, reducer = MISReducer())
 
 One can also use the [`branch_and_reduce`](@ref) function to solve the problem, which is more flexible.
 ```@repl quick-start
-branch_and_reduce(MISProblem(g), branching_strategy, MISReducer(), MaxSizeBranchCount)
+branch_and_reduce(MISProblem(g), branching_strategy, MISReducer())
 ```
 
 ## The optimal branching rule
