@@ -204,7 +204,7 @@ function gather2(n::Int, c1::Clause{INT}, c2::Clause{INT}) where INT
     return Clause(mask, val)
 end
 
-function is_solved(xs::Vector{T}, sets_id::Vector{Vector{Int}}, num_items::Int) where{T}
+function is_solved_by(xs::Vector{T}, sets_id::Vector{Vector{Int}}, num_items::Int) where{T}
     for i in 1:num_items
         flag = sum(xs[j] for j in sets_id[i])
         ((flag < 1) && !(flag ≈ 1)) && return false
@@ -247,7 +247,7 @@ function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, s
 
     optimize!(model)
     xs = value.(x)
-    @assert is_solved(xs, sets_id, num_items)
+    @assert is_solved_by(xs, sets_id, num_items)
     return pick_sets(xs, subsets, num_items)
 end
 

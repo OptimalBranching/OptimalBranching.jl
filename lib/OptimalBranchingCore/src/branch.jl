@@ -81,7 +81,9 @@ function branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy, 
     return sum(enumerate(get_clauses(result))) do (i, branch)  # branch and recurse
         show_progress && (print_sequence(stdout, tag); println(stdout))
         subproblem, localvalue = apply_branch(rp, branch, variables)
-        branch_and_reduce(subproblem, config, reducer, result_type; tag=[tag..., (i, length(get_clauses(result)))], show_progress) * result_type(localvalue) * reducedvalue
+        branch_and_reduce(subproblem, config, reducer, result_type;
+                tag=(show_progress ? [tag..., (i, length(get_clauses(result)))] : tag),
+                show_progress) * result_type(localvalue) * reducedvalue
     end
 end
 
