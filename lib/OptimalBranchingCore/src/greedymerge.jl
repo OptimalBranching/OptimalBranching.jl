@@ -7,7 +7,7 @@ end
 
 function optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, m::AbstractMeasure, solver::NaiveBranch)
     candidates = bit_clauses(table)
-	size_reductions = [size_reduction(problem, m, first(candidate), variables) for candidate in candidates]
+	size_reductions = [Float64(size_reduction(problem, m, first(candidate), variables)) for candidate in candidates]
 	γ = complexity_bv(size_reductions)
     return OptimalBranchingResult(DNF(first.(candidates)), size_reductions, γ)
 end
@@ -19,33 +19,60 @@ function bit_clauses(tbl::BranchingTable{INT}) where {INT}
 end
 
 function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem, variables::Vector, m::AbstractMeasure) where {INT}
+    function reduction_merge(cli, clj)
+        clmax, iimax, jjmax, reductionmax = Clause(zero(INT), zero(INT)), -1, -1, 0.0
+        @inbounds for ii = 1:length(cli), jj = 1:length(clj)
+            cl12 = gather2(length(variables), cli[ii], clj[jj])
+            iszero(cl12.mask) && continue
+            reduction = Float64(size_reduction(problem, m, cl12, variables))
+            if reduction > reductionmax
+                clmax, iimax, jjmax, reductionmax = cl12, ii, jj, reduction
+            end
+        end
+        return clmax, iimax, jjmax, reductionmax
+    end
     cls = copy(cls)
-    size_reductions = [size_reduction(problem, m, first(candidate), variables) for candidate in cls]
-    local γ
-    while true
+    size_reductions = [Float64(size_reduction(problem, m, first(candidate), variables)) for candidate in cls]
+    k = 0
+    @inbounds while true
+        nc = length(cls)
+        mask = trues(nc)
         γ = complexity_bv(size_reductions)
-        minval = zero(γ)
-        minidx = (-1, -1, -1, -1)
-        local minclause
-        local minred
-        for i ∈ 1:length(cls), j ∈ i+1:length(cls)
-            for ii in 1:length(cls[i]), jj in 1:length(cls[j])
-                cl12 = gather2(length(variables), cls[i][ii], cls[j][jj])
-                if cl12.mask == 0
-                    continue
+        weights = map(s -> γ^(-s), size_reductions)
+        queue = PriorityQueue{NTuple{2, Int}, Float64}()  # from small to large
+        for i ∈ 1:nc, j ∈ i+1:nc
+            _, _, _, reduction = reduction_merge(cls[i], cls[j])
+            dE = γ^(-reduction) - weights[i] - weights[j]
+            dE <= -1e-12 && enqueue!(queue, (i, j), dE - 1e-12 * (k += 1; k))
+        end
+        isempty(queue) && return OptimalBranchingResult(DNF(first.(cls)), size_reductions, γ)
+        while !isempty(queue)
+            (i, j) = dequeue!(queue)
+            # remove i, j-th row
+            for rowid in (i, j)
+                mask[rowid] = false
+                for k = 1:nc
+                    if mask[k]
+                        a, b = minmax(rowid, k)
+                        haskey(queue, (a, b)) && delete!(queue, (a, b))
+                    end
                 end
-                reduction = size_reduction(problem, m, cl12, variables)
-                val = γ^(-reduction) - γ^(-size_reductions[i]) - γ^(-size_reductions[j])
-                if val < minval
-                    minval, minidx, minclause, minred = val, (i, j, ii, jj), cl12, reduction
+            end
+            # add i-th row
+            mask[i] = true
+            clij, _, _, size_reductions[i] = reduction_merge(cls[i], cls[j])
+            cls[i] = [clij]
+            weights[i] = γ^(-size_reductions[i])
+            for k = 1:nc
+                if i !== k && mask[k]
+                    a, b = minmax(i, k)
+                    _, _, _, reduction = reduction_merge(cls[a], cls[b])
+                    dE = γ^(-reduction) - weights[a] - weights[b]
+                    
+                    dE <= -1e-12 && enqueue!(queue, (a, b), dE - 1e-12 * (k += 1; k))
                 end
             end
         end
-        minidx == (-1, -1, -1, -1) && break  # no more merging
-        deleteat!(cls, minidx[1:2])
-        deleteat!(size_reductions, minidx[1:2])
-        push!(cls, [minclause])
-        push!(size_reductions, minred)
+        cls, size_reductions = cls[mask], size_reductions[mask]
     end
-    return OptimalBranchingResult(DNF([cl[1] for cl in cls]), size_reductions, γ)
 end
