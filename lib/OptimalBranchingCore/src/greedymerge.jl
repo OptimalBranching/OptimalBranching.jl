@@ -33,6 +33,7 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
     end
     cls = copy(cls)
     size_reductions = [Float64(size_reduction(problem, m, first(candidate), variables)) for candidate in cls]
+    k = 0
     @inbounds while true
         nc = length(cls)
         mask = trues(nc)
@@ -42,7 +43,7 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
         for i ∈ 1:nc, j ∈ i+1:nc
             _, _, _, reduction = reduction_merge(cls[i], cls[j])
             dE = γ^(-reduction) - weights[i] - weights[j]
-            dE <= -1e-12 && enqueue!(queue, (i, j), dE)
+            dE <= -1e-12 && enqueue!(queue, (i, j), dE - 1e-12 * (k += 1; k))
         end
         isempty(queue) && return OptimalBranchingResult(DNF(first.(cls)), size_reductions, γ)
         while !isempty(queue)
@@ -67,7 +68,8 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
                     a, b = minmax(i, k)
                     _, _, _, reduction = reduction_merge(cls[a], cls[b])
                     dE = γ^(-reduction) - weights[a] - weights[b]
-                    dE <= -1e-12 && enqueue!(queue, (a, b), dE)
+                    
+                    dE <= -1e-12 && enqueue!(queue, (a, b), dE - 1e-12 * (k += 1; k))
                 end
             end
         end
