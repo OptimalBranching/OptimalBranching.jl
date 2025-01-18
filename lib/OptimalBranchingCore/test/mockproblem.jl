@@ -1,9 +1,9 @@
 using OptimalBranchingCore, Test
-using OptimalBranchingCore: NumOfVariables, MockProblem, MockTableSolver
+using OptimalBranchingCore: NumOfVariables, MockProblem, MockTableSolver, RandomSelector
 
 @testset "mockproblem" begin
     n = 10
-    p = MockProblem(n)
+    p = MockProblem(rand(Bool, n))
     m = NumOfVariables()
     @test measure(p, m) == n
     nb = 5
@@ -19,4 +19,12 @@ using OptimalBranchingCore: NumOfVariables, MockProblem, MockTableSolver
     @test tbl.bit_length == nb
     @test length(tbl.table) <= nsample
     @test all(length.(tbl.table) .> 10)
+end
+
+@testset "branch_and_reduce" begin
+    n = 100
+    nsample = 3
+    p = MockProblem(rand(Bool, n))
+    config = BranchingStrategy(table_solver=MockTableSolver(nsample), measure=NumOfVariables(), selector=RandomSelector(16))
+    @test branch_and_reduce(p, config, NoReducer(), MaxSize; show_progress=true).size == 100
 end
