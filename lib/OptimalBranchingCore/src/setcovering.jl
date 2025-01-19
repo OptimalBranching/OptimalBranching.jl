@@ -7,35 +7,39 @@ abstract type AbstractSetCoverSolver end
 
 """
     LPSolver <: AbstractSetCoverSolver
-    LPSolver(; optimizer = HiGHS.Optimizer, max_itr::Int = 5, verbose::Bool = false)
+    LPSolver(; optimizer = HiGHS.Optimizer, max_itr::Int = 20, γ0::Float64 = 2.0, verbose::Bool = false)
 
 A linear programming solver for set covering problems.
 
 ### Fields
 - `optimizer`: The optimizer to be used.
 - `max_itr::Int`: The maximum number of iterations to be performed.
+- `γ0::Float64`: The initial γ value.
 - `verbose::Bool`: Whether to print the solver's output.
 """
 Base.@kwdef struct LPSolver <: AbstractSetCoverSolver 
     optimizer = HiGHS.Optimizer
-    max_itr::Int = 5
+    max_itr::Int = 20
+    γ0::Float64 = 2.0
     verbose::Bool = false
 end
 
 """
     IPSolver <: AbstractSetCoverSolver
-    IPSolver(; optimizer = HiGHS.Optimizer, max_itr::Int = 5, verbose::Bool = false)
+    IPSolver(; optimizer = HiGHS.Optimizer, max_itr::Int = 20, γ0::Float64 = 2.0, verbose::Bool = false)
 
 An integer programming solver for set covering problems.
 
 ### Fields
 - `optimizer`: The optimizer to be used.
 - `max_itr::Int`: The maximum number of iterations to be performed.
+- `γ0::Float64`: The initial γ value.
 - `verbose::Bool`: Whether to print the solver's output.
 """
 Base.@kwdef struct IPSolver <: AbstractSetCoverSolver 
     optimizer = HiGHS.Optimizer
-    max_itr::Int = 5
+    max_itr::Int = 20
+    γ0::Float64 = 2.0
     verbose::Bool = false
 end
 
@@ -127,15 +131,12 @@ It utilizes an integer programming solver to optimize the selection of sub-cover
 - `Δρ::Vector`: A vector of problem size reduction for each candidate clause.
 - `solver`: The solver to be used. It can be an instance of `LPSolver` or `IPSolver`.
 
-### Keyword Arguments
-- `γ0::Float64`: The initial γ value.
-
 ### Returns
 A tuple of two elements: (indices of selected subsets, γ)
 """
-function minimize_γ(table::BranchingTable, candidates::Vector{Clause{INT}}, Δρ::Vector, solver::AbstractSetCoverSolver; γ0::Float64 = 2.0) where {INT}
+function minimize_γ(table::BranchingTable, candidates::Vector{Clause{INT}}, Δρ::Vector, solver::AbstractSetCoverSolver) where {INT}
     subsets = [covered_items(table.table, c) for c in candidates]
-    @debug "solver = $(solver), subsets = $(subsets), γ0 = $γ0, Δρ = $(Δρ)"
+    @debug "solver = $(solver), subsets = $(subsets), γ0 = $(solver.γ0), Δρ = $(Δρ)"
     num_items = length(table.table)
 
     # Note: the following instance is captured for time saving, and also for it may cause IP solver to fail
@@ -143,7 +144,7 @@ function minimize_γ(table::BranchingTable, candidates::Vector{Clause{INT}}, Δ�
         (length(subset) == num_items) && return OptimalBranchingResult(DNF([candidates[k]]), [Δρ[k]], 1.0)
     end
 
-    cx_old = cx = γ0
+    cx_old = cx = solver.γ0
     local picked_scs
     for i = 1:solver.max_itr
         weights = 1 ./ cx_old .^ Δρ
