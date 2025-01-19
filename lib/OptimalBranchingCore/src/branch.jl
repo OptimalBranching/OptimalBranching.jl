@@ -16,7 +16,7 @@ A [`OptimalBranchingResult`](@ref) object representing the optimal branching rul
 function optimal_branching_rule(table::BranchingTable, variables::Vector, problem::AbstractProblem, m::AbstractMeasure, solver::AbstractSetCoverSolver)
     candidates = candidate_clauses(table)
     size_reductions = [size_reduction(problem, m, candidate, variables) for candidate in candidates]
-    return minimize_γ(table, candidates, size_reductions, solver; γ0 = 2.0)
+    return minimize_γ(table, candidates, size_reductions, solver)
 end
 
 function size_reduction(p::AbstractProblem, m::AbstractMeasure, cl::Clause{INT}, variables::Vector) where {INT}
@@ -72,7 +72,7 @@ function branch_and_reduce(problem::AbstractProblem, config::BranchingStrategy, 
     has_zero_size(problem) && return zero(result_type)
     # reduce the problem
     rp, reducedvalue = reduce_problem(result_type, problem, reducer)
-    rp !== problem && return branch_and_reduce(rp, config, reducer, result_type; tag) * reducedvalue
+    rp !== problem && return branch_and_reduce(rp, config, reducer, result_type; tag, show_progress) * reducedvalue
 
     # branch the problem
     variables = select_variables(rp, config.measure, config.selector)  # select a subset of variables
@@ -92,9 +92,9 @@ function print_sequence(io::IO, sequence::Vector{Tuple{Int,Int}})
         if i == n
             print(io, "■")
         elseif i == 1
-            print(io, "□")
+            print(io, "⋅")
         else
-            print(io, "▦")
+            print(io, "□")
         end
     end
 end

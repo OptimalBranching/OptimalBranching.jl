@@ -36,7 +36,7 @@ function solve_opt_rule(branching_region, graph, vs)
     @info "generating the optimal branching rule via set cover..."
     problem = MISProblem(graph)
     size_reductions = [measure(problem, m) - measure(first(OptimalBranchingCore.apply_branch(problem, candidate, vs)), m) for candidate in candidate_clauses]
-    result = OptimalBranchingMIS.OptimalBranchingCore.minimize_γ(tbl, candidate_clauses, size_reductions, set_cover_solver; γ0=2.0)
+    result = OptimalBranchingMIS.OptimalBranchingCore.minimize_γ(tbl, candidate_clauses, size_reductions, set_cover_solver)
     @info "the minimized gamma: $(result.γ)"
 
     @info "the optimal branching rule on R:"
