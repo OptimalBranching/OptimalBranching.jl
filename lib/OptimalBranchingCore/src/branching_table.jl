@@ -16,8 +16,8 @@ end
 
 function BranchingTable(n::Int, arr::AbstractVector{<:AbstractVector})
     @assert all(x->all(v->length(v) == n, x), arr)
-    T = LongLongUInt{(n-1) ÷ 64 + 1}
-    return BranchingTable(n, [_vec2int.(T, x) for x in arr])
+    INT = BitBasis.longinttype(n, 2)
+    return BranchingTable(n, [_vec2int.(INT, x) for x in arr])
 end
 # encode a bit vector to and integer
 function _vec2int(::Type{T}, v::AbstractVector) where T <: Integer

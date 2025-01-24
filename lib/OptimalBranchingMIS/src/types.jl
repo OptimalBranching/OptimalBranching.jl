@@ -1,5 +1,5 @@
 """
-    mutable struct MISProblem <: AbstractProblem
+    mutable struct MISProblem{INT <: Integer} <: AbstractProblem
 
 Represents a Maximum Independent Set (MIS) problem.
 
@@ -11,8 +11,11 @@ Represents a Maximum Independent Set (MIS) problem.
 - `Base.show(io::IO, p::MISProblem)`: Displays the number of vertices in the `MISProblem`.
 
 """
-mutable struct MISProblem <: AbstractProblem
+mutable struct MISProblem{INT <: Integer} <: AbstractProblem
     g::SimpleGraph{Int}
+    function MISProblem(g::SimpleGraph{Int})
+        new{BitBasis.longinttype(nv(g), 2)}(g)
+    end
 end
 Base.copy(p::MISProblem) = MISProblem(copy(p.g))
 Base.show(io::IO, p::MISProblem) = print(io, "MISProblem($(nv(p.g)))")
@@ -85,8 +88,8 @@ function OptimalBranchingCore.measure(p::MISProblem, ::D3Measure)
     end
 end
 
-function OptimalBranchingCore.size_reduction(p::MISProblem, m::D3Measure, cl::Clause{INT}, variables::Vector) where {INT}
-    remove_mask = removed_mask(variables, p.g, cl)
+function OptimalBranchingCore.size_reduction(p::MISProblem{INT}, ::D3Measure, cl::Clause, variables::Vector) where {INT}
+    remove_mask = removed_mask(INT, variables, p.g, cl)
     iszero(remove_mask) && return 0
     sum = 0
     for i in 1:nv(p.g)
