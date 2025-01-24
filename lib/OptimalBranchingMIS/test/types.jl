@@ -22,4 +22,11 @@ using OptimalBranchingCore: size_reduction, apply_branch
     vs = collect(1:5)
     m = D3Measure()
     @test size_reduction(p, m, cl, vs) == measure(p, m) - measure(first(apply_branch(p, cl, vs)), m)
+
+    g = random_regular_graph(200, 3; seed = 2134)
+    vs = [6, 26, 81, 111, 56, 47, 101, 153]
+    cl = Clause(bit"11001111", bit"11000001")
+    p = MISProblem(g)
+    m = D3Measure()
+    @test size_reduction(p, m, cl, vs) == measure(p, m) - measure(first(apply_branch(p, cl, vs)), m)
 end
