@@ -40,8 +40,7 @@ function Base.show(io::IO, c::Clause{INT}) where INT
     print(io, "$(typeof(c)): " * clause_string(c))
 end
 function booleans(n::Int)
-    C = (n + 63) ÷ 64
-    INT = LongLongUInt{C}
+    INT = BitBasis.longinttype(n, 2)
     return [Clause(bmask(INT, i), bmask(INT, i)) for i=1:n]
 end
 ∧(x::Clause, xs::Clause...) = Clause(reduce(|, getfield.(xs, :mask); init=x.mask), reduce(|, getfield.(xs, :val); init=x.val))

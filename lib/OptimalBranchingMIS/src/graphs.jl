@@ -34,7 +34,7 @@ function removed_vertices(vertices::Vector{Int}, g::SimpleGraph, clause::Clause{
     return unique!(rvs)
 end
 
-function removed_mask(vertices::Vector{Int}, g::SimpleGraph, clause::Clause{INT}) where INT
+function removed_mask(::Type{INT}, vertices::Vector{Int}, g::SimpleGraph, clause::Clause) where INT
     mask = zero(INT)
     for (k, v) in enumerate(vertices)
         if readbit(clause.mask, k) == 1
