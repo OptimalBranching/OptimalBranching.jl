@@ -21,7 +21,7 @@ branching_strategy = BranchingStrategy(
     measure = D3Measure(),
     set_cover_solver = IPSolver(optimizer = SCIP.Optimizer)
 )
-mis_size(g, bs = branching_strategy, reducer = MISReducer())
+mis_size(g; branching_strategy, reducer = MISReducer())
 ```
 
 If approximately optimal branching rules are acceptable, one can also use the linear relaxation of the set cover problem to solve the problem.
@@ -32,6 +32,6 @@ branching_strategy_lp = BranchingStrategy(
     measure = D3Measure(),
     set_cover_solver = LPSolver()
 )
-mis_size(g, bs = branching_strategy_lp, reducer = MISReducer())
+mis_size(g; branching_strategy_lp, reducer = MISReducer())
 ```
 The default backend is also `HiGHS`. While the result is consistent, the rule searching is usually faster.
