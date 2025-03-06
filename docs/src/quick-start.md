@@ -37,7 +37,7 @@ branching_strategy = BranchingStrategy(
     measure = D3Measure(), 
     set_cover_solver = IPSolver()
 )
-mis_size(g, bs = branching_strategy, reducer = MISReducer())
+mis_size(g; branching_strategy, reducer = MISReducer())
 ```
 
 One can also use the [`branch_and_reduce`](@ref) function to solve the problem, which is more flexible.
