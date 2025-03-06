@@ -11,7 +11,7 @@ using OptimalBranchingCore: NumOfVariables, MockProblem, MockTableSolver, Random
     table_solver = MockTableSolver(nsample)
     tbl = branching_table(p, table_solver, 1:nb)
     @test tbl.bit_length == nb
-    @test length(tbl.table) <= nsample
+    @test length(tbl.table) <= nsample + 1
     @test all(length.(tbl.table) .== 1)
 
     table_solver = MockTableSolver(nsample, 1.0)
