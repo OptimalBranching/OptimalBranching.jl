@@ -55,6 +55,9 @@ Calculates the number of vertices in the given `MISProblem`.
 - `Int`: The number of vertices in the graph.
 """
 OptimalBranchingCore.measure(p::MISProblem, ::NumOfVertices) = nv(p.g)
+function OptimalBranchingCore.size_reduction(p::MISProblem{INT}, ::NumOfVertices, cl::Clause, variables::Vector) where {INT}
+    return count_ones(removed_mask(INT, variables, p.g, cl))
+end
 
 """
     D3Measure
