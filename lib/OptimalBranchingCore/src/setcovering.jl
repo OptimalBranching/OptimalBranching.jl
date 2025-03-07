@@ -159,41 +159,42 @@ end
 
 # try to find a non-zero intersection of clauses in the branching table
 # strategy: :dfs (depth-first search) or :bfs (breadth-first search), dfs gives the first found non-zero intersection, bfs gives the optimal result
-function intersect_clause(tbl::BranchingTable{INT}; strategy::Symbol = :dfs) where {INT}
+function intersect_clauses(tbl::BranchingTable{INT}, strategy::Symbol) where {INT}
     n, bss = tbl.bit_length, tbl.table
     tbl_clauses = [[Clause(bmask(INT, 1:n), bs[i]) for i in 1:length(bs)] for bs in bss]
+    length(tbl_clauses) == 1 && return tbl_clauses[1]
     sort!(tbl_clauses, by = x -> length(x))
 
     if strategy == :dfs
         for c0 in tbl_clauses[1]
-            c_res = _intersect_clause_dfs((@view tbl_clauses[2:end]), c0, n)
+            c_res = _intersect_clauses_dfs((@view tbl_clauses[2:end]), c0, n)
             c_res.mask != 0 && return [c_res]
         end
 
         # not found any non-zero intersection
         return Clause{INT}[]
     elseif strategy == :bfs
-        c0s = _intersect_clause_bfs((@view tbl_clauses[2:end]), tbl_clauses[1], n)
+        c0s = _intersect_clauses_bfs((@view tbl_clauses[2:end]), tbl_clauses[1], n)
         return c0s
     else 
         error("Invalid strategy: $strategy, must be :dfs or :bfs")
     end
 end
 
-function _intersect_clause_dfs(tbl_clauses::AbstractVector{Vector{Clause{INT}}}, c0::Clause{INT}, n::Int) where {INT}
+function _intersect_clauses_dfs(tbl_clauses::AbstractVector{Vector{Clause{INT}}}, c0::Clause{INT}, n::Int) where {INT}
     flag = (length(tbl_clauses) == 1) # flag is true if reaching the last layer
     for ci in tbl_clauses[1]
         c_new = gather2(n, c0, ci)
         if c_new.mask != 0 # skip the zero clause in middle layers
             flag && (return c_new) # return the final result if reaching the last layer
-            c_res = _intersect_clause_dfs((@view tbl_clauses[2:end]), c_new, n) # not the last layer, continue to intersect
+            c_res = _intersect_clauses_dfs((@view tbl_clauses[2:end]), c_new, n) # not the last layer, continue to intersect
             (c_res.mask != 0) && return c_res # return the result if the intersection is non-zero, stops the recursion
         end
     end
     return Clause(bmask(INT, 0), bmask(INT, 0))
 end
 
-function _intersect_clause_bfs(tbl_clauses::AbstractVector{Vector{Clause{INT}}}, cs::Vector{Clause{INT}}, n::Int) where {INT}
+function _intersect_clauses_bfs(tbl_clauses::AbstractVector{Vector{Clause{INT}}}, cs::Vector{Clause{INT}}, n::Int) where {INT}
     new_cs = Vector{Clause{INT}}()
     for ci in tbl_clauses[1]
         for cj in cs
@@ -202,7 +203,7 @@ function _intersect_clause_bfs(tbl_clauses::AbstractVector{Vector{Clause{INT}}},
         end
     end
     unique!(new_cs)
-    return (length(tbl_clauses) == 1 || isempty(new_cs)) ? new_cs : _intersect_clause_bfs((@view tbl_clauses[2:end]), new_cs, n)
+    return (length(tbl_clauses) == 1 || isempty(new_cs)) ? new_cs : _intersect_clauses_bfs((@view tbl_clauses[2:end]), new_cs, n)
 end
 
 # TODO: we need to extend this function to trim the candidate clauses

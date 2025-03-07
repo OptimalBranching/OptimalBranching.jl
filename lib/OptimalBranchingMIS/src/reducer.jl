@@ -96,3 +96,58 @@ function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, ::XiaoRed
 
     return p, R(0)
 end
+
+@kwdef struct TensorNetworkReducer <: AbstractReducer
+    n_max::Int = 15
+    selector::Symbol = :mincut # :neighbor or :mincut
+    measure::AbstractMeasure = NumOfVertices() # different measures for kernelization, use the size reduction from OptimalBranchingMIS
+    intersect_strategy::Symbol = :bfs # :dfs or :bfs
+    sub_reducer::AbstractReducer = XiaoReducer() # sub reducer for the selected vertices
+end
+Base.show(io::IO, reducer::TensorNetworkReducer) = print(io,
+    """
+    TensorNetworkReducer
+        ├── n_max - $(reducer.n_max)
+        ├── selector - $(reducer.selector)
+        ├── measure - $(reducer.measure)
+        ├── intersect_strategy - $(reducer.intersect_strategy)
+        └── sub_reducer - $(reducer.sub_reducer)
+    """)
+
+function OptimalBranchingCore.reduce_problem(result_type::Type{R}, p::MISProblem, tnreducer::TensorNetworkReducer) where R
+    rp, reducedvalue = reduce_problem(result_type, p, tnreducer.sub_reducer)
+    (rp.g != p.g) && return rp, reducedvalue
+
+    for i in 1:nv(p.g)
+        selected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
+        truth_table = branching_table(p, TensorNetworkSolver(), selected_vertices)
+        bc = best_intersect(p, truth_table, tnreducer.measure, tnreducer.intersect_strategy, 
+        selected_vertices)
+        if !isnothing(bc)
+            rp, reducedvalue = OptimalBranchingCore.apply_branch(p, bc, selected_vertices)
+            return rp, R(reducedvalue)
+        end
+    end
+
+    return p, R(0)
+end
+
+function best_intersect(p::MISProblem, tbl::BranchingTable, measure::AbstractMeasure, intersect_strategy::Symbol, variables::Vector{T}) where {T}
+    cl = OptimalBranchingCore.intersect_clauses(tbl, intersect_strategy)
+    if isempty(cl)
+        return nothing
+    elseif length(cl) == 1
+        return cl[1]
+    else
+        best_loss = OptimalBranchingCore.size_reduction(p, measure, cl[1], variables)
+        best_cl = cl[1]
+        for c in cl[2:end]
+            loss = OptimalBranchingCore.size_reduction(p, measure, c, variables)
+            if loss < best_loss
+                best_loss = loss
+                best_cl = c
+            end
+        end
+        return best_cl
+    end
+end

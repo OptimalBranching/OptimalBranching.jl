@@ -12,9 +12,9 @@ end
         [[1, 1, 0, 1, 0]],
         [[0, 0, 1, 0, 1]]
     ])
-    ct = OptimalBranchingCore.intersect_clause(tbl)
-    ct_bfs = OptimalBranchingCore.intersect_clause(tbl, strategy = :bfs)
-    @test isempty(ct)
+    ct_dfs = OptimalBranchingCore.intersect_clauses(tbl, :dfs)
+    ct_bfs = OptimalBranchingCore.intersect_clauses(tbl, :bfs)
+    @test isempty(ct_dfs)
     @test isempty(ct_bfs)
 
     tbl = BranchingTable(5, [
@@ -22,9 +22,9 @@ end
         [[1, 1, 0, 1, 0]],
         [[0, 0, 1, 0, 1], [0, 1, 1, 0, 1]]
     ])
-    ct = OptimalBranchingCore.intersect_clause(tbl)
-    ct_bfs = OptimalBranchingCore.intersect_clause(tbl, strategy = :bfs)
-    @test count_ones(ct[1].mask) == 1
+    ct_dfs = OptimalBranchingCore.intersect_clauses(tbl, :dfs)
+    ct_bfs = OptimalBranchingCore.intersect_clauses(tbl, :bfs)
+    @test count_ones(ct_dfs[1].mask) == 1
     @test count_ones(ct_bfs[1].mask) == 1
 end
 

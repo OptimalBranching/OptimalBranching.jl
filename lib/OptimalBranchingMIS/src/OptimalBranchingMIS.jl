@@ -5,12 +5,12 @@ using OptimalBranchingCore: AbstractProblem
 using OptimalBranchingCore.BitBasis
 using Combinatorics
 using EliminateGraphs, EliminateGraphs.Graphs
-using GenericTensorNetworks
+using GenericTensorNetworks, TropicalGEMM
 using SparseArrays
 using KaHyPar
 
 export MISProblem
-export MISReducer, XiaoReducer
+export MISReducer, XiaoReducer, TensorNetworkReducer
 export MinBoundarySelector, MinBoundaryHighDegreeSelector,KaHyParSelector
 export TensorNetworkSolver
 export NumOfVertices, D3Measure
