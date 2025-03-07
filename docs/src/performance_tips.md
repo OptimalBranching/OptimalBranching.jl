@@ -32,6 +32,6 @@ branching_strategy_lp = BranchingStrategy(
     measure = D3Measure(),
     set_cover_solver = LPSolver()
 )
-mis_size(g; branching_strategy_lp, reducer = MISReducer())
+mis_size(g; branching_strategy = branching_strategy_lp, reducer = MISReducer())
 ```
 The default backend is also `HiGHS`. While the result is consistent, the rule searching is usually faster.
