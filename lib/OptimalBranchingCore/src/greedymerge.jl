@@ -33,7 +33,6 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
     end
     cls = copy(cls)
     size_reductions = [Float64(size_reduction(problem, m, first(candidate), variables)) for candidate in cls]
-    k = 0
     @inbounds while true
         nc = length(cls)
         mask = trues(nc)
@@ -43,7 +42,7 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
         for i ∈ 1:nc, j ∈ i+1:nc
             _, _, _, reduction = reduction_merge(cls[i], cls[j])
             dE = γ^(-reduction) - weights[i] - weights[j]
-            dE <= -1e-12 && enqueue!(queue, (i, j), dE - 1e-12 * (k += 1; k))
+            dE <= -1e-12 && enqueue!(queue, (i, j), dE)
         end
         isempty(queue) && return OptimalBranchingResult(DNF(first.(cls)), size_reductions, γ)
         while !isempty(queue)
@@ -51,9 +50,9 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
             # remove i, j-th row
             for rowid in (i, j)
                 mask[rowid] = false
-                for k = 1:nc
-                    if mask[k]
-                        a, b = minmax(rowid, k)
+                for l = 1:nc
+                    if mask[l]
+                        a, b = minmax(rowid, l)
                         haskey(queue, (a, b)) && delete!(queue, (a, b))
                     end
                 end
@@ -63,13 +62,13 @@ function greedymerge(cls::Vector{Vector{Clause{INT}}}, problem::AbstractProblem,
             clij, _, _, size_reductions[i] = reduction_merge(cls[i], cls[j])
             cls[i] = [clij]
             weights[i] = γ^(-size_reductions[i])
-            for k = 1:nc
-                if i !== k && mask[k]
-                    a, b = minmax(i, k)
+            for l = 1:nc
+                if i !== l && mask[l]
+                    a, b = minmax(i, l)
                     _, _, _, reduction = reduction_merge(cls[a], cls[b])
                     dE = γ^(-reduction) - weights[a] - weights[b]
                     
-                    dE <= -1e-12 && enqueue!(queue, (a, b), dE - 1e-12 * (k += 1; k))
+                    dE <= -1e-12 && enqueue!(queue, (a, b), dE)
                 end
             end
         end
