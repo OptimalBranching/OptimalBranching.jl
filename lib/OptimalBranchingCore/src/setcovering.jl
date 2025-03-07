@@ -173,7 +173,7 @@ function intersect_clause(tbl::BranchingTable{INT}; strategy::Symbol = :dfs) whe
         # not found any non-zero intersection
         return Clause{INT}[]
     elseif strategy == :bfs
-        c0s = _intersect_clause_bfs!((@view tbl_clauses[2:end]), copy(tbl_clauses[1]), n)
+        c0s = _intersect_clause_bfs((@view tbl_clauses[2:end]), tbl_clauses[1], n)
         return c0s
     else 
         error("Invalid strategy: $strategy, must be :dfs or :bfs")
@@ -193,16 +193,16 @@ function _intersect_clause_dfs(tbl_clauses::AbstractVector{Vector{Clause{INT}}},
     return Clause(bmask(INT, 0), bmask(INT, 0))
 end
 
-function _intersect_clause_bfs!(tbl_clauses::AbstractVector{Vector{Clause{INT}}}, cs::Vector{Clause{INT}}, n::Int) where {INT}
-    new_cs = Set{Clause{INT}}()
+function _intersect_clause_bfs(tbl_clauses::AbstractVector{Vector{Clause{INT}}}, cs::Vector{Clause{INT}}, n::Int) where {INT}
+    new_cs = Vector{Clause{INT}}()
     for ci in tbl_clauses[1]
         for cj in cs
             c_new = gather2(n, cj, ci)
             (c_new.mask != 0) && push!(new_cs, c_new)
         end
     end
-    cs = collect(new_cs)
-    return (length(tbl_clauses) == 1 || isempty(cs)) ? cs : _intersect_clause_bfs!((@view tbl_clauses[2:end]), cs, n)
+    unique!(new_cs)
+    return (length(tbl_clauses) == 1 || isempty(new_cs)) ? new_cs : _intersect_clause_bfs((@view tbl_clauses[2:end]), new_cs, n)
 end
 
 # TODO: we need to extend this function to trim the candidate clauses
