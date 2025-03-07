@@ -1,11 +1,11 @@
 module OptimalBranchingMIS
 
 using OptimalBranchingCore
-using OptimalBranchingCore: AbstractProblem
+using OptimalBranchingCore: AbstractProblem, intersect_clauses, candidate_clauses
 using OptimalBranchingCore.BitBasis
 using Combinatorics
 using EliminateGraphs, EliminateGraphs.Graphs
-using GenericTensorNetworks, TropicalGEMM
+using GenericTensorNetworks
 using SparseArrays
 using KaHyPar
 

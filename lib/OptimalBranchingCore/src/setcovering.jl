@@ -158,7 +158,7 @@ function minimize_γ(table::BranchingTable, candidates::Vector{Clause{INT}}, Δ�
 end
 
 # try to find a non-zero intersection of clauses in the branching table
-# strategy: :dfs (depth-first search) or :bfs (breadth-first search), dfs gives the first found non-zero intersection, bfs gives the optimal result
+# strategy: :dfs (depth-first search) or :bfs (breadth-first search), dfs gives the first found non-zero intersection, which covers the whole branching table, bfs gives the optimal result
 function intersect_clauses(tbl::BranchingTable{INT}, strategy::Symbol) where {INT}
     n, bss = tbl.bit_length, tbl.table
     tbl_clauses = [[Clause(bmask(INT, 1:n), bs[i]) for i in 1:length(bs)] for bs in bss]

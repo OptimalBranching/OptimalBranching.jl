@@ -20,3 +20,14 @@ end
     miskn, countkn = mis_branch_count(g; branching_strategy = bs)
     @test mis1 == miskn
 end
+
+@testset "region selection" begin
+    g = random_regular_graph(100, 3)
+    for strategy in [:neighbor, :mincut]
+        for i in rand(1:100, 10)
+            selected_vertices = OptimalBranchingMIS.select_region(g, i, 15, strategy)
+            @test length(selected_vertices) ≤ 15
+            @test i ∈ selected_vertices
+        end
+    end
+end
