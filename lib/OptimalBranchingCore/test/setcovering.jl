@@ -6,6 +6,28 @@ using Test
     @test OptimalBranchingCore.bisect_solve(f, 1.0, f(1.0), 2.0, f(2.0)) ≈ sqrt(2)
 end
 
+@testset "intersection of clauses" begin
+    tbl = BranchingTable(5, [
+        [[0, 1, 0, 1, 0], [0, 1, 1, 0, 0]],
+        [[1, 1, 0, 1, 0]],
+        [[0, 0, 1, 0, 1]]
+    ])
+    ct = OptimalBranchingCore.intersect_clause(tbl)
+    ct_bfs = OptimalBranchingCore.intersect_clause(tbl, strategy = :bfs)
+    @test isempty(ct)
+    @test isempty(ct_bfs)
+
+    tbl = BranchingTable(5, [
+        [[0, 1, 0, 1, 0], [0, 1, 1, 0, 0], [0, 0, 1, 0, 0]],
+        [[1, 1, 0, 1, 0]],
+        [[0, 0, 1, 0, 1], [0, 1, 1, 0, 1]]
+    ])
+    ct = OptimalBranchingCore.intersect_clause(tbl)
+    ct_bfs = OptimalBranchingCore.intersect_clause(tbl, strategy = :bfs)
+    @test count_ones(ct[1].mask) == 1
+    @test count_ones(ct_bfs[1].mask) == 1
+end
+
 @testset "setcover by JuMP - StaticBitVector type" begin
     tbl = BranchingTable(5, [
         [StaticBitVector([0, 0, 1, 0, 0]), StaticBitVector([0, 1, 0, 0, 0])],
