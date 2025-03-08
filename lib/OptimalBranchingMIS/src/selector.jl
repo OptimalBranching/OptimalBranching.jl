@@ -120,16 +120,14 @@ function select_region(g::AbstractGraph, i::Int, n_max::Int, strategy::Symbol)
         return vs
     elseif strategy == :mincut
         nv(g) <= n_max && return collect(1:nv(g))
-
-        fix_vs = fill(-1, nv(g)) 
-        fix_vs[i] = 0  
-
         h = KaHyPar.HyperGraph(edge2vertex(g))
-        KaHyPar.fix_vertices(h, nv(g)-1, fix_vs)
-        KaHyPar.set_target_block_weights(h, [n_max,nv(g) - n_max])
+        
+        fix_vs = [j == i ? 1 : -1 for j in 1:nv(g)]
+        KaHyPar.fix_vertices(h, 2, fix_vs)
+        KaHyPar.set_target_block_weights(h, [nv(g) - n_max, n_max])
         parts = KaHyPar.partition(h, 2; configuration = pkgdir(@__MODULE__, "src/ini", "cut_kKaHyPar_sea20.ini"))
         
-        return findall(iszero,parts)
+        return findall(!iszero,parts)
     else
         error("Invalid strategy: $strategy, must be :neighbor or :mincut")
     end
