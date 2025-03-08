@@ -1,7 +1,7 @@
 module OptimalBranchingMIS
 
 using OptimalBranchingCore
-using OptimalBranchingCore: AbstractProblem
+using OptimalBranchingCore: AbstractProblem, intersect_clauses, candidate_clauses
 using OptimalBranchingCore.BitBasis
 using Combinatorics
 using EliminateGraphs, EliminateGraphs.Graphs
@@ -10,7 +10,7 @@ using SparseArrays
 using KaHyPar
 
 export MISProblem
-export MISReducer, XiaoReducer
+export MISReducer, XiaoReducer, TensorNetworkReducer
 export MinBoundarySelector, MinBoundaryHighDegreeSelector,KaHyParSelector
 export TensorNetworkSolver
 export NumOfVertices, D3Measure

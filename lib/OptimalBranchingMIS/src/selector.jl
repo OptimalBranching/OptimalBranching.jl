@@ -1,5 +1,5 @@
 """
-    struct MinBoundarySelector <: AbstractVertexSelector
+    struct MinBoundarySelector <: AbstractSelector
 
 The `MinBoundarySelector` struct represents a strategy for selecting a subgraph with the minimum number of open vertices by k-layers of neighbors.
 
@@ -82,7 +82,7 @@ function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::Ka
     h = KaHyPar.HyperGraph(edge2vertex(p))
     imbalance = 1-2*selector.app_domain_size/nv(p.g)
     
-    parts = KaHyPar.partition(h, 2; configuration = pkgdir(@__MODULE__, "src", "cut_kKaHyPar_sea20.ini"), imbalance)
+    parts = KaHyPar.partition(h, 2; configuration = pkgdir(@__MODULE__, "src/ini", "cut_kKaHyPar_sea20.ini"), imbalance)
 
     zero_num = count(x-> x ≈ 0,parts)
     one_num = length(parts)-zero_num
@@ -91,20 +91,46 @@ function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::Ka
     return abs(zero_num-selector.app_domain_size) < abs(one_num-selector.app_domain_size) ? findall(iszero,parts) : findall(!iszero,parts)
 end
 
-function edge2vertex(p::MISProblem)
+edge2vertex(p::MISProblem) = edge2vertex(p.g)
+function edge2vertex(g::SimpleGraph)
     I = Int[]
     J = Int[]
     edgecount = 0
-    for i in 1:nv(p.g)-1
-        for j in p.g.fadjlist[i]
-            if j >i
-                edgecount += 1
-                push!(I,i)
-                push!(I,j)
-                push!(J, edgecount)
-                push!(J, edgecount)
-            end
+    @inbounds for i in 1:nv(g)-1, j in g.fadjlist[i]
+        if j >i
+            edgecount += 1
+            push!(I,i)
+            push!(I,j)
+            push!(J, edgecount)
+            push!(J, edgecount)
         end
     end
     return sparse(I, J, ones(length(I)))
+end
+
+# region selectors, max size is n_max and a vertex i is required to be in the region
+function select_region(g::AbstractGraph, i::Int, n_max::Int, strategy::Symbol)
+    if strategy == :neighbor
+        vs = [i]
+        while length(vs) < n_max
+            nbrs = open_neighbors(g, vs)
+            (length(vs) + length(nbrs) > n_max) && break
+            append!(vs, nbrs)
+        end
+        return vs
+    elseif strategy == :mincut
+        nv(g) <= n_max && return collect(1:nv(g))
+
+        fix_vs = fill(-1, nv(g)) 
+        fix_vs[i] = 0  
+
+        h = KaHyPar.HyperGraph(edge2vertex(g))
+        KaHyPar.fix_vertices(h, nv(g)-1, fix_vs)
+        KaHyPar.set_target_block_weights(h, [n_max,nv(g) - n_max])
+        parts = KaHyPar.partition(h, 2; configuration = pkgdir(@__MODULE__, "src/ini", "cut_kKaHyPar_sea20.ini"))
+        
+        return findall(iszero,parts)
+    else
+        error("Invalid strategy: $strategy, must be :neighbor or :mincut")
+    end
 end

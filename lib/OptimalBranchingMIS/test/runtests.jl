@@ -1,4 +1,5 @@
 using OptimalBranchingMIS
+using TropicalGEMM
 using Test
 
 @testset "branch" begin
