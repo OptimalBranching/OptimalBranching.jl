@@ -104,7 +104,7 @@ A reducer that uses tensor network contraction to find reduction rules.
 
 # Fields
 - `n_max::Int = 15`: Maximum number of vertices to be included in the selected region
-- `selector::Symbol = :neighbor`: Strategy for selecting vertices to contract. Options are:
+- `selector::Symbol = :mincut`: Strategy for selecting vertices to contract. Options are:
     - `:neighbor`: Select vertices based on neighborhood
     - `:mincut`: Select vertices based on minimum cut provided by KaHyPar !Note: KaHyPar may leads to memory leak!
 - `measure::AbstractMeasure = NumOfVertices()`: Measure used for kernelization. Uses size reduction from OptimalBranchingMIS
@@ -115,7 +115,7 @@ A reducer that uses tensor network contraction to find reduction rules.
 """
 @kwdef struct TensorNetworkReducer <: AbstractReducer
     n_max::Int = 15
-    selector::Symbol = :neighbor # :neighbor or :mincut
+    selector::Symbol = :mincut # :neighbor or :mincut
     measure::AbstractMeasure = NumOfVertices() # different measures for kernelization, use the size reduction from OptimalBranchingMIS
     intersect_strategy::Symbol = :bfs # :dfs or :bfs
     sub_reducer::AbstractReducer = XiaoReducer() # sub reducer for the selected vertices
