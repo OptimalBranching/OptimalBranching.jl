@@ -1,6 +1,7 @@
 using EliminateGraphs, EliminateGraphs.Graphs
 using Test, Random
 
+using OptimalBranchingMIS
 using OptimalBranchingMIS: find_children, unconfined_vertices, is_line_graph, first_twin, twin_filter!, short_funnel_filter!, desk_filter!, effective_vertex, all_three_funnel, all_four_funnel, rho, optimal_four_cycle, optimal_vertex, has_fine_structure, count_o_path, closed_neighbors, is_complete_graph
 
 function graph_from_edges(edges)
@@ -168,6 +169,7 @@ end
         mis_size_mis1 = counting_mis1(g).size
         mis_size_mis2 = counting_mis2(g).size
         mis_size_xiao = counting_xiao2013(g).size
-        @test mis_size_standard == mis_size_mis1 == mis_size_mis2 == mis_size_xiao
+        mis_size_ip = ip_mis(g)
+        @test mis_size_standard == mis_size_mis1 == mis_size_mis2 == mis_size_xiao == mis_size_ip
     end
 end
