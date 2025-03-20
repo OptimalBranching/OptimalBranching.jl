@@ -54,6 +54,11 @@ function remove_vertices(g, v)
     return g
 end
 
+function remove_vertices_vmap(g, v)
+    g, vs = induced_subgraph(g, setdiff(vertices(g), v))
+    return g, vs
+end
+
 """
     open_vertices(g::SimpleGraph, vertices::Vector{Int})
 
@@ -168,20 +173,26 @@ function Graphs.neighbors(g::SimpleGraph, vs::Vector{Int})
     return set_neighbors
 end
 
-function folding(g::SimpleGraph, v::Int)
+function folding_vmap(g::SimpleGraph, v::Int)
     @debug "Folding vertex $(v)"
     @assert degree(g, v) == 2
     a, b = neighbors(g, v)
     if has_edge(g, a, b)
-        return (induced_subgraph(g, setdiff(1:nv(g), [v, a, b]))[1], 1)
+        g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), [v, a, b]))
+        return g_new, 1, vmap
     else
         # apply the graph rewrite rule
         g = copy(g)
-        add_vertex!(g)
         nn = open_neighbors(g, [v, a, b])
         for n in nn
-            add_edge!(g, nv(g), n)
+            add_edge!(g, v, n)
         end
-        return (induced_subgraph(g, setdiff(1:nv(g), [v, a, b]))[1], 1)
+        g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), [a, b]))
+        return g_new, 1, vmap
     end
+end
+
+function folding(g::SimpleGraph, v::Int)
+    g_new, n, _ = folding_vmap(g, v)
+    return g_new, n
 end
