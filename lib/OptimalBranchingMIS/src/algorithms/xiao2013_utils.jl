@@ -108,13 +108,13 @@ function twin_filter!(g::SimpleGraph)
 end
 
 function twin_filter_vmap(g::SimpleGraph{Int})
+    g = copy(g)
     twin_pair = first_twin(g)
     isnothing(twin_pair) && return nothing
-
     neighbor = copy(neighbors(g, twin_pair[1]))
     if is_independent(g,neighbor)
         for left_neighbor in unique(vcat([neighbors(g, neighbori) for neighbori in neighbor]...))
-            add_edge!(g, twin_pair[1], left_neighbor)  
+            (twin_pair[1] != left_neighbor) && add_edge!(g, twin_pair[1], left_neighbor)  
         end
         return remove_vertices_vmap(g, vcat(twin_pair[2], neighbor))
     else
@@ -157,6 +157,7 @@ function short_funnel_filter!(g::SimpleGraph)
 end
 
 function short_funnel_filter_vmap(g::SimpleGraph{Int})
+    g = copy(g)
     funnel_pair = first_short_funnel(g)
     isnothing(funnel_pair) && return nothing
 
@@ -205,6 +206,7 @@ function desk_filter!(g::SimpleGraph)
 end
 
 function desk_filter_vmap(g::SimpleGraph{Int})
+    g = copy(g)
     desk_group = first_desk(g)
     isnothing(desk_group) && return nothing
 
