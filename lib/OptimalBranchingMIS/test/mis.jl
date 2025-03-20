@@ -2,7 +2,7 @@ using EliminateGraphs, EliminateGraphs.Graphs
 using Test, Random
 
 using OptimalBranchingMIS
-using OptimalBranchingMIS: find_children, unconfined_vertices, is_line_graph, first_twin, twin_filter!, short_funnel_filter!, desk_filter!, effective_vertex, all_three_funnel, all_four_funnel, rho, optimal_four_cycle, optimal_vertex, has_fine_structure, count_o_path, closed_neighbors, is_complete_graph
+using OptimalBranchingMIS: find_children, unconfined_vertices, is_line_graph, first_twin, twin_filter!, short_funnel_filter!, desk_filter!, effective_vertex, all_three_funnel, all_four_funnel, rho, optimal_four_cycle, optimal_vertex, has_fine_structure, count_o_path, closed_neighbors, is_complete_graph, twin_filter_vmap, short_funnel_filter_vmap, desk_filter_vmap
 
 function graph_from_edges(edges)
     return SimpleGraph(Graphs.SimpleEdge.(edges))
@@ -40,18 +40,21 @@ end
     # xiao2013 fig.2(a)
     edges = [(1, 3), (1, 4), (1, 5), (2, 3), (2, 4), (2, 5), (4, 5), (3, 6), (3, 7), (4, 8), (5, 9), (5, 10)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
+ 
     @test first_twin(example_g) == (1, 2)
+    example_g_new, vmap = twin_filter_vmap(example_g)
     @test twin_filter!(example_g)
-    @test ne(example_g) == 0
-    @test nv(example_g) == 5
+    @test ne(example_g) == ne(example_g_new) == 0
+    @test nv(example_g) == nv(example_g_new) == 5
 
     #xiao2013 fig.2(b)
     edges = [(1, 3), (1, 4), (1, 5), (2, 3), (2, 4), (2, 5), (3, 6), (3, 7), (4, 8), (5, 9), (5, 10)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
     @test first_twin(example_g) == (1, 2)
+    example_g_new, vmap = twin_filter_vmap(example_g)
     @test twin_filter!(example_g)
-    @test ne(example_g) == 5
-    @test nv(example_g) == 6
+    @test ne(example_g) == ne(example_g_new) == 5
+    @test nv(example_g) == nv(example_g_new) == 6
 end
 
 
@@ -59,30 +62,36 @@ end
 @testset "short funnel" begin
     edges = [(1, 2), (1, 4), (1, 5), (2, 3), (2, 6), (3, 6), (4, 6)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
+    example_g_new, vmap = short_funnel_filter_vmap(example_g)
     @test short_funnel_filter!(example_g)
-    @test example_g == SimpleGraph{Int64}(5, [[2, 3, 4], [1, 3], [1, 2, 4], [1, 3]])
+    @test ne(example_g) == ne(example_g_new) == 5
+    @test nv(example_g) == nv(example_g_new) == 4
 
     # xiao2013 fig.2(c)
     edges = [(1, 2), (1, 3), (1, 4), (2, 5), (2, 6), (3, 4), (3, 7), (4, 5), (4, 8), (5, 10), (6, 9)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
+    example_g_new, vmap = short_funnel_filter_vmap(example_g)
     @test short_funnel_filter!(example_g)
-    @test nv(example_g) == 8
-    @test ne(example_g) == 9
+    @test nv(example_g) == nv(example_g_new) == 8
+    @test ne(example_g) == ne(example_g_new) == 9
 end
 
 
 @testset "desk" begin
     edges = [(1, 2), (1, 4), (1, 8), (2, 3), (2, 7), (3, 8), (5, 7), (6, 8), (7, 8)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
+    example_g_new, vmap = desk_filter_vmap(example_g)
     @test desk_filter!(example_g)
-    @test example_g == SimpleGraph{Int64}(4, [[2, 4], [1, 3], [2, 4], [1, 3]])
+    @test ne(example_g) == ne(example_g_new) == 4
+    @test nv(example_g) == nv(example_g_new) == 4
 
     #xiao2013 fig.2(d)
     edges = [(1, 2), (1, 4), (1, 5), (2, 3), (2, 6), (3, 4), (3, 5), (3, 7), (4, 8), (5, 9), (6, 10), (7, 11), (8, 12)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
+    example_g_new, vmap = desk_filter_vmap(example_g)
     @test desk_filter!(example_g)
-    @test nv(example_g) == 8
-    @test ne(example_g) == 8
+    @test nv(example_g) == nv(example_g_new) == 8
+    @test ne(example_g) == ne(example_g_new) == 8
 end
 
 

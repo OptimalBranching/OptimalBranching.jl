@@ -106,7 +106,21 @@ function twin_filter!(g::SimpleGraph)
 
     return true
 end
-        
+
+function twin_filter_vmap(g::SimpleGraph{Int})
+    g = copy(g)
+    twin_pair = first_twin(g)
+    isnothing(twin_pair) && return nothing
+    neighbor = copy(neighbors(g, twin_pair[1]))
+    if is_independent(g,neighbor)
+        for left_neighbor in unique(vcat([neighbors(g, neighbori) for neighbori in neighbor]...))
+            (twin_pair[1] != left_neighbor) && add_edge!(g, twin_pair[1], left_neighbor)  
+        end
+        return remove_vertices_vmap(g, vcat(twin_pair[2], neighbor))
+    else
+        return remove_vertices_vmap(g, vcat(twin_pair[1], twin_pair[2], neighbor))
+    end
+end
 
 function first_twin(g::SimpleGraph)
     vertices_with_degree_3 = [v for v in vertices(g) if degree(g, v) == 3]
@@ -142,6 +156,20 @@ function short_funnel_filter!(g::SimpleGraph)
     return true
 end
 
+function short_funnel_filter_vmap(g::SimpleGraph{Int})
+    g = copy(g)
+    funnel_pair = first_short_funnel(g)
+    isnothing(funnel_pair) && return nothing
+
+    a,b = funnel_pair
+    @debug "Removing short funnel vertices, $(a) $(b)"
+    N_a = neighbors(g, a)
+    N_b = neighbors(g, b)
+    for u in setdiff(N_a,vcat(N_b,[b])), v in setdiff(N_b,vcat(N_a,[a]))
+        (!has_edge(g,u,v)) && add_edge!(g,u,v)
+    end
+    return remove_vertices_vmap(g, [a,b]) 
+end
 
 function first_short_funnel(g::SimpleGraph)
     for a in vertices(g)
@@ -175,6 +203,21 @@ function desk_filter!(g::SimpleGraph)
     rem_vertices!(g, [a,b,c,d])
 
     return true
+end
+
+function desk_filter_vmap(g::SimpleGraph{Int})
+    g = copy(g)
+    desk_group = first_desk(g)
+    isnothing(desk_group) && return nothing
+
+    a,b,c,d = desk_group
+    @debug "Removing desk vertices, $(a) $(b) $(c) $(d)"
+    for u in setdiff(open_neighbors(g, [a,c]), closed_neighbors(g, [b,d])) # N(a, c) - N[b, d]
+        for v in setdiff(open_neighbors(g, [b,d]), closed_neighbors(g, [a,c])) # N(b, d) - N[a, c]
+            !has_edge(g,u,v) && add_edge!(g,u,v)
+        end
+    end
+    return remove_vertices_vmap(g, [a,b,c,d])
 end
 
 function first_desk(g::SimpleGraph)

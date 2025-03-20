@@ -20,6 +20,7 @@ end
 Base.copy(p::MISProblem) = MISProblem(copy(p.g))
 Base.show(io::IO, p::MISProblem) = print(io, "MISProblem($(nv(p.g)))")
 OptimalBranchingCore.has_zero_size(p::MISProblem) = nv(p.g) == 0
+Base.:(==)(p1::MISProblem{T1}, p2::MISProblem{T2}) where {T1, T2} = (T1 == T2) && (p1.g == p2.g)
 
 """
     TensorNetworkSolver
