@@ -158,15 +158,15 @@ function reduce_graph(g::SimpleGraph{Int}, tnreducer::TensorNetworkReducer; vmap
 
     # if all the vertices that have been modified can not be reduced, try other vertices
     for (i, value) in tnreducer.region_list
-        selected_vertices, open_neighbors = value
+        selected_vertices, nn = value
         reselected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
-        reselected_open_neighbors = open_neighbors(p.g, reselected_vertices)
-        if (sort!(selected_vertices) == sort!(reselected_vertices)) && (sort!(open_neighbors) == sort!(reselected_open_neighbors))
+        reselected_nn = open_neighbors(p.g, reselected_vertices)
+        if (sort!(selected_vertices) == sort!(reselected_vertices)) && (sort!(nn) == sort!(reselected_nn))
             continue
         else
             res = tn_reduce_graph(p, tnreducer, selected_vertices) 
             if isnothing(res)
-                tnreducer.region_list[i] = (reselected_vertices, reselected_open_neighbors)
+                tnreducer.region_list[i] = (reselected_vertices, reselected_nn)
             else
                 return res
             end
@@ -189,7 +189,7 @@ function update_region_list(region_list::Dict{Int, Tuple{Vector{Int}, Vector{Int
         ((v in v_removed) || maximum(region) > v_max || maximum(open_neighbors) > v_max || !isempty(intersect(region, v_removed)) || !isempty(intersect(open_neighbors, v_removed))) && continue
         mapped_region_list[ivmap[v]] = ([ivmap[u] for u in region], [ivmap[u] for u in open_neighbors])
     end
-
+    
     return mapped_region_list
 end
 
