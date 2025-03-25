@@ -29,12 +29,13 @@ A reducer that uses tensor network contraction to find reduction rules.
     - `:dfs`: Depth-first search (gives the first found non-zero intersection)
 - `sub_reducer::AbstractReducer = XiaoReducer()`: Reducer applied to selected vertices before tensor network contraction, default is XiaoReducer
 """
-@kwdef struct TensorNetworkReducer <: AbstractReducer
+@kwdef mutable struct TensorNetworkReducer <: AbstractReducer
     n_max::Int = 15
     selector::Symbol = :mincut # :neighbor or :mincut
     measure::AbstractMeasure = NumOfVertices() # different measures for kernelization, use the size reduction from OptimalBranchingMIS
     intersect_strategy::Symbol = :bfs # :dfs or :bfs
     sub_reducer::AbstractReducer = XiaoReducer() # sub reducer for the selected vertices
+    region_list::Dict{Int, Tuple{Vector{Int}, Vector{Int}}} = Dict{Int, Tuple{Vector{Int}, Vector{Int}}}() # store the selected region and the open neighbors of the selected region for each vertex
 end
 Base.show(io::IO, reducer::TensorNetworkReducer) = print(io,
     """
@@ -103,7 +104,7 @@ function reduce_graph(g::SimpleGraph{Int}, ::MISReducer)
     return g, 0, collect(1:nv(g))
 end
 
-function reduce_graph(g::SimpleGraph{Int}, ::XiaoReducer)    
+function reduce_graph(g::SimpleGraph{Int}, ::XiaoReducer)
     nv(g) == 0 && return SimpleGraph(0), 0, Int[]
 
     g_new, r, vmap = reduce_graph(g, MISReducer())
@@ -128,28 +129,81 @@ function reduce_graph(g::SimpleGraph{Int}, ::XiaoReducer)
     return g, 0, collect(1:nv(g))
 end
 
-function reduce_graph(g::SimpleGraph{Int}, tnreducer::TensorNetworkReducer)
+# in this function, vmap_0 is from the late step to the current step, the out put vmap is from the current step to next step, which means it is not coupled with the vmap_0
+function reduce_graph(g::SimpleGraph{Int}, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing)
     nv(g) == 0 && return SimpleGraph(0), 0, Int[]
+
+    # if the vmap_0 is not specified, the region_list will not be updated, otherwise udpate the region_list
+    !isnothing(vmap_0) && (tnreducer.region_list = update_region_list(tnreducer.region_list, vmap_0))
+
+    # use the sub_reducer to reduce the graph first
     g_new, r, vmap = reduce_graph(g, tnreducer.sub_reducer)
     (g_new != g) && return g_new, r, vmap
 
-    # TODO: consider better strategy for selecting
     p = MISProblem(g)
+
+    # first consider the vertices with region removed (not a key in region_list)
     for i in 1:nv(p.g)
+        haskey(tnreducer.region_list, i) && continue 
         selected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
-        truth_table = branching_table(p, TensorNetworkSolver(), selected_vertices)
-        bc = best_intersect(p, truth_table, tnreducer.measure, tnreducer.intersect_strategy, 
-        selected_vertices)
-        if !isnothing(bc)
-            # rp, reducedvalue = OptimalBranchingCore.apply_branch(p, bc, selected_vertices)
-            vertices_removed = removed_vertices(selected_vertices, p.g, bc)
-            g_new, vmap = remove_vertices_vmap(p.g, vertices_removed)
-            reducedvalue = count_ones(bc.val)
-            return g_new, reducedvalue, vmap
+        res = tn_reduce_graph(p, tnreducer, selected_vertices)
+
+        if isnothing(res)
+            # if the region selected by i can not be reduced, add it to the region_list
+            tnreducer.region_list[i] = (selected_vertices, open_neighbors(p.g, selected_vertices))
+        else
+            return res 
+        end
+    end
+
+    # if all the vertices that have been modified can not be reduced, try other vertices
+    for (i, value) in tnreducer.region_list
+        selected_vertices, open_neighbors = value
+        reselected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
+        reselected_open_neighbors = open_neighbors(p.g, reselected_vertices)
+        if (sort!(selected_vertices) == sort!(reselected_vertices)) && (sort!(open_neighbors) == sort!(reselected_open_neighbors))
+            continue
+        else
+            res = tn_reduce_graph(p, tnreducer, selected_vertices) 
+            if isnothing(res)
+                tnreducer.region_list[i] = (reselected_vertices, reselected_open_neighbors)
+            else
+                return res
+            end
         end
     end
 
     return g, 0, collect(1:nv(g))
+end
+
+#update the region_list accroding to the region list
+function update_region_list(region_list::Dict{Int, Tuple{Vector{Int}, Vector{Int}}}, vmap::Vector{Int})
+    v_max = maximum(vmap)
+    v_removed = Set(setdiff(collect(1:v_max), vmap))
+    ivmap = Dict(vmap[i] => i for i in 1:length(vmap))
+
+    mapped_region_list = Dict{Int, Tuple{Vector{Int}, Vector{Int}}}()
+    for (v, value) in region_list
+        region, open_neighbors = value
+        (isempty(region) || isempty(open_neighbors)) && continue
+        ((v in v_removed) || maximum(region) > v_max || maximum(open_neighbors) > v_max || !isempty(intersect(region, v_removed)) || !isempty(intersect(open_neighbors, v_removed))) && continue
+        mapped_region_list[ivmap[v]] = ([ivmap[u] for u in region], [ivmap[u] for u in open_neighbors])
+    end
+
+    return mapped_region_list
+end
+
+function tn_reduce_graph(p::MISProblem, tnreducer::TensorNetworkReducer, selected_vertices::Vector{Int})
+    truth_table = branching_table(p, TensorNetworkSolver(), selected_vertices)
+    bc = best_intersect(p, truth_table, tnreducer.measure, tnreducer.intersect_strategy, 
+    selected_vertices)
+    if !isnothing(bc)
+        vertices_removed = removed_vertices(selected_vertices, p.g, bc)
+        g_new, vmap = remove_vertices_vmap(p.g, vertices_removed)
+        reducedvalue = count_ones(bc.val)
+        return g_new, reducedvalue, vmap
+    end
+    return nothing
 end
 
 function best_intersect(p::MISProblem, tbl::BranchingTable, measure::AbstractMeasure, intersect_strategy::Symbol, variables::Vector{T}) where {T}

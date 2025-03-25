@@ -33,3 +33,25 @@ end
     @test collect_configs.(cfgs) == reshape([[BitVector((0, 0, 1))], [], [], []], 2, 2)
     @test BranchingTable(cfgs) == BranchingTable(3, [[StaticElementVector(2, [0, 0, 1])]])
 end
+
+
+@testset "update region list via vmap" begin
+    for g in [random_regular_graph(1000, 3), SimpleGraph(GenericTensorNetworks.random_diagonal_coupled_graph(50, 50, 0.8))]
+        region_list = Dict{Int, Tuple{Vector{Int}, Vector{Int}}}()
+        for i in 1:nv(g)
+            n = OptimalBranchingMIS.closed_neighbors(g, [i])
+            nn = OptimalBranchingMIS.open_neighbors(g, n)
+            region_list[i] = (n, nn)
+        end
+
+        removed_vertices = unique!(rand(1:nv(g), 10))
+        sub_g, vmap = OptimalBranchingMIS.remove_vertices_vmap(g, removed_vertices)
+
+        mapped_region_list = OptimalBranchingMIS.update_region_list(region_list, vmap)
+        
+        for (v, (n, nn)) in mapped_region_list
+            @test n == OptimalBranchingMIS.closed_neighbors(sub_g, [v])
+            @test nn == OptimalBranchingMIS.open_neighbors(sub_g, n)
+        end
+    end
+end
