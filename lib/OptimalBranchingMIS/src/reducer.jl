@@ -36,6 +36,7 @@ A reducer that uses tensor network contraction to find reduction rules.
     intersect_strategy::Symbol = :bfs # :dfs or :bfs
     sub_reducer::AbstractReducer = XiaoReducer() # sub reducer for the selected vertices
     region_list::Dict{Int, Tuple{Vector{Int}, Vector{Int}}} = Dict{Int, Tuple{Vector{Int}, Vector{Int}}}() # store the selected region and the open neighbors of the selected region for each vertex
+    recheck::Bool = false # whether to recheck the vertices that have not been modified
 end
 Base.show(io::IO, reducer::TensorNetworkReducer) = print(io,
     """
@@ -44,7 +45,8 @@ Base.show(io::IO, reducer::TensorNetworkReducer) = print(io,
         ├── selector - $(reducer.selector)
         ├── measure - $(reducer.measure)
         ├── intersect_strategy - $(reducer.intersect_strategy)
-        └── sub_reducer - $(reducer.sub_reducer)
+        ├── sub_reducer - $(reducer.sub_reducer)
+        └── recheck - $(reducer.recheck)
     """)
 
 """
@@ -157,18 +159,20 @@ function reduce_graph(g::SimpleGraph{Int}, tnreducer::TensorNetworkReducer; vmap
     end
 
     # if all the vertices that have been modified can not be reduced, try other vertices
-    for (i, value) in tnreducer.region_list
-        selected_vertices, nn = value
-        reselected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
-        reselected_nn = open_neighbors(p.g, reselected_vertices)
-        if (sort!(selected_vertices) == sort!(reselected_vertices)) && (sort!(nn) == sort!(reselected_nn))
-            continue
-        else
-            res = tn_reduce_graph(p, tnreducer, selected_vertices) 
-            if isnothing(res)
-                tnreducer.region_list[i] = (reselected_vertices, reselected_nn)
+    if tnreducer.recheck
+        for (i, value) in tnreducer.region_list
+            selected_vertices, nn = value
+            reselected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
+            reselected_nn = open_neighbors(p.g, reselected_vertices)
+            if (sort!(selected_vertices) == sort!(reselected_vertices)) && (sort!(nn) == sort!(reselected_nn))
+                continue
             else
-                return res
+                res = tn_reduce_graph(p, tnreducer, selected_vertices) 
+                if isnothing(res)
+                    tnreducer.region_list[i] = (reselected_vertices, reselected_nn)
+                else
+                    return res
+                end
             end
         end
     end
