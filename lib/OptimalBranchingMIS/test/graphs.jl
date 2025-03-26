@@ -77,7 +77,7 @@ end
     end
 
     g = random_regular_graph(100, 3)
-    reducer = TensorNetworkReducer()
+    reducer = TensorNetworkReducer(recheck = true)
     gk, r, _ = kernelize(g, reducer)
     @test nv(gk) ≤ nv(g)
     @test nv(gk) == length(reducer.region_list)
