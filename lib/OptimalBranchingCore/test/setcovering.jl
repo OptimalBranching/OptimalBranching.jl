@@ -85,3 +85,17 @@ end
     @test OptimalBranchingCore.covered_by(tbl, result_ip.optimal_rule)
     @test result_ip.γ ≈ 1.0
 end
+
+@testset "weighted minimum signed exact cover" begin
+    subsets = [[1], [2], [3], [4], [1, 2], [2, 3], [3, 4], [4, 5]]
+    weights = collect(1:8.0)
+    num_items = 5
+    result_ip = OptimalBranchingCore.weighted_minimum_signed_exact_cover(IPSolver(max_itr = 10, verbose = false), weights, subsets, num_items, 10.0)
+    @test result_ip ≈ [1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+    subsets = [[1, 2], [2], [2,3,4,5], [4], [2, 3], [3, 4], [4, 5]]
+    weights = collect(1:7.0)
+    num_items = 5
+    result_ip = OptimalBranchingCore.weighted_minimum_signed_exact_cover(IPSolver(max_itr = 10, verbose = false), weights, subsets, num_items, 10.0)
+    @test result_ip ≈ [1.0, -1.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+end
