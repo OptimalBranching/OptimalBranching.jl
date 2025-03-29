@@ -276,46 +276,18 @@ Solves the weighted minimum set cover problem.
 ### Returns
 A vector of indices of selected subsets.
 """
-function weighted_minimum_set_cover(solver::LPSolver, weights::AbstractVector, subsets::Vector{Vector{Int}}, num_items::Int)
+function weighted_minimum_set_cover(solver::Union{LPSolver, IPSolver}, weights::AbstractVector, subsets::Vector{Vector{Int}}, num_items::Int)
     nsc = length(subsets)
-
-    sets_id = [Vector{Int}() for _=1:num_items]
-    for i in 1:nsc
-        for j in subsets[i]
-            push!(sets_id[j], i)
-        end
-    end
+    sets_id = _init_set_id(subsets, num_items)
 
     # LP by JuMP
     model = Model(solver.optimizer)
     !solver.verbose && set_silent(model)
-    @variable(model, 0 <= x[i = 1:nsc] <= 1)
-    @objective(model, Min, sum(x[i] * weights[i] for i in 1:nsc))
-    for i in 1:num_items
-        @constraint(model, sum(x[j] for j in sets_id[i]) >= 1)
+    if solver isa LPSolver
+        @variable(model, 0 <= x[i = 1:nsc] <= 1)
+    elseif solver isa IPSolver
+        @variable(model, 0 <= x[i = 1:nsc] <= 1, Int)
     end
-
-    optimize!(model)
-    xs = value.(x)
-    @assert is_solved_by(xs, sets_id, num_items)
-    return pick_sets(xs, subsets, num_items)
-end
-
-function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, subsets::Vector{Vector{Int}}, num_items::Int)
-    nsc = length(subsets)
-
-    sets_id = [Vector{Int}() for _=1:num_items]
-    for i in 1:nsc
-        for j in subsets[i]
-            push!(sets_id[j], i)
-        end
-    end
-
-    # IP by JuMP
-    model = Model(solver.optimizer)
-    !solver.verbose && set_silent(model)
-
-    @variable(model, 0 <= x[i = 1:nsc] <= 1, Int)
     @objective(model, Min, sum(x[i] * weights[i] for i in 1:nsc))
     for i in 1:num_items
         @constraint(model, sum(x[j] for j in sets_id[i]) >= 1)
@@ -324,6 +296,15 @@ function weighted_minimum_set_cover(solver::IPSolver, weights::AbstractVector, s
     optimize!(model)
     @assert is_solved_and_feasible(model)
     return pick_sets(value.(x), subsets, num_items)
+end
+function _init_set_id(subsets::Vector{Vector{Int}}, num_items::Int)
+    sets_id = [Vector{Int}() for _=1:num_items]
+    for i in 1:length(subsets)
+        for j in subsets[i]
+            push!(sets_id[j], i)
+        end
+    end
+    return sets_id
 end
 
 # by viewing xs as the probability of being selected, we can use a random algorithm to pick the sets
@@ -346,4 +327,48 @@ function pick_sets(xs::Vector, subsets::Vector{Vector{Int}}, num_items::Int)
     end
 
     return [i for i in picked]
+end
+
+"""
+    weighted_minimum_signed_exact_cover(solver, weights::AbstractVector, subsets::Vector{Vector{Int}}, num_items::Int, cmax::Float64)
+
+Solves the weighted minimum signed exact cover problem. It is different from the unbalanced version in that the variables are now changed to a real variable rather than a binary variable.
+It represents how many times a subset is selected. This number can be positive, zero, or negative. The total number of times a subset is selected must be equal to one.
+
+### Arguments
+- `solver`: The solver to be used. It can be an instance of `LPSolver` or `IPSolver`.
+- `weights::AbstractVector`: The weights of the subsets.
+- `subsets::Vector{Vector{Int}}`: A vector of subsets.
+- `num_items::Int`: The number of elements to cover.
+- `cmax::Float64`: The maximum coefficient of the subsets.
+
+### Returns
+A vector of weights for each subset.
+"""
+function weighted_minimum_signed_exact_cover(solver::Union{LPSolver, IPSolver}, weights::AbstractVector, subsets::Vector{Vector{Int}}, num_items::Int, cmax::Float64)
+    nsc = length(subsets)
+    sets_id = _init_set_id(subsets, num_items)
+
+    # IP by JuMP
+    model = Model(solver.optimizer)
+    !solver.verbose && set_silent(model)
+    if solver isa LPSolver
+        @variable(model, 0 <= x[i = 1:nsc] <= 1)
+    elseif solver isa IPSolver
+        @variable(model, 0 <= x[i = 1:nsc] <= 1, Int)
+    end
+    @variable(model, c[i = 1:nsc])          # coefficient of the i-th subset
+    @objective(model, Min, sum(x[i] * weights[i] for i in 1:nsc))
+    for i in 1:num_items  # cover all items exactly once
+        @constraint(model, sum(c[j] for j in sets_id[i]) == 1)
+    end
+    for i in 1:nsc
+        # inspired by: https://ieeexplore.ieee.org/document/6638790
+        @constraint(model, c[i] >= -cmax * x[i])
+        @constraint(model, c[i] <= cmax * x[i])
+    end
+
+    optimize!(model)
+    @assert is_solved_and_feasible(model)
+    return value.(c)
 end
