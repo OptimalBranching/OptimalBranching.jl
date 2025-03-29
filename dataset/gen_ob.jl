@@ -1,10 +1,11 @@
 using OptimalBranchingCore
-using OptimalBranchingCore: NumOfVariables, MockProblem, MockTableSolver, IPSolver, optimal_branching_rule, GreedyMerge, NaiveBranch, BitBasis
+using OptimalBranchingCore: NumOfVariables, MockProblem, MockTableSolver, IPSolver, optimal_branching_rule, BitBasis
 using JSON3
 
 function gen_ob(n::Int, nstrings::Int, output_file::String, solver, nsample::Int)
     output_data = []
     for i in 1:nsample
+        @info "Generating sample $i"
         p = MockProblem(rand(Bool, n))
         table_solver = MockTableSolver(nstrings, 0.2)
         tbl = branching_table(p, table_solver, 1:n)
@@ -13,8 +14,8 @@ function gen_ob(n::Int, nstrings::Int, output_file::String, solver, nsample::Int
         item = Dict(
             "input_table" => table2dict(tbl),
             "optimal_rule" => Dict(
-                "rule" => [clause2dict(clause) for clause in r1.optimal_rule],
-                "gamma" => r1.γ
+                "rule" => [clause2dict(n, clause) for clause in r1.optimal_rule.clauses],
+                "gamma" => r1.γ  # γ is determined by: 1 = sum_c γ^(num_literals(c)), where c is a clause in the optimal rule
             ),
         )
         push!(output_data, item)
@@ -33,81 +34,28 @@ function table2dict(tbl::BranchingTable)
     )
 end
 
-function clause2dict(clause::Clause)
-    return Dict(
-        "mask" => BitArray(bitstring(clause.mask)[end-tbl.bit_length+1:end] .== '1'),
-        "val" => BitArray(bitstring(clause.val)[end-tbl.bit_length+1:end] .== '1')
-    )
+function clause2dict(n::Int, clause::Clause)
+    return [isone(BitBasis.readbit(clause.mask, i)) ? Int(BitBasis.readbit(clause.val, i)) : -1 for i in 1:n]
 end
 
 # Generate and save to file
-output_file = "optimal_branching_result.json"
-gen_ob(15, 40, output_file, IPSolver(), 1)
-println("Results saved to $output_file")
+function gen_ob_and_save(n, nstrings, nsample)
+    output_file = joinpath(@__DIR__, "optimal_branching_result-n=$n-nstrings=$nstrings.json")
+    gen_ob(n, nstrings, output_file, IPSolver(), nsample)
+    @info("Results saved to $output_file")
+    return output_file
+end
+
+n, nstrings = 15, 40
+output_file = gen_ob_and_save(n, nstrings, 1000)
 
 function load_ob(input_file::String)
     # Read the JSON file
     data = open(input_file, "r") do io
         JSON3.read(io)
     end
-    
-    # Extract the bit length
-    bit_length = data.bit_length
-    
-    # Convert the table data back to BranchingTable format
-    table = Vector{Vector{UInt}}()
-    for row in data.table
-        table_row = Vector{UInt}()
-        for bs in row
-            # Convert BitArray back to UInt
-            int_val = UInt(0)
-            for (i, bit) in enumerate(bs)
-                if bit
-                    int_val |= UInt(1) << (i-1)
-                end
-            end
-            push!(table_row, int_val)
-        end
-        push!(table, table_row)
-    end
-    
-    # Create the BranchingTable
-    branching_table = BranchingTable(bit_length, table)
-    
-    # Convert the rule data back to DNF format
-    clauses = Vector{Clause{UInt}}()
-    for clause_data in data.optimal_rule
-        mask = UInt(0)
-        val = UInt(0)
-        
-        for (i, bit) in enumerate(clause_data.mask)
-            if bit
-                mask |= UInt(1) << (i-1)
-            end
-        end
-        
-        for (i, bit) in enumerate(clause_data.val)
-            if bit
-                val |= UInt(1) << (i-1)
-            end
-        end
-        
-        push!(clauses, Clause(mask, val))
-    end
-    
-    # Create the DNF
-    optimal_rule = DNF(clauses)
-    
-    # Return the loaded data
-    return (
-        branching_table = branching_table,
-        optimal_rule = optimal_rule,
-        gamma = data.gamma
-    )
+    return data
 end
 
-# Example usage:
-# result = load_ob("optimal_branching_result.json")
-# println("Loaded branching table: ", result.branching_table)
-# println("Loaded optimal rule: ", result.optimal_rule)
-# println("Gamma value: ", result.gamma)
+data = load_ob(output_file)
+println(data)
