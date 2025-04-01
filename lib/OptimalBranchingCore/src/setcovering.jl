@@ -84,7 +84,8 @@ function complexity_bv(branching_vector::Vector{T}) where {T}
     return bisect_solve(f, 1.0, f(1.0), 2.0, f(2.0))
 end
 function bisect_solve(f, a, fa, b, fb)
-    @assert fa * fb <= 0 "f(a) and f(b) have the same sign"
+    # iszero(fa * fb) && return iszero(fa) ? a : b
+    @assert fa * fb <= 0 "f(a) and f(b) have the same sign, a = $a, b = $b, fa = $fa, fb = $fb"
     while b - a > eps(b)
         c = (a + b) / 2
         fc = f(c)
