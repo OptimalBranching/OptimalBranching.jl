@@ -48,14 +48,3 @@ end
 
 n, nstrings = 5, 5
 output_file = gen_ob_and_save(n, nstrings, 1000, 0.0)
-
-function load_ob(input_file::String)
-    # Read the JSON file
-    data = open(input_file, "r") do io
-        JSON3.read(io)
-    end
-    return data
-end
-
-data = load_ob(output_file)
-println(data)
