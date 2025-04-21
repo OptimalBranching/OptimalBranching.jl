@@ -46,5 +46,5 @@ function gen_ob_and_save(n, nstrings, nsample, p)
     return output_file
 end
 
-n, nstrings = 5, 5
-output_file = gen_ob_and_save(n, nstrings, 1000, 0.0)
+# n, nstrings = 5, 5
+# output_file = gen_ob_and_save(n, nstrings, 1000, 0.0)

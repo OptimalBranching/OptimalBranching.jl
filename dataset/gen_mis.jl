@@ -25,6 +25,7 @@ function gen_mis(graph::SimpleGraph, output_file::String)
         # Convert the optimal rule to a serializable format
         item = Dict(
             "input_subgraph" => subgraph2dict(subgraph, findfirst(==(i), vmap), [findfirst(==(v), vmap) for v in openvars4]),
+            "input_table" => table2dict(tbl),
             "optimal_rule" => Dict(
                 "rule" => [clause2dict(nv(graph), clause) for clause in result.optimal_rule.clauses],
                 "gamma" => result.γ  # γ is determined by: 1 = sum_c γ^(num_literals(c)), where c is a clause in the optimal rule
@@ -36,6 +37,14 @@ function gen_mis(graph::SimpleGraph, output_file::String)
     open(output_file, "w") do io
         JSON3.write(io, output_data)
     end
+end
+
+function table2dict(tbl::BranchingTable)
+    n = tbl.bit_length
+    return Dict(
+        "bit_length" => n,
+        "rows" => [[[Int(BitBasis.readbit(bs, i)) for i in 1:n] for bs in row] for row in tbl.table]
+    )
 end
 
 function subgraph2dict(subgraph::SimpleGraph, center::Int, openvars::Vector{Int})
@@ -67,17 +76,11 @@ function gen_ksg_and_save(L::Int)
     @info("Results saved to $output_file")
     return output_file
 end
-
-output_file = gen_ksg_and_save(32)
-# output_file = gen_renyi_and_save(1000, 0.005)
-
-function load_ob(input_file::String)
-    # Read the JSON file
-    data = open(input_file, "r") do io
-        JSON3.read(io)
-    end
-    return data
+function gen_regular3_and_save(n::Int)
+    output_file = joinpath(@__DIR__, "mis_result-regular3-n=$n.json")
+    graph = random_regular_graph(n, 3)
+    gen_mis(graph, output_file)
 end
-
-data = load_ob(output_file)
-println(data)
+# output_file = gen_ksg_and_save(32)
+# output_file = gen_renyi_and_save(1000, 0.005)
+# output_file = gen_regular3_and_save(1000)
