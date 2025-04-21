@@ -16,7 +16,7 @@ regular3:
 	$(JL) -e 'include("gen_mis.jl"); gen_regular3_and_save(1000)'
 
 renyi:
-	$(JL) -e 'include("gen_mis.jl"); gen_renyi_and_save(1000, 0.005)'
+	$(JL) -e 'include("gen_mis.jl"); gen_renyi_and_save(1000, 0.003)'
 
 ob:
 	$(JL) -e 'include("gen_ob.jl"); gen_ob_and_save($n, $(nstrings), 1000, 0.0)'

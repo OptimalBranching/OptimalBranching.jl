@@ -11,6 +11,7 @@ end
 function gen_mis(graph::SimpleGraph, output_file::String, single_column::Bool)
     problem = MISProblem(graph)
     output_data = []
+    existing_tables = []
     for i in 1:nv(graph)
         @info "Generating sample $i"
         variables, openvars = OptimalBranchingMIS.neighbor_cover(graph, i, 2)
@@ -20,6 +21,12 @@ function gen_mis(graph::SimpleGraph, output_file::String, single_column::Bool)
                 resize!(row, 1)
             end
         end
+        if any(t -> length(t.table) == length(tbl.table) && all(t.table .== tbl.table), existing_tables)
+            @warn "got existing table"
+            continue
+        end
+        @show tbl
+        push!(existing_tables, tbl)
         @show length(tbl.table)
         if length(tbl.table) > 100
             @warn "Branching table is too large: $length(tbl.table)"
@@ -30,11 +37,11 @@ function gen_mis(graph::SimpleGraph, output_file::String, single_column::Bool)
         result = optimal_branching_rule(tbl, variables, problem, measure, IPSolver())        # compute the optimal branching rule
 
         # save the environment data (up to 4-layer neighbors)
-        variables4, openvars4 = OptimalBranchingMIS.neighbor_cover(graph, i, 4)
-        subgraph, vmap = induced_subgraph(graph, variables4)
+        #variables4, openvars4 = OptimalBranchingMIS.neighbor_cover(graph, i, 4)
+        #subgraph, vmap = induced_subgraph(graph, variables4)
         # Convert the optimal rule to a serializable format
         item = Dict(
-            "input_subgraph" => subgraph2dict(subgraph, findfirst(==(i), vmap), [findfirst(==(v), vmap) for v in openvars4]),
+            #"input_subgraph" => subgraph2dict(subgraph, findfirst(==(i), vmap), [findfirst(==(v), vmap) for v in openvars4]),
             "input_table" => table2dict(tbl),
             "optimal_rule" => Dict(
                 "rule" => [clause2dict(nv(graph), clause) for clause in result.optimal_rule.clauses],
@@ -43,6 +50,7 @@ function gen_mis(graph::SimpleGraph, output_file::String, single_column::Bool)
         )
         push!(output_data, item)
     end
+    @info "number of valid entries: $(length(existing_tables))"
    # Write to JSON file
     open(output_file, "w") do io
         JSON3.write(io, output_data)
