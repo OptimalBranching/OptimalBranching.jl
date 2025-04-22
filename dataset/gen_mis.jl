@@ -3,6 +3,7 @@ using OptimalBranchingCore, OptimalBranchingMIS
 using OptimalBranchingCore: IPSolver, optimal_branching_rule, BitBasis, NumOfVariables
 using OptimalBranchingMIS.GenericTensorNetworks: random_diagonal_coupled_graph
 using Graphs
+using SCIP
 using JSON3
 
 function OptimalBranchingCore.size_reduction(p::AbstractProblem, m::NumOfVariables, cl::Clause{INT}, variables::Vector) where {INT}
@@ -13,8 +14,12 @@ function gen_mis(graph::SimpleGraph, output_file::String, single_column::Bool)
     output_data = []
     existing_tables = []
     for i in 1:nv(graph)
-        @info "Generating sample $i"
         variables, openvars = OptimalBranchingMIS.neighbor_cover(graph, i, 2)
+        @info "Generating sample $i, number of variables: $(length(variables)), openvars: $(length(openvars))"
+        if length(openvars) > 13
+            @warn "too many openvars"
+            continue
+        end
         tbl = branching_table(problem, TensorNetworkSolver(; prune_by_env=true), variables)      # compute the BranchingTable
         if single_column
             for row in tbl.table
@@ -29,12 +34,12 @@ function gen_mis(graph::SimpleGraph, output_file::String, single_column::Bool)
         push!(existing_tables, tbl)
         @show length(tbl.table)
         if length(tbl.table) > 100
-            @warn "Branching table is too large: $length(tbl.table)"
+            @warn "Branching table is too large: $(length(tbl.table))"
             continue
         end
         # measure = D3Measure()
         measure = NumOfVariables()
-        result = optimal_branching_rule(tbl, variables, problem, measure, IPSolver())        # compute the optimal branching rule
+        result = optimal_branching_rule(tbl, variables, problem, measure, IPSolver(optimizer=SCIP.Optimizer))        # compute the optimal branching rule
 
         # save the environment data (up to 4-layer neighbors)
         #variables4, openvars4 = OptimalBranchingMIS.neighbor_cover(graph, i, 4)
