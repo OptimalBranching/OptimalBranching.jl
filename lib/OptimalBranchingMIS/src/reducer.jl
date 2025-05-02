@@ -50,6 +50,22 @@ Base.show(io::IO, reducer::TensorNetworkReducer) = print(io,
     """)
 
 """
+    struct SubsolverReducer{TR, TS} <: AbstractReducer
+
+After the size of the problem is smaller than the threshold, use a subsolver to find reduction rules.
+
+# Fields
+- `reducer::TR = XiaoReducer()`: The reducer used to reduce the graph.
+- `subsolver::Symbol = :xiao`: subsolvers include `:mis2`, `:xiao` and `:ip`.
+- `threshold::Int = 100`: The threshold for using the subsolver.
+"""
+@kwdef struct SubsolverReducer <: AbstractReducer
+    reducer::AbstractReducer = XiaoReducer()
+    subsolver::Symbol = :xiao # :mis2, :xiao or :ip
+    threshold::Int = 100 # the threshold for using the subsolver
+end
+
+"""
     reduce_problem(::Type{R}, p::MISProblem, ::MISReducer) where R
 
 Reduces the given `MISProblem` by removing vertices based on their degrees and returns a new `MISProblem` instance along with the count of removed vertices.
@@ -71,7 +87,7 @@ The function checks the number of vertices in the graph:
 - If there are two vertices, it returns an empty instance and a count based on the presence of an edge between them.
 - For graphs with more than two vertices, it calculates the degrees of the vertices and identifies the vertex with the minimum degree to determine which vertices to remove.
 """
-function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, reducer::Union{MISReducer, XiaoReducer, TensorNetworkReducer}) where R
+function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, reducer::Union{MISReducer, XiaoReducer, TensorNetworkReducer, SubsolverReducer}) where R
     g_new, r, _ = reduce_graph(p.g, reducer)
     if (nv(g_new) == nv(p.g)) && iszero(r)
         return p, R(0)
@@ -227,5 +243,23 @@ function best_intersect(p::MISProblem, tbl::BranchingTable, measure::AbstractMea
             end
         end
         return best_cl
+    end
+end
+
+function reduce_graph(g::SimpleGraph{Int}, reducer::SubsolverReducer)
+    if nv(g) <= reducer.threshold
+        # use the subsolver the directly solve the problem
+        if reducer.subsolver == :mis2
+            res = mis2(EliminateGraph(g))
+        elseif reducer.subsolver == :xiao
+            res = counting_xiao2013(g).size
+        elseif reducer.subsolver == :ip
+            res = ip_mis(g)
+        else
+            error("Subsolver $(reducer.subsolver) not supported, please choose from :mis2, :xiao or :ip")
+        end
+        return SimpleGraph(0), res, Int[]
+    else
+        return reduce_graph(g, reducer.reducer)
     end
 end
