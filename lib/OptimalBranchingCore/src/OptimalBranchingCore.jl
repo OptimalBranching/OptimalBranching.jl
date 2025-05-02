@@ -23,7 +23,7 @@ export measure, AbstractMeasure
 # reducer interface
 export reduce_problem, AbstractReducer, NoReducer
 # return type
-export MaxSize, MaxSizeBranchCount
+export MaxSize, MaxSizeBranchCount, MaxSizeNodeCount
 
 include("algebra.jl")
 include("bitbasis.jl")

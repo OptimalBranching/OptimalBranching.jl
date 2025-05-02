@@ -41,3 +41,11 @@ function mis_branch_count(g::AbstractGraph; branching_strategy::BranchingStrateg
     res = branch_and_reduce(p, branching_strategy, reducer, MaxSizeBranchCount; show_progress)
     return (res.size, res.count)
 end
+
+
+function mis_node_count(g::AbstractGraph; branching_strategy::BranchingStrategy = BranchingStrategy(table_solver = TensorNetworkSolver(), selector = MinBoundaryHighDegreeSelector(2, 6, 0), measure = D3Measure()), reducer = MISReducer(), show_progress::Bool = false)
+    p = MISProblem(g)
+    res = branch_and_reduce(p, branching_strategy, reducer, MaxSizeNodeCount; show_progress)
+    return (res.size, res.branch_count, res.node_count)
+end
+

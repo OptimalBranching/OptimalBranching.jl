@@ -17,6 +17,7 @@ end
 Base.:+(a::MaxSize, b::MaxSize) = MaxSize(max(a.size, b.size))
 Base.:*(a::MaxSize, b::MaxSize) = MaxSize(a.size + b.size)
 Base.zero(::Type{MaxSize}) = MaxSize(0)
+szero(::Type{MaxSize}) = MaxSize(0)
 
 """
     struct MaxSizeBranchCount
@@ -42,3 +43,17 @@ end
 Base.:+(a::MaxSizeBranchCount, b::MaxSizeBranchCount) = MaxSizeBranchCount(max(a.size, b.size), a.count + b.count)
 Base.:*(a::MaxSizeBranchCount, b::MaxSizeBranchCount) = MaxSizeBranchCount(a.size + b.size, (a.count * b.count))
 Base.zero(::Type{MaxSizeBranchCount}) = MaxSizeBranchCount(0, 1)
+szero(::Type{MaxSizeBranchCount}) = MaxSizeBranchCount(0, 0)
+
+struct MaxSizeNodeCount
+    size::Int
+    branch_count::Int
+    node_count::Int
+    MaxSizeNodeCount(size::Int) = new(size, 1, 1)
+    MaxSizeNodeCount(size::Int, branch_count::Int, node_count::Int) = new(size, branch_count, node_count)
+end
+
+Base.:+(a::MaxSizeNodeCount, b::MaxSizeNodeCount) = MaxSizeNodeCount(max(a.size, b.size), a.branch_count + b.branch_count, a.node_count + b.node_count)
+Base.:*(a::MaxSizeNodeCount, b::MaxSizeNodeCount) = MaxSizeNodeCount(a.size + b.size, (a.branch_count * b.branch_count), a.node_count * b.node_count)
+Base.zero(::Type{MaxSizeNodeCount}) = MaxSizeNodeCount(0, 1, 1)
+szero(::Type{MaxSizeNodeCount}) = MaxSizeNodeCount(0, 0, 1)

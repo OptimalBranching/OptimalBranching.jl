@@ -15,7 +15,7 @@ export MinBoundarySelector, MinBoundaryHighDegreeSelector,KaHyParSelector
 export TensorNetworkSolver
 export NumOfVertices, D3Measure
 
-export mis_size, mis_branch_count
+export mis_size, mis_branch_count, mis_node_count
 export ip_mis
 export counting_mis1, counting_mis2, counting_xiao2013
 
