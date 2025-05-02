@@ -1,0 +1,16 @@
+name = "OptimalBranchingMWIS"
+uuid = "d46499bf-d5f4-4475-a342-1bae19c1e260"
+authors = ["ArrogantGao <xz.gao@connect.ust.hk> and contributors"]
+version = "1.0.0-DEV"
+
+[deps]
+OptimalBranchingCore = "c76e7b22-e1d2-40e8-b0f1-f659837787b8"
+
+[compat]
+julia = "1.6.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
