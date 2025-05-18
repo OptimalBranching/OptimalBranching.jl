@@ -10,7 +10,7 @@ using SparseArrays
 using KaHyPar
 
 export MISProblem
-export MISReducer, XiaoReducer, TensorNetworkReducer, SubsolverReducer
+export MISReducer, XiaoReducer, TensorNetworkReducer, SubsolverReducer, MatryoshkaReducer
 export MinBoundarySelector, MinBoundaryHighDegreeSelector,KaHyParSelector
 export TensorNetworkSolver
 export NumOfVertices, D3Measure

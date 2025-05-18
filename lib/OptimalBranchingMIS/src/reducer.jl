@@ -65,6 +65,13 @@ After the size of the problem is smaller than the threshold, use a subsolver to 
     threshold::Int = 100 # the threshold for using the subsolver
 end
 
+@kwdef struct MatryoshkaReducer <: AbstractReducer
+    reducer::AbstractReducer
+    subconfig::BranchingStrategy
+    subreducer::Union{MatryoshkaReducer, SubsolverReducer}
+    threshold::Int
+end
+
 """
     reduce_problem(::Type{R}, p::MISProblem, ::MISReducer) where R
 
@@ -261,5 +268,13 @@ function reduce_graph(g::SimpleGraph{Int}, reducer::SubsolverReducer)
         return SimpleGraph(0), res, Int[]
     else
         return reduce_graph(g, reducer.reducer)
+    end
+end
+
+function reduce_graph(g::SimpleGraph{Int}, reducer::MatryoshkaReducer)
+    if nv(g) > reducer.threshold
+        return reduce_graph(g, reducer.reducer)
+    else
+        return SimpleGraph(0), mis_size(g, branching_strategy = reducer.subconfig, reducer = reducer.subreducer), Int[]
     end
 end
