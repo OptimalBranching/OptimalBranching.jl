@@ -94,7 +94,7 @@ The function checks the number of vertices in the graph:
 - If there are two vertices, it returns an empty instance and a count based on the presence of an edge between them.
 - For graphs with more than two vertices, it calculates the degrees of the vertices and identifies the vertex with the minimum degree to determine which vertices to remove.
 """
-function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, reducer::Union{MISReducer, XiaoReducer, TensorNetworkReducer, SubsolverReducer}) where R
+function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, reducer::Union{MISReducer, XiaoReducer, TensorNetworkReducer, SubsolverReducer, MatryoshkaReducer}) where R
     g_new, r, _ = reduce_graph(p.g, reducer)
     if (nv(g_new) == nv(p.g)) && iszero(r)
         return p, R(0)
