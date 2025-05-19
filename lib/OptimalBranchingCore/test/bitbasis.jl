@@ -48,6 +48,7 @@ end
     c2 = Clause(mask, v2)
     c3 = OptimalBranchingCore.gather2(5, c1, c2)
     @test c3 == Clause(LongLongUInt{1}((0b10100,)), LongLongUInt{1}((0b0,)))
+    @test length(c3) == 2
 end
 
 @testset "satellite" begin
