@@ -20,7 +20,7 @@ function solve_opt_rule(branching_region, graph, vs)
     ## Use default solver and measure
     m = D3Measure()
     table_solver = TensorNetworkSolver(; prune_by_env=true)
-    set_cover_solver = IPSolver()
+    set_cover_solver = IPSolver(verbose=true)
 
     ## Pruning irrelevant entries
     ovs = OptimalBranchingMIS.open_vertices(graph, vs)

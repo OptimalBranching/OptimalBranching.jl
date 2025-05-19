@@ -14,7 +14,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 [compat]
 Combinatorics = "1"
 EliminateGraphs = "0.2"
-GenericTensorNetworks = "3"
+GenericTensorNetworks = "3, 4"
 KaHyPar = "0.3.1"
 OptimalBranchingCore = "0.1.0"
 SparseArrays = "1.11.0"
