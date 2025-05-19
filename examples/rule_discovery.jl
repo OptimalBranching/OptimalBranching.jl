@@ -38,10 +38,14 @@ function solve_opt_rule(branching_region, graph, vs)
     problem = MISProblem(graph)
     size_reductions = [measure(problem, m) - measure(first(OptimalBranchingCore.apply_branch(problem, candidate, vs)), m) for candidate in candidate_clauses]
     result = OptimalBranchingMIS.OptimalBranchingCore.minimize_γ(tbl, candidate_clauses, size_reductions, set_cover_solver)
+    is_valid, gamma = OptimalBranchingCore.test_rule(tbl, result.optimal_rule, problem, m, vs)
+    @assert is_valid "The rule is not valid"
+    @assert gamma ≈ result.γ "The gamma is not correct"
     @info "the minimized gamma: $(result.γ)"
 
     @info "the optimal branching rule on R:"
     viz_dnf(result.optimal_rule, vs)
+    return result
 end
 
 function viz_dnf(dnf::DNF{INT}, variables::Vector{T}) where {T, INT}
@@ -103,11 +107,14 @@ function solve_greedy_rule(branching_region, graph, vs)
     @info "generating the optimal branching rule via greedy merge..."
     candidates = OptimalBranchingCore.bit_clauses(tbl)
     result = OptimalBranchingMIS.OptimalBranchingCore.greedymerge(candidates, MISProblem(graph), vs, m)
-    return result
+    is_valid, gamma = OptimalBranchingCore.test_rule(tbl, result.optimal_rule, MISProblem(graph), m, vs)
+    @assert is_valid "The rule is not valid"
+    @assert gamma ≈ result.γ "The gamma is not correct"
     @info "the greedily minimized gamma: $(result.γ)"
 
     @info "the branching rule on R:"
     viz_dnf(result.optimal_rule, vs)
+    return result
 end
 
 result = solve_greedy_rule(branching_region, graph, vs)

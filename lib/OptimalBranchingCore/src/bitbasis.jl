@@ -45,6 +45,8 @@ function booleans(n::Int)
 end
 ∧(x::Clause, xs::Clause...) = Clause(reduce(|, getfield.(xs, :mask); init=x.mask), reduce(|, getfield.(xs, :val); init=x.val))
 ¬(x::Clause) = Clause(x.mask, flip(x.val, x.mask))
+# The number of literals in the clause
+Base.length(clause::Clause) = count_ones(clause.mask)
 
 function BitBasis.bdistance(c1::Clause{INT}, c2::Clause{INT}) where INT <: Integer
     b1 = c1.val & c1.mask & c2.mask

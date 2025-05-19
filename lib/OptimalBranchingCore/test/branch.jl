@@ -42,6 +42,9 @@ using Test
         [StaticElementVector(2, [1, 0, 0, 1, 0])],
         [StaticElementVector(2, [0, 0, 1, 0, 1])]
     ])
+    is_valid, gamma = test_rule(tbl, DNF([Clause(2, 1)]), MockProblem(rand(Bool, 5)), D3Measure(), 1:5)
+    @test is_valid
+    @test gamma == 1.0
     clauses = OptimalBranchingCore.candidate_clauses(tbl)
     subsets = [OptimalBranchingCore.covered_items(tbl.table, c) for c in clauses]
     subsets_naive = subcovers_naive(tbl)

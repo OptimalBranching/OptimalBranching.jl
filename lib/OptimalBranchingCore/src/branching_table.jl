@@ -49,3 +49,26 @@ Returns `true` if there exists at least one bitstring in each group of `t` that 
 function covered_by(t::BranchingTable, dnf::DNF)
     all(x->any(y->covered_by(y, dnf), x), t.table)
 end
+
+"""
+    test_rule(table::BranchingTable, predicted::DNF, problem::AbstractProblem, m::AbstractMeasure, variables::Vector)
+
+Test the validity and complexity of a rule.
+
+### Arguments
+- `table::BranchingTable`: The branching table.
+- `predicted::DNF`: The logic expression in DNF.
+- `problem::AbstractProblem`: The problem.
+- `m::AbstractMeasure`: The measure.
+- `variables::Vector`: The variables.
+
+### Returns
+- `is_valid::Bool`: Whether the rule is valid.
+- `gamma::Float64`: The complexity of the rule.
+"""
+function test_rule(table::BranchingTable, predicted::DNF, problem::AbstractProblem, m::AbstractMeasure, variables::Vector)
+    is_valid = covered_by(table, predicted)
+    size_reductions = [size_reduction(problem, m, c, variables) for c in predicted.clauses]
+    gamma = complexity_bv(size_reductions)
+    return is_valid, gamma
+end
