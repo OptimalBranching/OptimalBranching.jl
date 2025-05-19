@@ -22,7 +22,8 @@ A reducer that uses tensor network contraction to find reduction rules.
 - `n_max::Int = 15`: Maximum number of vertices to be included in the selected region
 - `selector::Symbol = :mincut`: Strategy for selecting vertices to contract. Options are:
     - `:neighbor`: Select vertices based on neighborhood
-    - `:mincut`: Select vertices based on minimum cut provided by KaHyPar !Note: KaHyPar may leads to memory leak!
+    - `:mincut`: Select vertices based on minimum cut provided by `KaHyPar` (as extension, requires `using KaHyPar`)
+      !Note: `KaHyPar` may leads to memory leak!
 - `measure::AbstractMeasure = NumOfVertices()`: Measure used for kernelization. Uses size reduction from OptimalBranchingMIS
 - `intersect_strategy::Symbol = :bfs`: Strategy for intersecting clauses. Options are:
     - `:bfs`: Breadth-first search (gives the optimal result)
@@ -178,6 +179,10 @@ function reduce_graph(g::SimpleGraph{Int}, tnreducer::TensorNetworkReducer; vmap
     end
 
     return g, 0, collect(1:nv(g))
+end
+
+function select_region(args...)
+    error("Region selection requires `using KaHyPar`, since it is an extension function.")
 end
 
 #update the region_list accroding to the region list

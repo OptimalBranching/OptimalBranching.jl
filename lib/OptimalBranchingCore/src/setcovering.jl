@@ -139,6 +139,8 @@ function minimize_γ(table::BranchingTable, candidates::Vector{Clause{INT}}, Δ�
     subsets = [covered_items(table.table, c) for c in candidates]
     @debug "solver = $(solver), subsets = $(subsets), γ0 = $(solver.γ0), Δρ = $(Δρ)"
     num_items = length(table.table)
+    subsets, Δρ, picked_items = eliminate_strictly_worse_subsets(subsets, Δρ)
+    candidates = candidates[picked_items]
 
     # Note: the following instance is captured for time saving, and also for it may cause IP solver to fail
     for (k, subset) in enumerate(subsets)
@@ -156,6 +158,28 @@ function minimize_γ(table::BranchingTable, candidates::Vector{Clause{INT}}, Δ�
         cx_old = cx
     end
     return OptimalBranchingResult(DNF([candidates[i] for i in picked_scs]), Δρ[picked_scs], cx)
+end
+
+function eliminate_strictly_worse_subsets(subsets::Vector{Vector{Int}}, Δρ::Vector)
+    # eliminated strictly worse subsets
+    mask = trues(length(subsets))
+    dict = Dict{Vector{Int}, Tuple{Int, eltype(Δρ)}}()
+    for i in 1:length(subsets)
+        set = subsets[i]
+        if haskey(dict, set)
+            idx_pre, Δρ_pre = dict[set]
+            if Δρ[i] <= Δρ_pre
+                mask[i] = false
+            else
+                mask[idx_pre] = false
+                dict[set] = (i, Δρ[i])
+            end
+        else
+            dict[set] = (i, Δρ[i])
+        end
+    end
+    picked_items = findall(mask)
+    return subsets[picked_items], Δρ[picked_items], picked_items
 end
 
 # try to find a non-zero intersection of clauses in the branching table

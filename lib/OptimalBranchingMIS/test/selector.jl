@@ -2,6 +2,7 @@ using Test
 using OptimalBranchingMIS
 using OptimalBranchingCore
 using OptimalBranchingMIS.Graphs
+using KaHyPar
 
 @testset "KaHyParSelector" begin
     g = random_regular_graph(20, 3; seed = 2134)
