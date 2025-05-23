@@ -19,28 +19,16 @@ function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::Ka
 end
 
 # region selectors, max size is n_max and a vertex i is required to be in the region
-function OptimalBranchingMIS.select_region(g::AbstractGraph, i::Int, n_max::Int, strategy::Symbol)
-    if strategy == :neighbor
-        vs = [i]
-        while length(vs) < n_max
-            nbrs = OptimalBranchingMIS.open_neighbors(g, vs)
-            (length(vs) + length(nbrs) > n_max) && break
-            append!(vs, nbrs)
-        end
-        return vs
-    elseif strategy == :mincut
-        nv(g) <= n_max && return collect(1:nv(g))
-        h = KaHyPar.HyperGraph(OptimalBranchingMIS.edge2vertex(g))
-        
-        fix_vs = [j == i ? 1 : -1 for j in 1:nv(g)]
-        KaHyPar.fix_vertices(h, 2, fix_vs)
-        KaHyPar.set_target_block_weights(h, [nv(g) - n_max, n_max])
-        parts = KaHyPar.partition(h, 2; configuration = pkgdir(@__MODULE__, "src/ini", "cut_kKaHyPar_sea20.ini"))
-        
-        return findall(!iszero,parts)
-    else
-        error("Invalid strategy: $strategy, must be :neighbor or :mincut")
-    end
+function OptimalBranchingMIS.select_region_mincut(g::AbstractGraph, i::Int, n_max::Int)
+    nv(g) <= n_max && return collect(1:nv(g))
+    h = KaHyPar.HyperGraph(OptimalBranchingMIS.edge2vertex(g))
+    
+    fix_vs = [j == i ? 1 : -1 for j in 1:nv(g)]
+    KaHyPar.fix_vertices(h, 2, fix_vs)
+    KaHyPar.set_target_block_weights(h, [nv(g) - n_max, n_max])
+    parts = KaHyPar.partition(h, 2; configuration = pkgdir(@__MODULE__, "src/ini", "cut_kKaHyPar_sea20.ini"))
+    
+    return findall(!iszero,parts)
 end
 
 end
