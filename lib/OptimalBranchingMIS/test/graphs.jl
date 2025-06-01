@@ -34,7 +34,6 @@ end
     @test BranchingTable(cfgs) == BranchingTable(3, [[StaticElementVector(2, [0, 0, 1])]])
 end
 
-
 @testset "update region list via vmap" begin
     for g in [random_regular_graph(1000, 3), SimpleGraph(GenericTensorNetworks.random_diagonal_coupled_graph(50, 50, 0.8))]
         region_list = Dict{Int, Tuple{Vector{Int}, Vector{Int}}}()
@@ -87,4 +86,44 @@ end
     reducer = TensorNetworkReducer()
     gkk, _, _ = kernelize(gk, reducer)
     @test gkk == gk
+end
+
+@testset "kernelize for mwis" begin
+    function kernelize(g::SimpleGraph, weights::Vector, reducer::TensorNetworkReducer; verbose::Int = 0, vmap::Vector{Int} = collect(1:nv(g)))
+        (verbose ≥ 2) && (@info "kernelizing graph: $(nv(g)) vertices, $(ne(g)) edges")
+        r = 0
+    
+        vmap_0 = vmap
+    
+        while true
+            res = OptimalBranchingMIS.reduce_graph(g, weights, reducer, vmap_0 = vmap_0) # res = (g_new, weights_new, r_new, vmap_new)
+            vmap_0 = res[4]
+            vmap = vmap[res[4]]
+            r += res[3]
+            if g == res[1]
+                (verbose ≥ 2) && (@info "kernelized graph: $(nv(g)) vertices, $(ne(g)) edges")
+                return (g, weights, r, vmap)
+            end
+            g = res[1]
+            weights = res[2]
+        end
+    end
+
+    g = random_regular_graph(100, 3)
+    weights = rand(Float64, nv(g))
+    reducer = TensorNetworkReducer(recheck = true)
+    gk, weightsk, r, _ = kernelize(g, weights, reducer)
+    @test nv(gk) ≤ nv(g)
+    @test nv(gk) == length(reducer.region_list)
+
+    problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())
+    mwis = solve(problem, SizeMax())[1].n
+    problemk = GenericTensorNetwork(IndependentSet(gk, weightsk); optimizer = TreeSA())
+    mwisk = solve(problemk, SizeMax())[1].n
+    @test abs(mwisk + r - mwis) < 1e-12
+    
+    reducer = TensorNetworkReducer()
+    gkk, weightskk, _, _ = kernelize(gk, weightsk, reducer)
+    @test gkk == gk
+    @test weightskk == weightsk
 end

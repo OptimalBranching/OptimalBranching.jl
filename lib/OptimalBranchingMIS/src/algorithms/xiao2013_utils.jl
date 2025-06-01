@@ -41,14 +41,25 @@ function is_line_graph(g::SimpleGraph)
     return true
 end
 
-function find_children(g::SimpleGraph, vertex_set::Vector{Int})
-    u_vertices = Int[]
-    
-    for v in open_neighbors(g, vertex_set)
-        length(intersect(neighbors(g, v), vertex_set)) == 1 && push!(u_vertices, v)
-    end
+function find_children(g::SimpleGraph, vertex_set::Vector{Int}, with_parents::Bool = false)
+    if !with_parents
+        u_vertices = Int[]
+        for v in open_neighbors(g, vertex_set)
+            length(intersect(neighbors(g, v), vertex_set)) == 1 && push!(u_vertices, v)
+        end
 
-    return u_vertices
+        return u_vertices
+    else
+        u_vertices = Int[]
+        v_vertices = Int[]
+        for v in open_neighbors(g, vertex_set)
+            if length(intersect(neighbors(g, v), vertex_set)) == 1
+                push!(u_vertices, v)
+                push!(v_vertices, intersect(neighbors(g, v), vertex_set)[1])
+            end
+        end
+        return u_vertices, v_vertices
+    end
 end
 
 function is_independent(g::SimpleGraph, vertex_set::Vector{Int})
@@ -62,6 +73,16 @@ function unconfined_vertices(g::SimpleGraph)
     u_vertices = []
     for v in 1:nv(g)
         isempty(confined_set(g, [v])) && push!(u_vertices, v)
+    end
+    return u_vertices
+end
+
+function unconfined_vertices(g::SimpleGraph, weights::Vector)
+    u_vertices = []
+    local confinedset
+    for v in 1:nv(g)
+        confinedset = confined_set(g, weights, [v])
+        isempty(confinedset) && push!(u_vertices, v)
     end
     return u_vertices
 end
@@ -89,6 +110,36 @@ function confined_set(g::SimpleGraph, S::Vector{Int})
     end
 end
 
+function confined_set(g::SimpleGraph, weights::Vector, S::Vector{Int})
+    N_S = closed_neighbors(g, S)
+    us, vs = find_children(g, S, true)
+    isempty(us) && return S
+
+    ws = []
+    for u_idx in 1:length(us)
+        u = us[u_idx]
+        v = vs[u_idx]
+        if weights[v] <= weights[u]
+            w = setdiff(neighbors(g, u), N_S)
+            if isempty(w) 
+                return Int[]
+            elseif sum(weights[collect(w)]) + weights[v] <= weights[u]
+                return Int[]
+            elseif length(w) == 1
+                push!(ws, w)
+            end
+        end
+    end
+
+    (length(ws) == 0) && return S
+
+    W = unique(vcat(ws...))
+    if is_independent(g, W)
+        return confined_set(g, weights,unique(S ∪ W))
+    else
+        return Int[]
+    end
+end
 
 function twin_filter!(g::SimpleGraph)
     twin_pair = first_twin(g)
@@ -320,7 +371,6 @@ function optimal_funnel(g::SimpleGraph)
     return nothing
 end
 
-
 function has_fine_structure(g::SimpleGraph)
     any(degree(g) .>= 4) && return true
 
@@ -370,7 +420,6 @@ function find_path(g::SimpleGraph, path::Path)
         return (true, path)
     end
 end
-
 
 function optimal_four_cycle(g::SimpleGraph)
     all_cycles = simplecycles_limited_length(g, 4)

@@ -7,6 +7,14 @@ This struct serves as a specific implementation of the `AbstractReducer` type.
 struct MISReducer <: AbstractReducer end
 
 """
+    MWISReducer
+
+A struct representing a reducer for the Maximum Weighted Independent Set (MWIS) problem. 
+This struct serves as a specific implementation of the `AbstractReducer` type.
+"""
+struct MWISReducer <: AbstractReducer end
+
+"""
     struct XiaoReducer <: AbstractReducer end
 
 A reducer that uses Xiao's reduction rules to find reduction rules.
@@ -122,6 +130,60 @@ function reduce_graph(g::SimpleGraph{Int}, ::MISReducer)
     return g, 0, collect(1:nv(g))
 end
 
+function OptimalBranchingCore.reduce_problem(::Type{R}, p::MWISProblem, reducer::Union{MISReducer, MWISReducer, XiaoReducer, TensorNetworkReducer, SubsolverReducer}) where R
+    g_new, weights_new, r, _ = reduce_graph(p.g, p.weights, reducer)
+    if (nv(g_new) == nv(p.g)) && iszero(r)
+        return p, R(0)
+    else
+        return MWISProblem(g_new, weights_new), R(r)
+    end
+end
+
+function reduce_graph(g::SimpleGraph{Int}, weights::Vector, ::MWISReducer)
+    if nv(g) == 0
+        return SimpleGraph(0), [], 0, Int[]
+    elseif nv(g) == 1
+        return SimpleGraph(0), [], weights[1], Int[] 
+    elseif nv(g) == 2
+        if !has_edge(g, 1, 2)
+            return SimpleGraph(0), [], weights[1] + weights[2], Int[]
+        else
+            return SimpleGraph(0), [], max(weights[1], weights[2]), Int[]
+        end
+    else
+        degrees = degree(g)
+        degmin = minimum(degrees)
+        vmin = findfirst(==(degmin), degrees)
+
+        if degmin == 0
+            all_zero_vertices = findall(==(0), degrees)
+            g_new, vmap = remove_vertices_vmap(g, all_zero_vertices)
+            return g_new, weights[vmap], sum(weights[all_zero_vertices]), vmap
+        elseif degmin == 1
+            vmin_neighbor = neighbors(g, vmin)[1]
+            if weights[vmin] >= weights[vmin_neighbor]
+                g_new, vmap = remove_vertices_vmap(g, neighbors(g, vmin) ∪ vmin)
+                return g_new, weights[vmap], weights[vmin], vmap
+            end
+        end
+
+        unconfined_vs = unconfined_vertices(g, weights)
+        if length(unconfined_vs) != 0
+            g_new, vmap = remove_vertices_vmap(g, [unconfined_vs[1]])
+            return g_new, weights[vmap], 0, vmap
+        end
+
+        for vi in 1:nv(g)
+            g_new, weights_new, mis_addition, vmap = folding_vmap(g, weights, vi)
+            
+            if g_new != g
+                return g_new, weights_new, mis_addition, vmap
+            end
+        end
+    end
+    return g, weights, 0, collect(1:nv(g))
+end
+
 function reduce_graph(g::SimpleGraph{Int}, ::XiaoReducer)
     nv(g) == 0 && return SimpleGraph(0), 0, Int[]
 
@@ -196,6 +258,55 @@ function reduce_graph(g::SimpleGraph{Int}, tnreducer::TensorNetworkReducer; vmap
     return g, 0, collect(1:nv(g))
 end
 
+# in this function, vmap_0 is from the late step to the current step, the out put vmap is from the current step to next step, which means it is not coupled with the vmap_0
+function reduce_graph(g::SimpleGraph{Int}, weights::Vector, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing)
+    nv(g) == 0 && return SimpleGraph(0), [], 0, Int[]
+
+    # if the vmap_0 is not specified, the region_list will not be updated, otherwise udpate the region_list
+    !isnothing(vmap_0) && (tnreducer.region_list = update_region_list(tnreducer.region_list, vmap_0))
+
+    # use the sub_reducer to reduce the graph first
+    g_new, weights_new, r, vmap = reduce_graph(g, weights, MWISReducer())
+    (g_new != g) && return g_new, weights_new, r, vmap
+
+    p = MWISProblem(g, weights)
+
+    # first consider the vertices with region removed (not a key in region_list)
+    for i in 1:nv(p.g)
+        haskey(tnreducer.region_list, i) && continue 
+        selected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
+        res = tn_reduce_graph(p, tnreducer, selected_vertices)
+
+        if isnothing(res)
+            # if the region selected by i can not be reduced, add it to the region_list
+            tnreducer.region_list[i] = (selected_vertices, open_neighbors(p.g, selected_vertices))
+        else
+            return res 
+        end
+    end
+
+    # if all the vertices that have been modified can not be reduced, try other vertices
+    if tnreducer.recheck
+        for (i, value) in tnreducer.region_list
+            selected_vertices, nn = value
+            reselected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
+            reselected_nn = open_neighbors(p.g, reselected_vertices)
+            if (sort!(selected_vertices) == sort!(reselected_vertices)) && (sort!(nn) == sort!(reselected_nn))
+                continue
+            else
+                res = tn_reduce_graph(p, tnreducer, selected_vertices) 
+                if isnothing(res)
+                    tnreducer.region_list[i] = (reselected_vertices, reselected_nn)
+                else
+                    return res
+                end
+            end
+        end
+    end
+
+    return g, weights, 0, collect(1:nv(g))
+end
+
 #update the region_list accroding to the region list
 function update_region_list(region_list::Dict{Int, Tuple{Vector{Int}, Vector{Int}}}, vmap::Vector{Int})
     v_max = maximum(vmap)
@@ -226,7 +337,20 @@ function tn_reduce_graph(p::MISProblem, tnreducer::TensorNetworkReducer, selecte
     return nothing
 end
 
-function best_intersect(p::MISProblem, tbl::BranchingTable, measure::AbstractMeasure, intersect_strategy::Symbol, variables::Vector{T}) where {T}
+function tn_reduce_graph(p::MWISProblem, tnreducer::TensorNetworkReducer, selected_vertices::Vector{Int})
+    truth_table = branching_table(p, TensorNetworkSolver(), selected_vertices)
+    bc = best_intersect(p, truth_table, tnreducer.measure, tnreducer.intersect_strategy, 
+    selected_vertices)
+    if !isnothing(bc)
+        vertices_removed = removed_vertices(selected_vertices, p.g, bc)
+        g_new, vmap = remove_vertices_vmap(p.g, vertices_removed)
+        reducedvalue = clause_weighted_size(p.weights, bc.val, selected_vertices)
+        return g_new, p.weights[vmap], reducedvalue, vmap
+    end
+    return nothing
+end
+
+function best_intersect(p::Union{MISProblem, MWISProblem}, tbl::BranchingTable, measure::AbstractMeasure, intersect_strategy::Symbol, variables::Vector{T}) where {T}
     cl = OptimalBranchingCore.intersect_clauses(tbl, intersect_strategy)
     if isempty(cl)
         return nothing

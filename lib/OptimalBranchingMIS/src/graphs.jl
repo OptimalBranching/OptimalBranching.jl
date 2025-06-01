@@ -196,3 +196,54 @@ function folding(g::SimpleGraph, v::Int)
     g_new, n, _ = folding_vmap(g, v)
     return g_new, n
 end
+
+# If weights[v] >= mwis_size(neighbors(g, v)), v must be in the mwis
+# If neighbors(g, v) = [a, b], a is not connected to b, weights[a] + weights[b] > weights[v] but maximum(weights[a], weights[b]) <= weights[v], then a and b can be folded into one vertex
+function folding(g::SimpleGraph, weights::Vector, v::Int)
+    @debug "Folding vertex $(v)"
+    v_neighbors = collect(neighbors(g, v))
+    problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,v_neighbors)[1], weights[v_neighbors]); optimizer = GreedyMethod(nrepeat=1))
+    mis_vneighbors = solve(problem_sg, SizeMax())[].n
+    if mis_vneighbors <= weights[v]
+        removing_vertices = vcat(v_neighbors,[v])
+        g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), removing_vertices))
+        return (g_new, weights[vmap], weights[v])
+    elseif degree(g, v) == 2 && maximum(weights[v_neighbors]) <= weights[v]
+        a, b = neighbors(g, v)
+         # apply the graph rewrite rule
+        add_vertex!(g)
+        nn = open_neighbors(g, [v, a, b])
+        for n in nn
+            add_edge!(g, v, n)
+        end
+        mwis_diff = weights[v]
+        weights[v] = sum(weights[v_neighbors])-weights[v]
+        g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), [a, b]))
+        return (g_new, weights[vmap], mwis_diff)
+    end
+    return (g, weights, 0)
+end
+
+function folding_vmap(g::SimpleGraph, weights::Vector, v::Int)
+    @debug "Folding vertex $(v)"
+    v_neighbors = collect(neighbors(g, v))
+    problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,v_neighbors)[1], weights[v_neighbors]); optimizer = GreedyMethod(nrepeat=1))
+    mis_vneighbors = solve(problem_sg, SizeMax())[].n
+    if mis_vneighbors <= weights[v]
+        removing_vertices = vcat(v_neighbors,[v])
+        g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), removing_vertices))
+        return g_new, weights[vmap], weights[v], vmap
+    elseif degree(g, v) == 2 && maximum(weights[v_neighbors]) <= weights[v]
+        a, b = neighbors(g, v)
+         # apply the graph rewrite rule
+        nn = open_neighbors(g, [v, a, b])
+        for n in nn
+            add_edge!(g, v, n)
+        end
+        mwis_diff = weights[v]
+        weights[v] = sum(weights[v_neighbors])-weights[v]
+        g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), [a, b]))
+        return g_new, weights[vmap], mwis_diff, vmap
+    end
+    return g, weights, 0, collect(1:nv(g))
+end

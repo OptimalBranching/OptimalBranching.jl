@@ -4,7 +4,7 @@ using Reexport
 
 using OptimalBranchingCore
 using OptimalBranchingMIS
-using OptimalBranchingMWIS
+
 
 export BranchingStrategy, IPSolver, LPSolver
 export NoReducer

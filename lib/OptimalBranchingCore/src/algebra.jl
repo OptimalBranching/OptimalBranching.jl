@@ -10,8 +10,8 @@ A struct representing the maximum size of a result. (actually a tropical int)
 - `MaxSize(size::Int)`: Creates a `MaxSize` instance with the specified size.
 """
 struct MaxSize
-    size::Int
-    MaxSize(size::Int) = new(size)
+    size
+    MaxSize(size) = new(size)
 end
 
 Base.:+(a::MaxSize, b::MaxSize) = MaxSize(max(a.size, b.size))
@@ -33,10 +33,10 @@ Reture both the max size of the results and number of branches.
 
 """
 struct MaxSizeBranchCount
-    size::Int
+    size
     count::Int
-    MaxSizeBranchCount(size::Int) = new(size, 1)
-    MaxSizeBranchCount(size::Int, count::Int) = new(size, count)
+    MaxSizeBranchCount(size) = new(size, 1)
+    MaxSizeBranchCount(size, count::Int) = new(size, count)
 end
 
 Base.:+(a::MaxSizeBranchCount, b::MaxSizeBranchCount) = MaxSizeBranchCount(max(a.size, b.size), a.count + b.count)
