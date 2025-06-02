@@ -1,5 +1,5 @@
 # # Automatic rule discovery
-using OptimalBranching.OptimalBranchingMIS.Graphs, OptimalBranching
+using OptimalBranching.OptimalBranchingMIS.Graphs, OptimalBranching, OptimalBranching.OptimalBranchingMIS
 using OptimalBranching.OptimalBranchingCore, OptimalBranching.OptimalBranchingCore.BitBasis
 using SCIP
 
