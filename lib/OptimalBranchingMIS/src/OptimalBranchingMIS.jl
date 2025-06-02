@@ -7,11 +7,11 @@ using Combinatorics
 using EliminateGraphs, EliminateGraphs.Graphs
 using GenericTensorNetworks
 using SparseArrays
-using KaHyPar
 
 export MISProblem, MWISProblem
-export MISReducer, XiaoReducer, MWISReducer, TensorNetworkReducer, SubsolverReducer
+export MISReducer, XiaoReducer, MWISReducer, TensorNetworkReducer
 export MinBoundarySelector, MinBoundaryHighDegreeSelector,KaHyParSelector
+
 export TensorNetworkSolver
 export NumOfVertices, D3Measure
 export clause_weighted_size

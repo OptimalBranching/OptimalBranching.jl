@@ -1,4 +1,5 @@
 using OptimalBranchingMIS, EliminateGraphs, EliminateGraphs.Graphs
+using KaHyPar
 using OptimalBranchingCore
 using Test, Random, GenericTensorNetworks
 

@@ -30,7 +30,8 @@ A reducer that uses tensor network contraction to find reduction rules.
 - `n_max::Int = 15`: Maximum number of vertices to be included in the selected region
 - `selector::Symbol = :mincut`: Strategy for selecting vertices to contract. Options are:
     - `:neighbor`: Select vertices based on neighborhood
-    - `:mincut`: Select vertices based on minimum cut provided by KaHyPar !Note: KaHyPar may leads to memory leak!
+    - `:mincut`: Select vertices based on minimum cut provided by `KaHyPar` (as extension, requires `using KaHyPar`)
+      !Note: `KaHyPar` may leads to memory leak!
 - `measure::AbstractMeasure = NumOfVertices()`: Measure used for kernelization. Uses size reduction from OptimalBranchingMIS
 - `intersect_strategy::Symbol = :bfs`: Strategy for intersecting clauses. Options are:
     - `:bfs`: Breadth-first search (gives the optimal result)
@@ -39,7 +40,7 @@ A reducer that uses tensor network contraction to find reduction rules.
 """
 @kwdef mutable struct TensorNetworkReducer <: AbstractReducer
     n_max::Int = 15
-    selector::Symbol = :mincut # :neighbor or :mincut
+    selector::Symbol = :neighbor # :neighbor or :mincut
     measure::AbstractMeasure = NumOfVertices() # different measures for kernelization, use the size reduction from OptimalBranchingMIS
     intersect_strategy::Symbol = :bfs # :dfs or :bfs
     sub_reducer::AbstractReducer = XiaoReducer() # sub reducer for the selected vertices
@@ -256,6 +257,30 @@ function reduce_graph(g::SimpleGraph{Int}, tnreducer::TensorNetworkReducer; vmap
     end
 
     return g, 0, collect(1:nv(g))
+end
+
+function select_region(g::AbstractGraph, i::Int, n_max::Int, strategy::Symbol)
+    if strategy == :neighbor
+        return select_region_neighbor(g, i, n_max)
+    elseif strategy == :mincut
+        return select_region_mincut(g, i, n_max)
+    else
+        error("Invalid strategy: $strategy")
+    end
+end
+
+function select_region_neighbor(g::AbstractGraph, i::Int, n_max::Int)
+    vs = [i]
+    while length(vs) < n_max
+        nbrs = OptimalBranchingMIS.open_neighbors(g, vs)
+        (length(vs) + length(nbrs) > n_max) && break
+        append!(vs, nbrs)
+    end
+    return vs
+end
+
+function select_region_mincut(args...)
+    error("Region selection requires `using KaHyPar`, since it is an extension function.")
 end
 
 # in this function, vmap_0 is from the late step to the current step, the out put vmap is from the current step to next step, which means it is not coupled with the vmap_0

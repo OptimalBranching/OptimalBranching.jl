@@ -1,30 +1,33 @@
 name = "OptimalBranchingMIS"
 uuid = "1d45bab8-fbcd-445a-8de2-8d643ff389c2"
 authors = ["Xuanzhao Gao <xz.gao@connect.ust.hk> and Jin-Guo Liu and Yijia Wang"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 EliminateGraphs = "b3ff564c-d3b6-11e9-0ef2-9b4ae9f9cbe1"
 GenericTensorNetworks = "3521c873-ad32-4bb4-b63d-f4f178f42b49"
-KaHyPar = "2a6221f6-aa48-11e9-3542-2d9e0ef01880"
 OptimalBranchingCore = "c76e7b22-e1d2-40e8-b0f1-f659837787b8"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[weakdeps]
+KaHyPar = "2a6221f6-aa48-11e9-3542-2d9e0ef01880"
+
+[extensions]
+KaHyParExt = "KaHyPar"
 
 [compat]
 Combinatorics = "1"
 EliminateGraphs = "0.2"
-GenericTensorNetworks = "3"
+GenericTensorNetworks = "3, 4"
 KaHyPar = "0.3.1"
 OptimalBranchingCore = "0.1.0"
 SparseArrays = "1.11.0"
-TropicalGEMM = "0.2.0"
 julia = "1.10"
 
 [extras]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-TropicalGEMM = "a4ad3063-64a7-4bad-8738-34ed09bc0236"
 
 [targets]
-test = ["Random", "Test", "TropicalGEMM"]
+test = ["Random", "Test", "KaHyPar"]
