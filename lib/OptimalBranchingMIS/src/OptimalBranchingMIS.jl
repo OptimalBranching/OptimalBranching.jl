@@ -9,7 +9,7 @@ using GenericTensorNetworks
 using SparseArrays
 
 export MISProblem, MWISProblem
-export MISReducer, XiaoReducer, MWISReducer, TensorNetworkReducer
+export MISReducer, XiaoReducer, MWISReducer, TensorNetworkReducer, SubsolverReducer
 export MinBoundarySelector, MinBoundaryHighDegreeSelector,KaHyParSelector
 
 export TensorNetworkSolver
