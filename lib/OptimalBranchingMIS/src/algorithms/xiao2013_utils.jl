@@ -41,6 +41,8 @@ function is_line_graph(g::SimpleGraph)
     return true
 end
 
+# For a subset `vertex_set` of vertices, find its children, who has only one neighbor in the subset.
+# If `with_parents` is true, also return the only one parent of each child.
 function find_children(g::SimpleGraph, vertex_set::Vector{Int}, with_parents::Bool = false)
     if !with_parents
         u_vertices = Int[]
@@ -115,7 +117,7 @@ function confined_set(g::SimpleGraph, weights::Vector, S::Vector{Int})
     us, vs = find_children(g, S, true)
     isempty(us) && return S
 
-    ws = []
+    ws = Vector{Int}[]
     for u_idx in 1:length(us)
         u = us[u_idx]
         v = vs[u_idx]

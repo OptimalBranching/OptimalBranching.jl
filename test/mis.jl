@@ -26,6 +26,6 @@ end
     res_no = branch_and_reduce(p, bs, NoReducer(), MaxSize)
     problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())
     mwis = solve(problem, SizeMax())[1].n
-    @test abs(res.size - mwis) < 1e-12
-    @test abs(res_no.size - mwis) < 1e-12
+    @test isapprox(res.size, mwis)
+    @test isapprox(res_no.size, mwis)
 end

@@ -16,8 +16,8 @@ end
     weights = rand(Float64, nv(g))
     problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())
     mwis = solve(problem, SizeMax())[1].n
-    @test abs(mwis_size(g, weights) - mwis) < 1e-12
-    @test abs(mwis_branch_count(g, weights)[1] - mwis) < 1e-12
+    @test isapprox(mwis_size(g, weights), mwis)
+    @test isapprox(mwis_branch_count(g, weights)[1], mwis)
 
     weights = ones(Int64, nv(g))
     problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())

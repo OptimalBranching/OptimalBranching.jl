@@ -217,7 +217,7 @@ function folding(g::SimpleGraph, weights::Vector, v::Int)
             add_edge!(g, v, n)
         end
         mwis_diff = weights[v]
-        weights[v] = sum(weights[v_neighbors])-weights[v]
+        weights[v] = weights[a] + weights[b] - weights[v]
         g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), [a, b]))
         return (g_new, weights[vmap], mwis_diff)
     end
@@ -241,7 +241,7 @@ function folding_vmap(g::SimpleGraph, weights::Vector, v::Int)
             add_edge!(g, v, n)
         end
         mwis_diff = weights[v]
-        weights[v] = sum(weights[v_neighbors])-weights[v]
+        weights[v] = weights[a] + weights[b] - weights[v]
         g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), [a, b]))
         return g_new, weights[vmap], mwis_diff, vmap
     end

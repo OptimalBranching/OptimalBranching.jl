@@ -120,7 +120,7 @@ end
     mwis = solve(problem, SizeMax())[1].n
     problemk = GenericTensorNetwork(IndependentSet(gk, weightsk); optimizer = TreeSA())
     mwisk = solve(problemk, SizeMax())[1].n
-    @test abs(mwisk + r - mwis) < 1e-12
+    @test isapprox(mwisk + r, mwis)
     
     reducer = TensorNetworkReducer()
     gkk, weightskk, _, _ = kernelize(gk, weightsk, reducer)
