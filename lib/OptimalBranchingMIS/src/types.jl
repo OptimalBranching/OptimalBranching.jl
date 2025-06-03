@@ -5,50 +5,27 @@ Represents a Maximum Independent Set (MIS) problem.
 
 # Fields
 - `g::SimpleGraph`: The graph associated with the MIS problem.
+- `weights::VT`: The weights of the vertices in the graph.
 
 # Methods
 - `copy(p::MISProblem)`: Creates a copy of the given `MISProblem`.
 - `Base.show(io::IO, p::MISProblem)`: Displays the number of vertices in the `MISProblem`.
-
 """
-mutable struct MISProblem{INT <: Integer} <: AbstractProblem
+mutable struct MISProblem{INT <: Integer, VT<:AbstractVector} <: AbstractProblem
     g::SimpleGraph{Int}
+    weights::VT
+    function MISProblem(g::SimpleGraph{Int}, weights::VT) where VT
+        new{BitBasis.longinttype(nv(g), 2), VT}(g, weights)
+    end
     function MISProblem(g::SimpleGraph{Int})
-        new{BitBasis.longinttype(nv(g), 2)}(g)
+        new{BitBasis.longinttype(nv(g), 2), UnitWeight{Int}}(g, UnitWeight(nv(g)))
     end
 end
-Base.copy(p::MISProblem) = MISProblem(copy(p.g))
+Base.copy(p::MISProblem) = MISProblem(copy(p.g), copy(p.weights))
 Base.show(io::IO, p::MISProblem) = print(io, "MISProblem($(nv(p.g)))")
 OptimalBranchingCore.has_zero_size(p::MISProblem) = nv(p.g) == 0
-Base.:(==)(p1::MISProblem{T1}, p2::MISProblem{T2}) where {T1, T2} = (T1 == T2) && (p1.g == p2.g)
-
-"""
-    mutable struct MWISProblem{INT <: Integer} <: AbstractProblem
-
-Represents a Maximum Weighted Independent Set (MWIS) problem.
-
-# Fields
-- `g::SimpleGraph`: The graph associated with the MWIS problem.
-- `weights::Vector`: The weights of the vertices in the graph.
-
-# Methods
-- `copy(p::MWISProblem)`: Creates a copy of the given `MWISProblem`.
-- `Base.show(io::IO, p::MWISProblem)`: Displays the number of vertices in the `MWISProblem`.
-
-"""
-mutable struct MWISProblem{INT <: Integer} <: AbstractProblem
-    g::SimpleGraph{Int}
-    weights::Vector
-    function MWISProblem(g::SimpleGraph{Int}, weights::Vector)
-        new{BitBasis.longinttype(nv(g), 2)}(g, weights)
-    end
-end
-Base.copy(p::MWISProblem) = MWISProblem(copy(p.g), copy(p.weights))
-Base.show(io::IO, p::MWISProblem) = print(io, "MWISProblem($(nv(p.g)))")
-OptimalBranchingCore.has_zero_size(p::MWISProblem) = nv(p.g) == 0
-Base.:(==)(p1::MWISProblem{T1}, p2::MWISProblem{T2}) where {T1, T2} = 
+Base.:(==)(p1::MISProblem{T1}, p2::MISProblem{T2}) where {T1, T2} = 
     (T1 == T2) && (p1.g == p2.g) && (p1.weights == p2.weights)
-
 
 """
     TensorNetworkSolver
@@ -73,18 +50,18 @@ Each vertex is counted as 1.
 struct NumOfVertices <: AbstractMeasure end
 
 """
-    measure(p::Union{MISProblem, MWISProblem}, ::NumOfVertices)
+    measure(p::MISProblem, ::NumOfVertices)
 
-Calculates the number of vertices in the given `MISProblem` or `MWISProblem`.
+Calculates the number of vertices in the given `MISProblem`.
 
 # Arguments
-- `p::Union{MISProblem, MWISProblem}`: The problem instance containing the graph.
+- `p::MISProblem`: The problem instance containing the graph.
 
 # Returns
 - `Int`: The number of vertices in the graph.
 """
-OptimalBranchingCore.measure(p::Union{MISProblem{INT}, MWISProblem{INT}}, ::NumOfVertices) where {INT} = nv(p.g)
-function OptimalBranchingCore.size_reduction(p::Union{MISProblem{INT}, MWISProblem{INT}}, ::NumOfVertices, cl::Clause, variables::Vector) where {INT}
+OptimalBranchingCore.measure(p::MISProblem{INT}, ::NumOfVertices) where {INT} = nv(p.g)
+function OptimalBranchingCore.size_reduction(p::MISProblem{INT}, ::NumOfVertices, cl::Clause, variables::Vector) where {INT}
     return count_ones(removed_mask(INT, variables, p.g, cl))
 end
 
@@ -99,18 +76,18 @@ A struct representing a measure that calculates the sum of the maximum degree mi
 struct D3Measure <: AbstractMeasure end
 
 """
-    measure(p::Union{MISProblem, MWISProblem}, ::D3Measure)
+    measure(p::MISProblem, ::D3Measure)
 
-Calculates the D3 measure for the given `MISProblem` or `MWISProblem`, which is defined as the sum of 
+Calculates the D3 measure for the given `MISProblem`, which is defined as the sum of 
 the maximum degree of each vertex minus 2, for all vertices in the graph.
 
 # Arguments
-- `p::Union{MISProblem, MWISProblem}`: The problem instance containing the graph.
+- `p::MISProblem`: The problem instance containing the graph.
 
 # Returns
 - `Int`: The computed D3 measure value.
 """
-function OptimalBranchingCore.measure(p::Union{MISProblem{INT}, MWISProblem{INT}}, ::D3Measure) where {INT}
+function OptimalBranchingCore.measure(p::MISProblem{INT}, ::D3Measure) where {INT}
     g = p.g
     if nv(g) == 0
         return 0
@@ -120,7 +97,7 @@ function OptimalBranchingCore.measure(p::Union{MISProblem{INT}, MWISProblem{INT}
     end
 end
 
-function OptimalBranchingCore.size_reduction(p::Union{MISProblem{INT}, MWISProblem{INT}}, ::D3Measure, cl::Clause, variables::Vector) where {INT}
+function OptimalBranchingCore.size_reduction(p::MISProblem{INT}, ::D3Measure, cl::Clause, variables::Vector) where {INT}
     remove_mask = removed_mask(INT, variables, p.g, cl)
     iszero(remove_mask) && return 0
     sum = 0

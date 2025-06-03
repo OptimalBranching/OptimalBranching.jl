@@ -47,11 +47,6 @@ function _reduced_alpha_configs(g::SimpleGraph, weights::Vector; openvertices::V
 	return configs
 end
 
-function reduced_alpha_configs(::TensorNetworkSolver, graph::SimpleGraph, openvertices::Vector{Int}, potentials=nothing)
-	configs = _reduced_alpha_configs(graph, openvertices, potentials)
-    return BranchingTable(configs)
-end
-
 function reduced_alpha_configs(::TensorNetworkSolver, graph::SimpleGraph, weights::Vector; openvertices::Vector{Int})
 	configs = _reduced_alpha_configs(graph, weights; openvertices)
     return BranchingTable(configs)
@@ -66,21 +61,22 @@ function collect_configs(cfg::CountingTropical{<:Real, <:ConfigEnumerator}, symb
     symbols === nothing ? cs : [String([symbols[i] for (i, v) in enumerate(x) if v == 1]) for x in cs]
 end
 
-function OptimalBranchingCore.branching_table(p::MISProblem, solver::TensorNetworkSolver, vs::Vector{Int})
+function OptimalBranchingCore.branching_table(p::MISProblem{INT, <:UnitWeight}, solver::TensorNetworkSolver, vs::Vector{Int}) where INT<:Integer
     ovs = open_vertices(p.g, vs)
     subg, vmap = induced_subgraph(p.g, vs)
 	potential = [length(setdiff(neighbors(p.g, v), vs)) for v in ovs]
-    tbl = reduced_alpha_configs(solver, subg, Int[findfirst(==(v), vs) for v in ovs], potential)
+    tbl = reduced_alpha_configs(solver, subg, p.weights[vmap]; openvertices=Int[findfirst(==(v), vs) for v in ovs], potential)
     if solver.prune_by_env
         tbl = prune_by_env(tbl, p, vs)
     end
     return tbl
 end
 
-function OptimalBranchingCore.branching_table(p::MWISProblem, solver::TensorNetworkSolver, vs::Vector{Int})
+# TODO: maybe merge with the above function
+function OptimalBranchingCore.branching_table(p::MISProblem{INT, <:Vector}, solver::TensorNetworkSolver, vs::Vector{Int}) where INT<:Integer
     ovs = open_vertices(p.g, vs)
     subg, vmap = induced_subgraph(p.g, vs)
-	tbl = reduced_alpha_configs(solver, subg, p.weights[vmap], openvertices=Int[findfirst(==(v), vs) for v in ovs])
+	tbl = reduced_alpha_configs(solver, subg, p.weights[vmap]; openvertices=Int[findfirst(==(v), vs) for v in ovs])
     if solver.prune_by_env
         tbl = prune_by_env(tbl, p, vs)
     end
@@ -90,7 +86,7 @@ end
 # consider two different branching rule (A, and B) applied on the same set of vertices, with open vertices ovs.
 # the neighbors of 1 vertices in A is label as NA1, and the neighbors of 1 vertices in B is label as NB1, and the pink_block is the set of vertices that are not in NB1 but in NA1.
 # once mis(A) + mis(pink_block) ≤ mis(B), then A is not a good branching rule, and should be removed.
-function prune_by_env(tbl::BranchingTable{INT}, p::MISProblem, vertices) where{INT<:Integer}
+function prune_by_env(tbl::BranchingTable{INT}, p::MISProblem{INT, <:UnitWeight}, vertices) where{INT<:Integer}
     g = p.g
     openvertices = open_vertices(g, vertices)
     ns = neighbors(g, vertices)
@@ -133,17 +129,18 @@ function prune_by_env(tbl::BranchingTable{INT}, p::MISProblem, vertices) where{I
     return BranchingTable(OptimalBranchingCore.nbits(tbl), new_table)
 end
 
-function clause_weighted_size(weights::Vector,bit_config,vertices::Vector)
-    weighted_size = 0.0
+function clause_size(weights::Vector{WT}, bit_config::Int, vertices::Vector) where WT
+    weighted_size = zero(WT)
     for bit_pos in 1:length(vertices)
-        if readbit(bit_config,bit_pos) == 1
+        if readbit(bit_config, bit_pos) == 1
             weighted_size += weights[vertices[bit_pos]]
         end
     end
     return weighted_size
 end
+clause_size(::UnitWeight, bit_config::Int, vertices::Vector) = count_ones(bit_config)
 
-function prune_by_env(tbl::BranchingTable{INT}, p::MWISProblem, vertices) where{INT<:Integer}
+function prune_by_env(tbl::BranchingTable{INT}, p::MISProblem{INT, <:Vector}, vertices) where{INT<:Integer}
     g = p.g
     openvertices = open_vertices(g, vertices)
     ns = neighbors(g, vertices)
@@ -172,7 +169,7 @@ function prune_by_env(tbl::BranchingTable{INT}, p::MWISProblem, vertices) where{
                 sg_pink, sg_vec = induced_subgraph(g, collect(pink_block))
                 problem_sg_pink = GenericTensorNetwork(IndependentSet(sg_pink, p.weights[collect(pink_block)]); optimizer = GreedyMethod(nrepeat=1))
                 mis_pink = solve(problem_sg_pink, SizeMax())[].n
-                if (clause_weighted_size(p.weights, tbl.table[i][1], vertices) + mis_pink ≤ clause_weighted_size(p.weights, tbl.table[j][1], vertices)) && (!iszero(mis_pink))
+                if (clause_size(p.weights, tbl.table[i][1], vertices) + mis_pink ≤ clause_size(p.weights, tbl.table[j][1], vertices)) && (!iszero(mis_pink))
                     flag = false
                     break
                 end

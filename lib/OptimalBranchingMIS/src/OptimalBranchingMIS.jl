@@ -8,13 +8,12 @@ using EliminateGraphs, EliminateGraphs.Graphs
 using GenericTensorNetworks
 using SparseArrays
 
-export MISProblem, MWISProblem
+export MISProblem
 export MISReducer, XiaoReducer, MWISReducer, TensorNetworkReducer, SubsolverReducer
 export MinBoundarySelector, MinBoundaryHighDegreeSelector,KaHyParSelector
 
 export TensorNetworkSolver
 export NumOfVertices, D3Measure
-export clause_weighted_size
 
 export mis_size, mis_branch_count, mwis_size, mwis_branch_count
 export ip_mis
