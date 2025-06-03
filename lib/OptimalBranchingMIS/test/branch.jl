@@ -29,7 +29,7 @@ end
     weights = rand(Float64, nv(g))
     problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())
     mwis_exact = solve(problem, SizeMax())[1].n
-    p = MWISProblem(g, weights)
+    p = MISProblem(g, weights)
 
     for set_cover_solver in [IPSolver(max_itr = 10, verbose = false), LPSolver(max_itr = 10, verbose = false)], measure in [D3Measure(), NumOfVertices()], reducer in [NoReducer(), MWISReducer(), TensorNetworkReducer()], prune_by_env in [true, false], selector in [MinBoundarySelector(2), MinBoundaryHighDegreeSelector(2, 6, 0), MinBoundaryHighDegreeSelector(2, 6, 1)]
         @info "set_cover_solver = $set_cover_solver, measure = $measure, reducer = $reducer, prune_by_env = $prune_by_env, selector = $selector"

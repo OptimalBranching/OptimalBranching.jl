@@ -1,18 +1,11 @@
 """
     MISReducer
 
-A struct representing a reducer for the Maximum Independent Set (MIS) problem. 
+A struct representing a reducer for the Maximum (Weighted) Independent Set (M(W)IS) problem. 
 This struct serves as a specific implementation of the `AbstractReducer` type.
 """
 struct MISReducer <: AbstractReducer end
 
-"""
-    MWISReducer
-
-A struct representing a reducer for the Maximum Weighted Independent Set (MWIS) problem. 
-This struct serves as a specific implementation of the `AbstractReducer` type.
-"""
-struct MWISReducer <: AbstractReducer end
 
 """
     struct XiaoReducer <: AbstractReducer end
@@ -43,7 +36,7 @@ A reducer that uses tensor network contraction to find reduction rules.
     selector::Symbol = :neighbor # :neighbor or :mincut
     measure::AbstractMeasure = NumOfVertices() # different measures for kernelization, use the size reduction from OptimalBranchingMIS
     intersect_strategy::Symbol = :bfs # :dfs or :bfs
-    sub_reducer::AbstractReducer = XiaoReducer() # sub reducer for the selected vertices
+    sub_reducer::AbstractReducer = MISReducer() # sub reducer for the selected vertices
     region_list::Dict{Int, Tuple{Vector{Int}, Vector{Int}}} = Dict{Int, Tuple{Vector{Int}, Vector{Int}}}() # store the selected region and the open neighbors of the selected region for each vertex
     recheck::Bool = false # whether to recheck the vertices that have not been modified
 end
@@ -105,13 +98,24 @@ function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, reducer::
     end
 end
 
+struct ReductionResult{VT<:AbstractVector, WT}
+    g::SimpleGraph{Int}
+    weights::VT
+    r::WT
+    vmap::Vector{Int}
+end
+
+function ReductionResult(g::SimpleGraph{Int}, r::Int, vmap::Vector{Int}) where VT
+    ReductionResult(g, UnitWeight(nv(g)), r, vmap)
+end
+
 function reduce_graph(g::SimpleGraph{Int}, ::UnitWeight, ::MISReducer)
     if nv(g) == 0
-        return SimpleGraph(0), 0, Int[]
+        return ReductionResult(SimpleGraph(0), 0, Int[])
     elseif nv(g) == 1
-        return SimpleGraph(0), 1, Int[] 
+        return ReductionResult(SimpleGraph(0), 1, Int[]) 
     elseif nv(g) == 2
-        return SimpleGraph(0), 2 - has_edge(g, 1, 2), Int[]
+        return ReductionResult(SimpleGraph(0), 2 - has_edge(g, 1, 2), Int[])
     else
         degrees = degree(g)
         degmin = minimum(degrees)
@@ -120,37 +124,27 @@ function reduce_graph(g::SimpleGraph{Int}, ::UnitWeight, ::MISReducer)
         if degmin == 0
             all_zero_vertices = findall(==(0), degrees)
             g_new, vmap = remove_vertices_vmap(g, all_zero_vertices)
-            return g_new, length(all_zero_vertices), vmap
+            return ReductionResult(g_new, length(all_zero_vertices), vmap)
         elseif degmin == 1
             g_new, vmap = remove_vertices_vmap(g, neighbors(g, vmin) ∪ vmin)
-            return g_new, 1, vmap
+            return ReductionResult(g_new, 1, vmap)
         elseif degmin == 2
-            return folding_vmap(g, vmin)
+            return ReductionResult(folding_vmap(g, vmin)...)
         end
     end
-    return g, 0, collect(1:nv(g))
+    return ReductionResult(g, 0, collect(1:nv(g)))
 end
 
-struct ReductionResult{VT<:AbstractVector}
-    g::SimpleGraph{Int}
-    r::Int
-    vmap::Vector{Int}
-    weights::VT
-end
-function ReductionResult(g::SimpleGraph{Int}, r::Int, vmap::Vector{Int}) where VT
-    ReductionResult(g, r, vmap, UnitWeight(nv(g)))
-end
-
-function reduce_graph(g::SimpleGraph{Int}, weights::VT, ::MISReducer) where VT
+function reduce_graph(g::SimpleGraph{Int}, weights::Vector{WT}, ::MISReducer) where WT
     if nv(g) == 0
-        return ReductionResult(SimpleGraph(0), 0, Int[], VT[])
+        return ReductionResult(SimpleGraph(0), WT[], 0, Int[])
     elseif nv(g) == 1
-        return ReductionResult(SimpleGraph(0), 0, Int[], VT[]) 
+        return ReductionResult(SimpleGraph(0), WT[], weights[1], Int[]) 
     elseif nv(g) == 2
         if !has_edge(g, 1, 2)
-            return ReductionResult(SimpleGraph(0), 0, VT[weights[1] + weights[2]], Int[])
+            return ReductionResult(SimpleGraph(0), WT[], weights[1] + weights[2], Int[])
         else
-            return ReductionResult(SimpleGraph(0), 0, VT[max(weights[1], weights[2])], Int[])
+            return ReductionResult(SimpleGraph(0), WT[], max(weights[1], weights[2]), Int[])
         end
     else
         degrees = degree(g)
@@ -160,30 +154,30 @@ function reduce_graph(g::SimpleGraph{Int}, weights::VT, ::MISReducer) where VT
         if degmin == 0
             all_zero_vertices = findall(==(0), degrees)
             g_new, vmap = remove_vertices_vmap(g, all_zero_vertices)
-            return ReductionResult(g_new, sum(weights[all_zero_vertices]), vmap, weights[vmap])
+            return ReductionResult(g_new, weights[vmap], sum(weights[all_zero_vertices]), vmap)
         elseif degmin == 1
             vmin_neighbor = neighbors(g, vmin)[1]
             if weights[vmin] >= weights[vmin_neighbor]
                 g_new, vmap = remove_vertices_vmap(g, neighbors(g, vmin) ∪ vmin)
-                return ReductionResult(g_new, weights[vmin], vmap, weights[vmap])
+                return ReductionResult(g_new, weights[vmap], weights[vmin], vmap)
             end
         end
 
         unconfined_vs = unconfined_vertices(g, weights)
         if length(unconfined_vs) != 0
             g_new, vmap = remove_vertices_vmap(g, [unconfined_vs[1]])
-            return ReductionResult(g_new, 0, vmap, weights[vmap])
+            return ReductionResult(g_new, weights[vmap], 0, vmap)
         end
 
         for vi in 1:nv(g)
             g_new, weights_new, mis_addition, vmap = folding_vmap(g, weights, vi)
             
             if g_new != g
-                return ReductionResult(g_new, mis_addition, vmap, weights_new)
+                return ReductionResult(g_new, weights_new, mis_addition, vmap)
             end
         end
     end
-    return ReductionResult(g, 0, collect(1:nv(g)), weights)
+    return ReductionResult(g, weights, 0, collect(1:nv(g)))
 end
 
 function reduce_graph(g::SimpleGraph{Int}, weights::UnitWeight, ::XiaoReducer)
@@ -212,7 +206,7 @@ function reduce_graph(g::SimpleGraph{Int}, weights::UnitWeight, ::XiaoReducer)
 end
 
 # in this function, vmap_0 is from the late step to the current step, the out put vmap is from the current step to next step, which means it is not coupled with the vmap_0
-function reduce_graph(g::SimpleGraph{Int}, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing)
+function reduce_graph(g::SimpleGraph{Int}, weights::UnitWeight, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing)
     nv(g) == 0 && return ReductionResult(SimpleGraph(0), 0, Int[])
 
     # if the vmap_0 is not specified, the region_list will not be updated, otherwise udpate the region_list
@@ -286,17 +280,17 @@ function select_region_mincut(args...)
 end
 
 # in this function, vmap_0 is from the late step to the current step, the out put vmap is from the current step to next step, which means it is not coupled with the vmap_0
-function reduce_graph(g::SimpleGraph{Int}, weights::Vector, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing)
-    nv(g) == 0 && return ReductionResult(SimpleGraph(0), 0, Int[])
+function reduce_graph(g::SimpleGraph{Int}, weights::Vector{WT}, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing) where WT
+    nv(g) == 0 && return ReductionResult(SimpleGraph(0), WT[], 0, Int[])
 
     # if the vmap_0 is not specified, the region_list will not be updated, otherwise udpate the region_list
     !isnothing(vmap_0) && (tnreducer.region_list = update_region_list(tnreducer.region_list, vmap_0))
 
     # use the sub_reducer to reduce the graph first
-    g_new, weights_new, r, vmap = reduce_graph(g, weights, MISReducer())
-    (g_new != g) && return ReductionResult(g_new, r, vmap, weights_new)
+    g_new, weights_new, r, vmap = reduce_graph(g, weights, MWISReducer())
+    (g_new != g) && return ReductionResult(g_new, weights_new, r, vmap)
 
-    p = MISProblem(g, weights)
+    p = MWISProblem(g, weights)
 
     # first consider the vertices with region removed (not a key in region_list)
     for i in 1:nv(p.g)
@@ -307,7 +301,7 @@ function reduce_graph(g::SimpleGraph{Int}, weights::Vector, tnreducer::TensorNet
             # if the region selected by i can not be reduced, add it to the region_list
             tnreducer.region_list[i] = (selected_vertices, open_neighbors(p.g, selected_vertices))
         else
-            return res 
+            return ReductionResult(res...) 
         end
     end
 
@@ -324,13 +318,13 @@ function reduce_graph(g::SimpleGraph{Int}, weights::Vector, tnreducer::TensorNet
                 if isnothing(res)
                     tnreducer.region_list[i] = (reselected_vertices, reselected_nn)
                 else
-                    return res
+                    return ReductionResult(res...)
                 end
             end
         end
     end
     
-    return ReductionResult(g, 0, collect(1:nv(g)), weights)
+    return ReductionResult(g, weights, 0, collect(1:nv(g)))
 end
 
 #update the region_list accroding to the region list
@@ -352,13 +346,12 @@ end
 
 function tn_reduce_graph(p::MISProblem, tnreducer::TensorNetworkReducer, selected_vertices::Vector{Int})
     truth_table = branching_table(p, TensorNetworkSolver(), selected_vertices)
-    bc = best_intersect(p, truth_table, tnreducer.measure, tnreducer.intersect_strategy, 
-    selected_vertices)
+    bc = best_intersect(p, truth_table, tnreducer.measure, tnreducer.intersect_strategy, selected_vertices)
     if !isnothing(bc)
         vertices_removed = removed_vertices(selected_vertices, p.g, bc)
         g_new, vmap = remove_vertices_vmap(p.g, vertices_removed)
         reducedvalue = clause_size(p.weights, bc.val, selected_vertices)
-        return ReductionResult(g_new, reducedvalue, vmap, p.weights[vmap])
+        return ReductionResult(g_new, p.weights[vmap], reducedvalue, vmap)
     end
     return nothing
 end

@@ -1,11 +1,11 @@
 """
-    mutable struct MISProblem{INT <: Integer} <: AbstractProblem
+    mutable struct MISProblem{INT <: Integer, VT<:AbstractVector} <: AbstractProblem
 
-Represents a Maximum Independent Set (MIS) problem.
+Represents a Maximum (Weighted) Independent Set (M(W)IS) problem.
 
 # Fields
 - `g::SimpleGraph`: The graph associated with the MIS problem.
-- `weights::VT`: The weights of the vertices in the graph.
+- `weights::VT`: The weights of the vertices in the graph. It's set to be UnitWeight if the graph is not weighted.
 
 # Methods
 - `copy(p::MISProblem)`: Creates a copy of the given `MISProblem`.
