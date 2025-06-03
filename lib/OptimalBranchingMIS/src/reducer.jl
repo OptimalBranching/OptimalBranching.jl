@@ -270,6 +270,7 @@ function select_region(g::AbstractGraph, i::Int, n_max::Int, strategy::Symbol)
 end
 
 function select_region_neighbor(g::AbstractGraph, i::Int, n_max::Int)
+    n_max = min(n_max, nv(g))
     vs = [i]
     while length(vs) < n_max
         nbrs = OptimalBranchingMIS.open_neighbors(g, vs)
@@ -298,10 +299,9 @@ function reduce_graph(g::SimpleGraph{Int}, weights::Vector, tnreducer::TensorNet
 
     # first consider the vertices with region removed (not a key in region_list)
     for i in 1:nv(p.g)
-        haskey(tnreducer.region_list, i) && continue 
+        haskey(tnreducer.region_list, i) && continue
         selected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
         res = tn_reduce_graph(p, tnreducer, selected_vertices)
-
         if isnothing(res)
             # if the region selected by i can not be reduced, add it to the region_list
             tnreducer.region_list[i] = (selected_vertices, open_neighbors(p.g, selected_vertices))
@@ -328,7 +328,7 @@ function reduce_graph(g::SimpleGraph{Int}, weights::Vector, tnreducer::TensorNet
             end
         end
     end
-
+    
     return g, weights, 0, collect(1:nv(g))
 end
 
