@@ -23,7 +23,7 @@ function reduced_alpha(g::SimpleGraph, weights::Vector{WT}, openvertices::Vector
 	return mis_compactify!(alpha_tensor)
 end
 
-function _reduced_alpha_configs(g::SimpleGraph, weights::UnitWeight, openvertices::Vector{Int}, potential::Vector{Int})
+function _reduced_alpha_configs(g::SimpleGraph, weights::UnitWeight, openvertices::Vector{Int}, potential)
 	problem = GenericTensorNetwork(IndependentSet(g); openvertices, optimizer = GreedyMethod(nrepeat=1))
 	alpha_tensor = solve(problem, SizeMax())
 	alpha_configs = solve(problem, ConfigsMax(; bounded=false))
@@ -35,7 +35,7 @@ function _reduced_alpha_configs(g::SimpleGraph, weights::UnitWeight, openvertice
 	return configs
 end
 
-function _reduced_alpha_configs(g::SimpleGraph, weights::Vector{WT}, openvertices::Vector{Int}, potential::Vector{Int}) where WT
+function _reduced_alpha_configs(g::SimpleGraph, weights::Vector{WT}, openvertices::Vector{Int}, potential) where WT
 	problem = GenericTensorNetwork(IndependentSet(g, weights); openvertices, optimizer = GreedyMethod(nrepeat=1))
 	alpha_tensor = solve(problem, SizeMax())
 	alpha_configs = solve(problem, ConfigsMax(; bounded=false))
@@ -47,7 +47,7 @@ function _reduced_alpha_configs(g::SimpleGraph, weights::Vector{WT}, openvertice
 	return configs
 end
 
-function reduced_alpha_configs(::TensorNetworkSolver, graph::SimpleGraph, weights::Union{UnitWeight, Vector{WT}}, openvertices::Vector{Int}, potential::Vector{Int}) where WT
+function reduced_alpha_configs(::TensorNetworkSolver, graph::SimpleGraph, weights::Union{UnitWeight, Vector{WT}}; openvertices::Vector{Int}, potential) where WT
 	configs = _reduced_alpha_configs(graph, weights, openvertices, potential)
     return BranchingTable(configs)
 end
@@ -73,7 +73,7 @@ function OptimalBranchingCore.branching_table(p::MISProblem, solver::TensorNetwo
     return tbl
 end
 
-function clause_size(weights::Vector{WT}, bit_config::Int, vertices::Vector) where WT
+function clause_size(weights::Vector{WT}, bit_config, vertices::Vector) where WT
     weighted_size = zero(WT)
     for bit_pos in 1:length(vertices)
         if readbit(bit_config, bit_pos) == 1
@@ -82,7 +82,7 @@ function clause_size(weights::Vector{WT}, bit_config::Int, vertices::Vector) whe
     end
     return weighted_size
 end
-clause_size(::UnitWeight, bit_config::Int, vertices::Vector) = count_ones(bit_config)
+clause_size(::UnitWeight, bit_config, vertices::Vector) = count_ones(bit_config)
 
 # consider two different branching rule (A, and B) applied on the same set of vertices, with open vertices ovs.
 # the neighbors of 1 vertices in A is label as NA1, and the neighbors of 1 vertices in B is label as NB1, and the pink_block is the set of vertices that are not in NB1 but in NA1.

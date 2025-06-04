@@ -18,7 +18,7 @@ mutable struct MISProblem{INT <: Integer, VT<:AbstractVector} <: AbstractProblem
         new{BitBasis.longinttype(nv(g), 2), VT}(g, weights)
     end
     function MISProblem(g::SimpleGraph{Int})
-        new{BitBasis.longinttype(nv(g), 2), UnitWeight{Int}}(g, UnitWeight(nv(g)))
+        new{BitBasis.longinttype(nv(g), 2), UnitWeight}(g, UnitWeight(nv(g)))
     end
 end
 Base.copy(p::MISProblem) = MISProblem(copy(p.g), copy(p.weights))

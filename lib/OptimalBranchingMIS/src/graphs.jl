@@ -199,12 +199,12 @@ end
 
 # If weights[v] >= mwis_size(neighbors(g, v)), v must be in the mwis
 # If neighbors(g, v) = [a, b], a is not connected to b, weights[a] + weights[b] > weights[v] but maximum(weights[a], weights[b]) <= weights[v], then a and b can be folded into one vertex
-function folding(g::SimpleGraph, weights::Vector, v::Int)
+function folding(g::SimpleGraph, weights::Vector{WT}, v::Int) where WT
     g_new, weights_new, r, _ = folding_vmap(g, weights, v)
     return g_new, weights_new, r
 end
 
-function folding_vmap(g::SimpleGraph, weights::Vector, v::Int)
+function folding_vmap(g::SimpleGraph, weights::Vector{WT}, v::Int) where WT
     @debug "Folding vertex $(v)"
     v_neighbors = collect(neighbors(g, v))
     problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,v_neighbors)[1], weights[v_neighbors]); optimizer = GreedyMethod(nrepeat=1))

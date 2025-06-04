@@ -24,7 +24,7 @@ using Test
 
     ovs = OptimalBranchingMIS.open_vertices(graph, vs)
     subg, vmap = induced_subgraph(graph, vs)
-    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, Int[findfirst(==(v), vs) for v in ovs])
+    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, UnitWeight(nv(subg)), Int[findfirst(==(v), vs) for v in ovs])
     @test length(tbl.table) == 9
 
     problem = MISProblem(graph)
@@ -66,7 +66,7 @@ end
     tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, weights; openvertices = Int[findfirst(==(v), vs) for v in ovs])
     @test length(tbl.table) == 9
 
-    problem = MWISProblem(graph, weights)
+    problem = MISProblem(graph, weights)
     pruned_tbl = OptimalBranchingMIS.prune_by_env(tbl, problem, vs)
     @test length(pruned_tbl.table) == 5
 end
@@ -85,7 +85,7 @@ end
     tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, weights; openvertices = Int[findfirst(==(v), vs) for v in ovs])
     @test length(tbl.table) == 2
 
-    problem = MWISProblem(graph, weights)
+    problem = MISProblem(graph, weights)
     pruned_tbl = OptimalBranchingMIS.prune_by_env(tbl, problem, vs)
     @test length(pruned_tbl.table) == 1
 
@@ -93,7 +93,7 @@ end
     tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, weights; openvertices = Int[findfirst(==(v), vs) for v in ovs])
     @test length(tbl.table) == 2
 
-    problem = MWISProblem(graph, weights)
+    problem = MISProblem(graph, weights)
     pruned_tbl = OptimalBranchingMIS.prune_by_env(tbl, problem, vs)
     @test length(pruned_tbl.table) == 2
 end

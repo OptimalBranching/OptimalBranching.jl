@@ -1,7 +1,7 @@
 using OptimalBranchingCore, OptimalBranchingMIS
 using EliminateGraphs, EliminateGraphs.Graphs
 using Test
-
+using ProblemReductions
 using OptimalBranchingMIS: neighbor_cover, reduced_alpha, reduced_alpha_configs, graph_from_tuples, collect_configs
 using GenericTensorNetworks
 
@@ -25,9 +25,9 @@ end
 
 @testset "reduced alpha" begin
     g = graph_from_tuples(3, [(1, 2), (2, 3), (3, 1)])
-    @test reduced_alpha(g, [1, 2]) == Tropical.([1 -Inf; -Inf -Inf])
+    @test reduced_alpha(g, UnitWeight(nv(g)), [1, 2]) == Tropical.([1 -Inf; -Inf -Inf])
 
-    cfgs = OptimalBranchingMIS._reduced_alpha_configs(g, [1, 2], nothing)
+    cfgs = OptimalBranchingMIS._reduced_alpha_configs(g, UnitWeight(nv(g)), [1, 2], nothing)
     @test count(!iszero, cfgs) == 1
     @test collect_configs.(cfgs, Ref("abc")) == reshape([["c"], String[], String[], String[]], 2, 2)
     @test collect_configs.(cfgs) == reshape([[BitVector((0, 0, 1))], [], [], []], 2, 2)
@@ -63,15 +63,15 @@ end
         vmap_0 = vmap
     
         while true
-            res = OptimalBranchingMIS.reduce_graph(g, reducer, vmap_0 = vmap_0) # res = (g_new, r_new, vmap_new)
-            vmap_0 = res[3]
-            vmap = vmap[res[3]]
-            r += res[2]
-            if g == res[1]
+            res = OptimalBranchingMIS.reduce_graph(g, UnitWeight(nv(g)), reducer, vmap_0 = vmap_0) # res = (g_new, r_new, vmap_new)
+            vmap_0 = res.vmap
+            vmap = vmap[res.vmap]
+            r += res.r
+            if g == res.g
                 (verbose ≥ 2) && (@info "kernelized graph: $(nv(g)) vertices, $(ne(g)) edges")
                 return (g, r, vmap)
             end
-            g = res[1]
+            g = res.g
         end
     end
 
@@ -89,7 +89,7 @@ end
 end
 
 @testset "kernelize for mwis" begin
-    function kernelize(g::SimpleGraph, weights::Vector, reducer::TensorNetworkReducer; verbose::Int = 0, vmap::Vector{Int} = collect(1:nv(g)))
+    function kernelize(g::SimpleGraph, weights::Vector{WT}, reducer::TensorNetworkReducer; verbose::Int = 0, vmap::Vector{Int} = collect(1:nv(g))) where WT
         (verbose ≥ 2) && (@info "kernelizing graph: $(nv(g)) vertices, $(ne(g)) edges")
         r = 0
     
@@ -97,15 +97,15 @@ end
     
         while true
             res = OptimalBranchingMIS.reduce_graph(g, weights, reducer, vmap_0 = vmap_0) # res = (g_new, weights_new, r_new, vmap_new)
-            vmap_0 = res[4]
-            vmap = vmap[res[4]]
-            r += res[3]
-            if g == res[1]
+            vmap_0 = res.vmap
+            vmap = vmap[res.vmap]
+            r += res.r
+            if g == res.g
                 (verbose ≥ 2) && (@info "kernelized graph: $(nv(g)) vertices, $(ne(g)) edges")
                 return (g, weights, r, vmap)
             end
-            g = res[1]
-            weights = res[2]
+            g = res.g
+            weights = res.weights
         end
     end
 

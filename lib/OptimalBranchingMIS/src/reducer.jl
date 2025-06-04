@@ -183,8 +183,8 @@ end
 function reduce_graph(g::SimpleGraph{Int}, weights::UnitWeight, ::XiaoReducer)
     nv(g) == 0 && return ReductionResult(SimpleGraph(0), 0, Int[])
 
-    g_new, r, vmap = reduce_graph(g, weights, MISReducer())
-    (g_new != g) && return ReductionResult(g_new, r, vmap)
+    res = reduce_graph(g, weights, MISReducer())
+    (res.g != g) && return res
 
     unconfined_vs = unconfined_vertices(g)
     if length(unconfined_vs) != 0
@@ -201,55 +201,6 @@ function reduce_graph(g::SimpleGraph{Int}, weights::UnitWeight, ::XiaoReducer)
 
     desk_res = desk_filter_vmap(g)
     !isnothing(desk_res) && return ReductionResult(desk_res[1], 2, desk_res[2])
-
-    return ReductionResult(g, 0, collect(1:nv(g)))
-end
-
-# in this function, vmap_0 is from the late step to the current step, the out put vmap is from the current step to next step, which means it is not coupled with the vmap_0
-function reduce_graph(g::SimpleGraph{Int}, weights::UnitWeight, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing)
-    nv(g) == 0 && return ReductionResult(SimpleGraph(0), 0, Int[])
-
-    # if the vmap_0 is not specified, the region_list will not be updated, otherwise udpate the region_list
-    !isnothing(vmap_0) && (tnreducer.region_list = update_region_list(tnreducer.region_list, vmap_0))
-
-    # use the sub_reducer to reduce the graph first
-    g_new, r, vmap = reduce_graph(g, tnreducer.sub_reducer)
-    (g_new != g) && return ReductionResult(g_new, r, vmap)
-
-    p = MISProblem(g)
-
-    # first consider the vertices with region removed (not a key in region_list)
-    for i in 1:nv(p.g)
-        haskey(tnreducer.region_list, i) && continue 
-        selected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
-        res = tn_reduce_graph(p, tnreducer, selected_vertices)
-
-        if isnothing(res)
-            # if the region selected by i can not be reduced, add it to the region_list
-            tnreducer.region_list[i] = (selected_vertices, open_neighbors(p.g, selected_vertices))
-        else
-            return res 
-        end
-    end
-
-    # if all the vertices that have been modified can not be reduced, try other vertices
-    if tnreducer.recheck
-        for (i, value) in tnreducer.region_list
-            selected_vertices, nn = value
-            reselected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
-            reselected_nn = open_neighbors(p.g, reselected_vertices)
-            if (sort!(selected_vertices) == sort!(reselected_vertices)) && (sort!(nn) == sort!(reselected_nn))
-                continue
-            else
-                res = tn_reduce_graph(p, tnreducer, selected_vertices) 
-                if isnothing(res)
-                    tnreducer.region_list[i] = (reselected_vertices, reselected_nn)
-                else
-                    return res
-                end
-            end
-        end
-    end
 
     return ReductionResult(g, 0, collect(1:nv(g)))
 end
@@ -280,17 +231,17 @@ function select_region_mincut(args...)
 end
 
 # in this function, vmap_0 is from the late step to the current step, the out put vmap is from the current step to next step, which means it is not coupled with the vmap_0
-function reduce_graph(g::SimpleGraph{Int}, weights::Vector{WT}, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing) where WT
-    nv(g) == 0 && return ReductionResult(SimpleGraph(0), WT[], 0, Int[])
+function reduce_graph(g::SimpleGraph{Int}, weights::Union{Vector{WT}, UnitWeight}, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing) where WT
+    nv(g) == 0 && return ReductionResult(SimpleGraph(0), weights, 0, Int[])
 
     # if the vmap_0 is not specified, the region_list will not be updated, otherwise udpate the region_list
     !isnothing(vmap_0) && (tnreducer.region_list = update_region_list(tnreducer.region_list, vmap_0))
 
     # use the sub_reducer to reduce the graph first
-    g_new, weights_new, r, vmap = reduce_graph(g, weights, MWISReducer())
-    (g_new != g) && return ReductionResult(g_new, weights_new, r, vmap)
+    res = reduce_graph(g, weights, tnreducer.sub_reducer)
+    (res.g != g) && return res
 
-    p = MWISProblem(g, weights)
+    p = MISProblem(g, weights)
 
     # first consider the vertices with region removed (not a key in region_list)
     for i in 1:nv(p.g)
@@ -301,7 +252,7 @@ function reduce_graph(g::SimpleGraph{Int}, weights::Vector{WT}, tnreducer::Tenso
             # if the region selected by i can not be reduced, add it to the region_list
             tnreducer.region_list[i] = (selected_vertices, open_neighbors(p.g, selected_vertices))
         else
-            return ReductionResult(res...) 
+            return res
         end
     end
 
@@ -318,7 +269,7 @@ function reduce_graph(g::SimpleGraph{Int}, weights::Vector{WT}, tnreducer::Tenso
                 if isnothing(res)
                     tnreducer.region_list[i] = (reselected_vertices, reselected_nn)
                 else
-                    return ReductionResult(res...)
+                    return res
                 end
             end
         end
@@ -376,7 +327,7 @@ function best_intersect(p::MISProblem, tbl::BranchingTable, measure::AbstractMea
     end
 end
 
-function reduce_graph(g::SimpleGraph{Int}, reducer::SubsolverReducer)
+function reduce_graph(g::SimpleGraph{Int}, weights::UnitWeight, reducer::SubsolverReducer)
     if nv(g) <= reducer.threshold
         # use the subsolver the directly solve the problem
         if reducer.subsolver == :mis2
@@ -390,6 +341,6 @@ function reduce_graph(g::SimpleGraph{Int}, reducer::SubsolverReducer)
         end
         return ReductionResult(SimpleGraph(0), res, Int[])
     else
-        return reduce_graph(g, reducer.reducer)
+        return reduce_graph(g, weights, reducer.reducer)
     end
 end

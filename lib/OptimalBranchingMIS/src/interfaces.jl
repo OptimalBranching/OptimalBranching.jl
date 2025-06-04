@@ -15,7 +15,7 @@ Calculate the size of the Maximum (Weighted) Independent Set (M(W)IS) for a give
 ### Returns
 - An integer representing the size of the Maximum (Weighted) Independent Set for the given vertex-weighted graph.
 """
-function mis_size(g::AbstractGraph; weights::AbstractVector = UnitWeight(nv(g)), branching_strategy::BranchingStrategy = BranchingStrategy(table_solver = TensorNetworkSolver(), selector = MinBoundaryHighDegreeSelector(2, 6, 0), measure = D3Measure()), reducer = MWISReducer(), show_progress::Bool = false)
+function mis_size(g::AbstractGraph; weights::AbstractVector = UnitWeight(nv(g)), branching_strategy::BranchingStrategy = BranchingStrategy(table_solver = TensorNetworkSolver(), selector = MinBoundaryHighDegreeSelector(2, 6, 0), measure = D3Measure()), reducer = MISReducer(), show_progress::Bool = false)
     p = MISProblem(g, weights)
     res = branch_and_reduce(p, branching_strategy, reducer, MaxSize; show_progress)
     return res.size
@@ -38,7 +38,7 @@ Calculate the size and the number of branches of the Maximum (Weighted) Independ
 ### Returns
 - A tuple `(size, count)` where `size` is the size of the Maximum (Weighted) Independent Set and `count` is the number of branches.
 """
-function mis_branch_count(g::AbstractGraph; weights::AbstractVector = UnitWeight(nv(g)), branching_strategy::BranchingStrategy = BranchingStrategy(table_solver = TensorNetworkSolver(), selector = MinBoundaryHighDegreeSelector(2, 6, 0), measure = D3Measure()), reducer = MWISReducer(), show_progress::Bool = false)
+function mis_branch_count(g::AbstractGraph; weights::AbstractVector = UnitWeight(nv(g)), branching_strategy::BranchingStrategy = BranchingStrategy(table_solver = TensorNetworkSolver(), selector = MinBoundaryHighDegreeSelector(2, 6, 0), measure = D3Measure()), reducer = MISReducer(), show_progress::Bool = false)
     p = MISProblem(g, weights)
     res = branch_and_reduce(p, branching_strategy, reducer, MaxSizeBranchCount; show_progress)
     return (res.size, res.count)
