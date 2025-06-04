@@ -7,13 +7,17 @@ version = "0.1.1"
 GenericTensorNetworks = "3521c873-ad32-4bb4-b63d-f4f178f42b49"
 OptimalBranchingCore = "c76e7b22-e1d2-40e8-b0f1-f659837787b8"
 OptimalBranchingMIS = "1d45bab8-fbcd-445a-8de2-8d643ff389c2"
+ProblemReductions = "899c297d-f7d2-4ebf-8815-a35996def416"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+SCIP = "82193955-e24f-5292-bf16-6f2c5261a85f"
 
 [compat]
 GenericTensorNetworks = "2.2.0, 3, 4"
 OptimalBranchingCore = "0.1"
 OptimalBranchingMIS = "0.1"
+ProblemReductions = "0.3.4"
 Reexport = "1.2.2"
+SCIP = "0.12.6"
 julia = "1.10"
 
 [extras]
