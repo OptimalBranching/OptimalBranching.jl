@@ -3,7 +3,6 @@ using OptimalBranching.OptimalBranchingMIS.Graphs, OptimalBranching, OptimalBran
 using OptimalBranching.OptimalBranchingCore, OptimalBranching.OptimalBranchingCore.BitBasis
 using OptimalBranching.OptimalBranchingCore: IPSolver
 using ProblemReductions
-using SCIP
 
 # This function generates the tree-like N3 neighborhood of g0.
 function tree_like_N3_neighborhood(g0::SimpleGraph)
@@ -23,7 +22,7 @@ function solve_opt_rule(branching_region, graph, vs)
     ## Use default solver and measure
     m = D3Measure()
     table_solver = TensorNetworkSolver(; prune_by_env=true)
-    set_cover_solver = IPSolver(optimizer= SCIP.Optimizer, verbose=false)
+    set_cover_solver = IPSolver()
 
     ## Pruning irrelevant entries
     ovs = OptimalBranchingMIS.open_vertices(graph, vs)

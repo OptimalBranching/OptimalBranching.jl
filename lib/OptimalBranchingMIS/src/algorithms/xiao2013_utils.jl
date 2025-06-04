@@ -72,15 +72,15 @@ function is_independent(g::SimpleGraph, vertex_set::Vector{Int})
 end
 
 function unconfined_vertices(g::SimpleGraph)
-    u_vertices = []
+    u_vertices = Int[]
     for v in 1:nv(g)
         isempty(confined_set(g, [v])) && push!(u_vertices, v)
     end
     return u_vertices
 end
 
-function unconfined_vertices(g::SimpleGraph, weights::Vector)
-    u_vertices = []
+function unconfined_vertices(g::SimpleGraph, weights::Vector{WT}) where WT
+    u_vertices = Int[]
     local confinedset
     for v in 1:nv(g)
         confinedset = confined_set(g, weights, [v])
@@ -112,7 +112,7 @@ function confined_set(g::SimpleGraph, S::Vector{Int})
     end
 end
 
-function confined_set(g::SimpleGraph, weights::Vector, S::Vector{Int})
+function confined_set(g::SimpleGraph, weights::Vector{WT}, S::Vector{Int}) where WT
     N_S = closed_neighbors(g, S)
     us, vs = find_children(g, S, true)
     isempty(us) && return S
