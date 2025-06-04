@@ -77,20 +77,6 @@ struct KaHyParSelector <: AbstractSelector
     app_domain_size::Int
 end
 
-function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::KaHyParSelector) where {M <: AbstractMeasure, INT<:Integer}
-    nv(p.g) <= selector.app_domain_size && return collect(1:nv(p.g))
-    h = KaHyPar.HyperGraph(edge2vertex(p))
-    imbalance = 1-2*selector.app_domain_size/nv(p.g)
-    
-    parts = KaHyPar.partition(h, 2; configuration = pkgdir(@__MODULE__, "src/ini", "cut_kKaHyPar_sea20.ini"), imbalance)
-
-    zero_num = count(x-> x ≈ 0,parts)
-    one_num = length(parts)-zero_num
-    @debug "Selecting vertices by KaHyPar, sizes: $(zero_num), $(one_num)"
-    
-    return abs(zero_num-selector.app_domain_size) < abs(one_num-selector.app_domain_size) ? findall(iszero,parts) : findall(!iszero,parts)
-end
-
 edge2vertex(p::MISProblem) = edge2vertex(p.g)
 
 function edge2vertex(g::SimpleGraph)

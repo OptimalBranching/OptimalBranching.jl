@@ -1,7 +1,7 @@
 using OptimalBranchingMIS, OptimalBranchingCore, OptimalBranchingMIS.Graphs
 using KaHyPar
 using OptimalBranchingCore: IPSolver
-using OptimalBranchingMIS: clause_size
+using OptimalBranchingMIS: clause_size, alpha, reduced_alpha
 using ProblemReductions
 using Test  
 
@@ -41,6 +41,23 @@ end
     clause = 0b10100
     vertices = [1, 2, 3, 4, 5]
     @test clause_size(weights, clause, vertices) == 8.0
+end
+
+@testset "alpha tensor" begin
+    g = SimpleGraph(Graphs.SimpleEdge.([(1,2), (2,3)])) 
+    weights = ones(Float64, nv(g))
+    openvertices = [1,3]
+    alpha_tensor = alpha(g, weights, openvertices)
+    @test alpha_tensor[1,2].n == 1
+
+    alpha_tensor = alpha(g, UnitWeight(nv(g)), openvertices)
+    @test alpha_tensor[1,2].n == 1
+
+    reduced_alpha_tensor = reduced_alpha(g, weights, openvertices)
+    @test reduced_alpha_tensor[1,2].n == -Inf
+
+    reduced_alpha_tensor = reduced_alpha(g, UnitWeight(nv(g)), openvertices)
+    @test reduced_alpha_tensor[1,2].n == -Inf
 end
 
 @testset "pruner PH2" begin
