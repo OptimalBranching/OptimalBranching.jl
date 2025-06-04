@@ -29,7 +29,7 @@ A reducer that uses tensor network contraction to find reduction rules.
 - `intersect_strategy::Symbol = :bfs`: Strategy for intersecting clauses. Options are:
     - `:bfs`: Breadth-first search (gives the optimal result)
     - `:dfs`: Depth-first search (gives the first found non-zero intersection)
-- `sub_reducer::AbstractReducer = XiaoReducer()`: Reducer applied to selected vertices before tensor network contraction, default is XiaoReducer
+- `sub_reducer::AbstractReducer = MISReducer()`: Reducer applied to selected vertices before tensor network contraction, default is MISReducer
 """
 @kwdef mutable struct TensorNetworkReducer <: AbstractReducer
     n_max::Int = 15
@@ -85,7 +85,7 @@ Reduces the given `MISProblem` by removing vertices based on their degrees and r
 # Description
 The function checks the number of vertices in the graph:
 - If there are no vertices, it returns an empty instance and a count of 0.
-- If there is one vertex, it returns an empty instance and a count of 1.
+- If there is one vertex, it returns an empty instance and a count of 1 or weight of the vertex.
 - If there are two vertices, it returns an empty instance and a count based on the presence of an edge between them.
 - For graphs with more than two vertices, it calculates the degrees of the vertices and identifies the vertex with the minimum degree to determine which vertices to remove.
 """

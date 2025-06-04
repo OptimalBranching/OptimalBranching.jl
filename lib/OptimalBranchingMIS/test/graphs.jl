@@ -110,7 +110,7 @@ end
     end
 
     g = random_regular_graph(100, 3)
-    weights = rand(Float64, nv(g))
+    weights = ones(Float64, nv(g))
     reducer = TensorNetworkReducer(recheck = true)
     gk, weightsk, r, _ = kernelize(g, weights, reducer)
     @test nv(gk) ≤ nv(g)

@@ -1,5 +1,9 @@
-using OptimalBranchingMIS, OptimalBranchingMIS.OptimalBranchingCore, OptimalBranchingMIS.Graphs
-using Test
+using OptimalBranchingMIS, OptimalBranchingCore, OptimalBranchingMIS.Graphs
+using KaHyPar
+using OptimalBranchingCore: IPSolver
+using OptimalBranchingMIS: clause_size
+using ProblemReductions
+using Test  
 
 @testset "pruner PH2" begin
     function tree_like_N3_neighborhood(g::SimpleGraph)
@@ -32,11 +36,11 @@ using Test
     @test length(pruned_tbl.table) == 5
 end
 
-@testset "clause_weighted_size" begin
+@testset "clause_size" begin
     weights = [1.0, 2.0, 3.0, 4.0, 5.0]
     clause = 0b10100
     vertices = [1, 2, 3, 4, 5]
-    @test clause_weighted_size(weights, clause, vertices) == 8.0
+    @test clause_size(weights, clause, vertices) == 8.0
 end
 
 @testset "pruner PH2" begin
@@ -63,7 +67,7 @@ end
 
     ovs = OptimalBranchingMIS.open_vertices(graph, vs)
     subg, vmap = induced_subgraph(graph, vs)
-    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, weights; openvertices = Int[findfirst(==(v), vs) for v in ovs])
+    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, weights, Int[findfirst(==(v), vs) for v in ovs])
     @test length(tbl.table) == 9
 
     problem = MISProblem(graph, weights)
@@ -82,7 +86,7 @@ end
     subg, vmap = induced_subgraph(graph, vs)
 
     weights = [1,1,1,0.2,0.3]
-    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, weights; openvertices = Int[findfirst(==(v), vs) for v in ovs])
+    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, weights, Int[findfirst(==(v), vs) for v in ovs])
     @test length(tbl.table) == 2
 
     problem = MISProblem(graph, weights)
@@ -90,7 +94,7 @@ end
     @test length(pruned_tbl.table) == 1
 
     weights = [1,0.7,0.7,0.2,0.3]
-    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, weights; openvertices = Int[findfirst(==(v), vs) for v in ovs])
+    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, weights, Int[findfirst(==(v), vs) for v in ovs])
     @test length(tbl.table) == 2
 
     problem = MISProblem(graph, weights)

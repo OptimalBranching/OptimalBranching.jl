@@ -24,7 +24,6 @@ end
     @test is_lg = is_line_graph(example_g) == false
 end
 
-
 @testset "confined set and unconfined vertices" begin
     # via dominated rule
     g = graph_from_edges([(1,2),(1,3),(1, 4), (2, 3), (2, 4), (2, 6), (3, 5), (4, 5)])
@@ -34,7 +33,6 @@ end
     g = graph_from_edges([(1, 2), (1, 5), (1, 6), (2, 5), (2, 3), (4, 5), (3, 4), (3, 7), (4, 7)])
     @test in(1, unconfined_vertices(g))
 end
-
 
 @testset "twin" begin
     # xiao2013 fig.2(a)
@@ -57,8 +55,6 @@ end
     @test nv(example_g) == nv(example_g_new) == 6
 end
 
-
-
 @testset "short funnel" begin
     edges = [(1, 2), (1, 4), (1, 5), (2, 3), (2, 6), (3, 6), (4, 6)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
@@ -76,7 +72,6 @@ end
     @test ne(example_g) == ne(example_g_new) == 9
 end
 
-
 @testset "desk" begin
     edges = [(1, 2), (1, 4), (1, 8), (2, 3), (2, 7), (3, 8), (5, 7), (6, 8), (7, 8)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
@@ -93,7 +88,6 @@ end
     @test nv(example_g) == nv(example_g_new) == 8
     @test ne(example_g) == ne(example_g_new) == 8
 end
-
 
 @testset "effective vertex" begin
     function is_effective_vertex(g::SimpleGraph, a::Int, S_a::Vector{Int})

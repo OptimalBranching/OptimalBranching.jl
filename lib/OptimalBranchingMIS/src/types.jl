@@ -4,7 +4,7 @@
 Represents a Maximum (Weighted) Independent Set (M(W)IS) problem.
 
 # Fields
-- `g::SimpleGraph`: The graph associated with the MIS problem.
+- `g::SimpleGraph`: The graph associated with the M(W)IS problem.
 - `weights::VT`: The weights of the vertices in the graph. It's set to be UnitWeight if the graph is not weighted.
 
 # Methods

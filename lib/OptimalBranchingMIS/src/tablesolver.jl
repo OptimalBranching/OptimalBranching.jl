@@ -47,7 +47,7 @@ function _reduced_alpha_configs(g::SimpleGraph, weights::Vector{WT}, openvertice
 	return configs
 end
 
-function reduced_alpha_configs(::TensorNetworkSolver, graph::SimpleGraph, weights::Union{UnitWeight, Vector{WT}}; openvertices::Vector{Int}, potential) where WT
+function reduced_alpha_configs(::TensorNetworkSolver, graph::SimpleGraph, weights::Union{UnitWeight, Vector{WT}}, openvertices::Vector{Int}, potential=nothing) where WT
 	configs = _reduced_alpha_configs(graph, weights, openvertices, potential)
     return BranchingTable(configs)
 end
@@ -66,7 +66,7 @@ function OptimalBranchingCore.branching_table(p::MISProblem, solver::TensorNetwo
     ovs = open_vertices(p.g, vs)
     subg, vmap = induced_subgraph(p.g, vs)
 	potential = [length(setdiff(neighbors(p.g, v), vs)) for v in ovs]
-    tbl = reduced_alpha_configs(solver, subg, p.weights[vmap]; openvertices=Int[findfirst(==(v), vs) for v in ovs], potential)
+    tbl = reduced_alpha_configs(solver, subg, p.weights[vmap], Int[findfirst(==(v), vs) for v in ovs], potential)
     if solver.prune_by_env
         tbl = prune_by_env(tbl, p, vs)
     end

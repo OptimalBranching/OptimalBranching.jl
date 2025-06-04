@@ -6,7 +6,7 @@ using OptimalBranchingCore
 using OptimalBranchingCore.BitBasis
 using GenericTensorNetworks
 using ProblemReductions
-using OptimalBranchingCore: size_reduction, apply_branch
+using OptimalBranchingCore: size_reduction, apply_branch, Clause
 
 @testset "size_reduction" begin
     for m in [NumOfVertices(), D3Measure()]

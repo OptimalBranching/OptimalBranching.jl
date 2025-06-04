@@ -1,6 +1,8 @@
 # # Automatic rule discovery
 using OptimalBranching.OptimalBranchingMIS.Graphs, OptimalBranching, OptimalBranching.OptimalBranchingMIS
 using OptimalBranching.OptimalBranchingCore, OptimalBranching.OptimalBranchingCore.BitBasis
+using OptimalBranching.OptimalBranchingCore: IPSolver
+using ProblemReductions
 using SCIP
 
 # This function generates the tree-like N3 neighborhood of g0.
@@ -21,13 +23,13 @@ function solve_opt_rule(branching_region, graph, vs)
     ## Use default solver and measure
     m = D3Measure()
     table_solver = TensorNetworkSolver(; prune_by_env=true)
-    set_cover_solver = IPSolver(optimizer= SCIP.Optimizer, verbose=true)
+    set_cover_solver = IPSolver(optimizer= SCIP.Optimizer, verbose=false)
 
     ## Pruning irrelevant entries
     ovs = OptimalBranchingMIS.open_vertices(graph, vs)
     subg, vmap = induced_subgraph(graph, vs)
     @info "solving the branching table..."
-    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, Int[findfirst(==(v), vs) for v in ovs])
+    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, UnitWeight(nv(subg)), Int[findfirst(==(v), vs) for v in ovs])
     @info "the length of the truth_table after pruning irrelevant entries: $(length(tbl.table))"
 
     @info "generating candidate clauses..."
@@ -101,7 +103,7 @@ function solve_greedy_rule(branching_region, graph, vs)
     ovs = OptimalBranchingMIS.open_vertices(graph, vs)
     subg, vmap = induced_subgraph(graph, vs)
     @info "solving the branching table..."
-    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, Int[findfirst(==(v), vs) for v in ovs])
+    tbl = OptimalBranchingMIS.reduced_alpha_configs(table_solver, subg, UnitWeight(nv(subg)), Int[findfirst(==(v), vs) for v in ovs])
     @info "the length of the truth_table after pruning irrelevant entries: $(length(tbl.table))"
 
     @info "generating the optimal branching rule via greedy merge..."

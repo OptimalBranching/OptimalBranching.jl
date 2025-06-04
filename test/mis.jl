@@ -20,9 +20,9 @@ end
 @testset "MWIS" begin
     g = random_regular_graph(40, 3)
     weights = rand(Float64, nv(g))
-    p = OptimalBranchingMIS.MWISProblem(g, weights)
+    p = OptimalBranchingMIS.MISProblem(g, weights)
     bs = BranchingStrategy(; table_solver=TensorNetworkSolver(; prune_by_env=true), set_cover_solver=IPSolver(), selector=MinBoundarySelector(2), measure=D3Measure())
-    res = branch_and_reduce(p, bs, MWISReducer(), MaxSize)
+    res = branch_and_reduce(p, bs, MISReducer(), MaxSize)
     res_no = branch_and_reduce(p, bs, NoReducer(), MaxSize)
     problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())
     mwis = solve(problem, SizeMax())[1].n
