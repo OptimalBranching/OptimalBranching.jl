@@ -17,7 +17,7 @@ OptimalBranchingCore = "0.1"
 OptimalBranchingMIS = "0.1"
 ProblemReductions = "0.3.4"
 Reexport = "1.2.2"
-SCIP = "0.12.6"
+SCIP = "0"
 julia = "1.10"
 
 [extras]
