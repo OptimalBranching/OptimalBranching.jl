@@ -4,7 +4,6 @@ using OptimalBranchingCore
 using OptimalBranchingCore: select_variables
 using OptimalBranchingMIS.Graphs
 using KaHyPar
-using Graphs
 
 # calculate the maximum distance between any two vertices in the subset
 function max_subset_distance(g::SimpleGraph, subset::Vector{Int})
