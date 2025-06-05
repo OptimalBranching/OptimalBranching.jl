@@ -1,30 +1,17 @@
-function alpha(g::SimpleGraph, weights::UnitWeight, openvertices::Vector{Int})
-	problem = GenericTensorNetwork(IndependentSet(g); openvertices, optimizer = GreedyMethod(nrepeat=1))
-	alpha_tensor = solve(problem, SizeMax())
-    return alpha_tensor
-end
-
-function alpha(g::SimpleGraph, weights::Vector{WT}, openvertices::Vector{Int}) where WT
+function alpha(g::SimpleGraph, weights::AbstractVector{WT}, openvertices::Vector{Int}) where WT
 	problem = GenericTensorNetwork(IndependentSet(g, weights); openvertices, optimizer = GreedyMethod(nrepeat=1))
 	alpha_tensor = solve(problem, SizeMax())
     return alpha_tensor
 end
 
-# Let us create a function for finding reduced ``\alpha``-tensors."
-function reduced_alpha(g::SimpleGraph, weights::UnitWeight, openvertices::Vector{Int})
-	problem = GenericTensorNetwork(IndependentSet(g); openvertices, optimizer = GreedyMethod(nrepeat=1))
-	alpha_tensor = solve(problem, SizeMax())
-	return mis_compactify!(alpha_tensor)
-end
-
-function reduced_alpha(g::SimpleGraph, weights::Vector{WT}, openvertices::Vector{Int}) where WT
+function reduced_alpha(g::SimpleGraph, weights::AbstractVector{WT}, openvertices::Vector{Int}) where WT
 	problem = GenericTensorNetwork(IndependentSet(g, weights); openvertices, optimizer = GreedyMethod(nrepeat=1))
 	alpha_tensor = solve(problem, SizeMax())
 	return mis_compactify!(alpha_tensor)
 end
 
-function _reduced_alpha_configs(g::SimpleGraph, weights::UnitWeight, openvertices::Vector{Int}, potential)
-	problem = GenericTensorNetwork(IndependentSet(g); openvertices, optimizer = GreedyMethod(nrepeat=1))
+function _reduced_alpha_configs(g::SimpleGraph, weights::AbstractVector{WT}, openvertices::Vector{Int}, potential) where WT
+	problem = GenericTensorNetwork(IndependentSet(g, weights); openvertices, optimizer = GreedyMethod(nrepeat=1))
 	alpha_tensor = solve(problem, SizeMax())
 	alpha_configs = solve(problem, ConfigsMax(; bounded=false))
 	reduced_alpha_tensor = mis_compactify!(alpha_tensor; potential)
@@ -35,19 +22,7 @@ function _reduced_alpha_configs(g::SimpleGraph, weights::UnitWeight, openvertice
 	return configs
 end
 
-function _reduced_alpha_configs(g::SimpleGraph, weights::Vector{WT}, openvertices::Vector{Int}, potential) where WT
-	problem = GenericTensorNetwork(IndependentSet(g, weights); openvertices, optimizer = GreedyMethod(nrepeat=1))
-	alpha_tensor = solve(problem, SizeMax())
-	alpha_configs = solve(problem, ConfigsMax(; bounded=false))
-	reduced_alpha_tensor = mis_compactify!(alpha_tensor)
-	# set the corresponding entries to 0.
-	alpha_configs[map(iszero, reduced_alpha_tensor)] .= Ref(zero(eltype(alpha_configs)))
-	# post processing
-	configs = alpha_configs
-	return configs
-end
-
-function reduced_alpha_configs(::TensorNetworkSolver, graph::SimpleGraph, weights::Union{UnitWeight, Vector{WT}}, openvertices::Vector{Int}, potential=nothing) where WT
+function reduced_alpha_configs(::TensorNetworkSolver, graph::SimpleGraph, weights::AbstractVector{WT}, openvertices::Vector{Int}, potential=nothing) where WT
 	configs = _reduced_alpha_configs(graph, weights, openvertices, potential)
     return BranchingTable(configs)
 end
@@ -65,7 +40,7 @@ end
 function OptimalBranchingCore.branching_table(p::MISProblem, solver::TensorNetworkSolver, vs::Vector{Int}) where INT<:Integer
     ovs = open_vertices(p.g, vs)
     subg, vmap = induced_subgraph(p.g, vs)
-	potential = [length(setdiff(neighbors(p.g, v), vs)) for v in ovs]
+	potential = [sum(p.weights[collect(setdiff(neighbors(p.g, v), vs))]) for v in ovs]
     tbl = reduced_alpha_configs(solver, subg, p.weights[vmap], Int[findfirst(==(v), vs) for v in ovs], potential)
     if solver.prune_by_env
         tbl = prune_by_env(tbl, p, vs)
@@ -115,7 +90,7 @@ function prune_by_env(tbl::BranchingTable{INT}, p::MISProblem, vertices) where{I
             if i != j
                 pink_block = setdiff(neibs_0[i], neibs_0[j])
                 sg_pink, sg_vec = induced_subgraph(g, collect(pink_block))
-                mis_pink = exact_mis_size(sg_pink, p.weights[collect(pink_block)])
+                mis_pink = small_scale_mis_size(sg_pink, p.weights[collect(pink_block)])
                 if (clause_size(p.weights, tbl.table[i][1], vertices) + mis_pink ≤ clause_size(p.weights, tbl.table[j][1], vertices)) && (!iszero(mis_pink))
                     flag = false
                     break
@@ -129,11 +104,13 @@ function prune_by_env(tbl::BranchingTable{INT}, p::MISProblem, vertices) where{I
     return BranchingTable(OptimalBranchingCore.nbits(tbl), new_table)
 end
 
-function exact_mis_size(g::SimpleGraph{Int}, weights::Vector{WT}) where WT
+# Calculate the MWIS size for small-scale graphs using tensor network contraction, whose contraction order is greedily searched.
+function small_scale_mis_size(g::SimpleGraph{Int}, weights::Vector{WT}) where WT
     problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = GreedyMethod(nrepeat=1))
     return solve(problem, SizeMax())[].n
 end
 
-function exact_mis_size(g::SimpleGraph{Int}, weights::UnitWeight)
+# Calculate the MIS size for small-scale graphs using mis2 algorithm.
+function small_scale_mis_size(g::SimpleGraph{Int}, weights::UnitWeight)
     return mis2(EliminateGraph(g))
 end

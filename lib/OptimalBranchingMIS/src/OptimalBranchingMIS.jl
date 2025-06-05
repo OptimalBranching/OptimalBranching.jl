@@ -10,7 +10,7 @@ using SparseArrays
 using ProblemReductions
 
 export MISProblem
-export MISReducer, XiaoReducer, TensorNetworkReducer, SubsolverReducer
+export MISReducer, BasicReducer, XiaoReducer, TensorNetworkReducer, SubsolverReducer
 export MinBoundarySelector, MinBoundaryHighDegreeSelector, KaHyParSelector
 
 export TensorNetworkSolver

@@ -55,6 +55,21 @@ end
     end
 end
 
+@testset "folding for mwis" begin
+    g = graph_from_tuples(5, [(1, 2), (2, 3), (3, 4), (4, 5)])
+    weights = ones(Float64, nv(g))
+    
+    weights[3] = 2.5
+    res = OptimalBranchingMIS.folding_vmap(g, weights, 3)
+    @test nv(res[1]) == length(res[2]) == 2
+    @test res[3] == 2.5
+   
+    weights[3] = 1.5
+    res = OptimalBranchingMIS.folding_vmap(g, weights, 3)
+    @test nv(res[1]) == length(res[2]) == 3
+    @test res[3] == 1.5
+end
+
 @testset "kernelize" begin
     function kernelize(g::SimpleGraph, reducer::TensorNetworkReducer; verbose::Int = 0, vmap::Vector{Int} = collect(1:nv(g)))
         (verbose ≥ 2) && (@info "kernelizing graph: $(nv(g)) vertices, $(ne(g)) edges")

@@ -173,6 +173,11 @@ function Graphs.neighbors(g::SimpleGraph, vs::Vector{Int})
     return set_neighbors
 end
 
+function folding(g::SimpleGraph, v::Int)
+    g_new, n, _ = folding_vmap(g, v)
+    return g_new, n
+end
+
 function folding_vmap(g::SimpleGraph, v::Int)
     @debug "Folding vertex $(v)"
     @assert degree(g, v) == 2
@@ -192,18 +197,8 @@ function folding_vmap(g::SimpleGraph, v::Int)
     end
 end
 
-function folding(g::SimpleGraph, v::Int)
-    g_new, n, _ = folding_vmap(g, v)
-    return g_new, n
-end
-
 # If weights[v] >= mwis_size(neighbors(g, v)), v must be in the mwis
 # If neighbors(g, v) = [a, b], a is not connected to b, weights[a] + weights[b] > weights[v] but maximum(weights[a], weights[b]) <= weights[v], then a and b can be folded into one vertex
-function folding(g::SimpleGraph, weights::Vector{WT}, v::Int) where WT
-    g_new, weights_new, r, _ = folding_vmap(g, weights, v)
-    return g_new, weights_new, r
-end
-
 function folding_vmap(g::SimpleGraph, weights::Vector{WT}, v::Int) where WT
     @debug "Folding vertex $(v)"
     v_neighbors = collect(neighbors(g, v))

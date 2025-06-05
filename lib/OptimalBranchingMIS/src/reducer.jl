@@ -1,21 +1,27 @@
 """
     MISReducer
 
-A struct representing a reducer for the Maximum (Weighted) Independent Set (M(W)IS) problem. 
-This struct serves as a specific implementation of the `AbstractReducer` type.
+An abstract type representing a reducer for the Maximum (Weighted) Independent Set (M(W)IS) problem.
 """
-struct MISReducer <: AbstractReducer end
-
+abstract type MISReducer <: AbstractReducer end
 
 """
-    struct XiaoReducer <: AbstractReducer end
+    BasicReducer
+
+A basic reducer for the Maximum (Weighted) Independent Set (M(W)IS) problem.
+This struct implements the basic reduction rules.
+"""
+struct BasicReducer <: MISReducer end
+
+"""
+    XiaoReducer <: MISReducer
 
 A reducer that uses Xiao's reduction rules to find reduction rules.
 """
-struct XiaoReducer <: AbstractReducer end
+struct XiaoReducer <: MISReducer end
 
 """
-    struct TensorNetworkReducer <: AbstractReducer
+    struct TensorNetworkReducer <: MISReducer
 
 A reducer that uses tensor network contraction to find reduction rules.
 
@@ -29,17 +35,18 @@ A reducer that uses tensor network contraction to find reduction rules.
 - `intersect_strategy::Symbol = :bfs`: Strategy for intersecting clauses. Options are:
     - `:bfs`: Breadth-first search (gives the optimal result)
     - `:dfs`: Depth-first search (gives the first found non-zero intersection)
-- `sub_reducer::AbstractReducer = MISReducer()`: Reducer applied to selected vertices before tensor network contraction, default is MISReducer
+- `sub_reducer::MISReducer = BasicReducer()`: Reducer applied to selected vertices before tensor network contraction, default is BasicReducer
 """
-@kwdef mutable struct TensorNetworkReducer <: AbstractReducer
+@kwdef mutable struct TensorNetworkReducer <: MISReducer
     n_max::Int = 15
     selector::Symbol = :neighbor # :neighbor or :mincut
     measure::AbstractMeasure = NumOfVertices() # different measures for kernelization, use the size reduction from OptimalBranchingMIS
     intersect_strategy::Symbol = :bfs # :dfs or :bfs
-    sub_reducer::AbstractReducer = MISReducer() # sub reducer for the selected vertices
-    region_list::Dict{Int, Tuple{Vector{Int}, Vector{Int}}} = Dict{Int, Tuple{Vector{Int}, Vector{Int}}}() # store the selected region and the open neighbors of the selected region for each vertex
+    sub_reducer::AbstractReducer = BasicReducer() # sub reducer for the selected vertices
+    region_list::Dict{Int, Tuple{Vector{Int}, Vector{Int}}} = Dict{Int, Tuple{Vector{Int}, Vector{Int}}}() # store the selected region
     recheck::Bool = false # whether to recheck the vertices that have not been modified
 end
+
 Base.show(io::IO, reducer::TensorNetworkReducer) = print(io,
     """
     TensorNetworkReducer
@@ -52,7 +59,7 @@ Base.show(io::IO, reducer::TensorNetworkReducer) = print(io,
     """)
 
 """
-    struct SubsolverReducer{TR, TS} <: AbstractReducer
+    struct SubsolverReducer{TR, TS} <: MISReducer
 
 After the size of the problem is smaller than the threshold, use a subsolver to find reduction rules.
 
@@ -61,8 +68,8 @@ After the size of the problem is smaller than the threshold, use a subsolver to 
 - `subsolver::Symbol = :xiao`: subsolvers include `:mis2`, `:xiao` and `:ip`.
 - `threshold::Int = 100`: The threshold for using the subsolver.
 """
-@kwdef struct SubsolverReducer <: AbstractReducer
-    reducer::AbstractReducer = XiaoReducer()
+@kwdef struct SubsolverReducer <: MISReducer
+    reducer::MISReducer = XiaoReducer()
     subsolver::Symbol = :xiao # :mis2, :xiao or :ip
     threshold::Int = 100 # the threshold for using the subsolver
 end
@@ -74,7 +81,7 @@ Reduces the given `MISProblem` by removing vertices based on their degrees and r
 
 # Arguments
 - `p::MISProblem`: The problem instance containing the graph to be reduced.
-- `::MISReducer`: An instance of the `MISReducer` struct.
+- `::MISReducer`: An implementation of the `MISReducer` abstract type.
 - `::Type{R}`: The type of the result expected.
 
 # Returns
@@ -89,7 +96,7 @@ The function checks the number of vertices in the graph:
 - If there are two vertices, it returns an empty instance and a count based on the presence of an edge between them.
 - For graphs with more than two vertices, it calculates the degrees of the vertices and identifies the vertex with the minimum degree to determine which vertices to remove.
 """
-function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, reducer::Union{MISReducer, XiaoReducer, TensorNetworkReducer, SubsolverReducer}) where R
+function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, reducer::MISReducer) where R
     res = reduce_graph(p.g, p.weights, reducer)
     if (nv(res.g) == nv(p.g)) && iszero(res.r)
         return p, R(0)
@@ -98,6 +105,17 @@ function OptimalBranchingCore.reduce_problem(::Type{R}, p::MISProblem, reducer::
     end
 end
 
+"""
+    struct ReductionResult{VT<:AbstractVector, WT}
+
+A struct to store the result of the reduction.
+
+# Fields
+- `g::SimpleGraph{Int}`: The reduced graph.
+- `weights::VT`: The weights of the reduced graph.
+- `r::WT`: The reduction value (MIS difference).
+- `vmap::Vector{Int}`: The vertex map from the vertices in the reduced graph to the vertices in the original graph.
+"""
 struct ReductionResult{VT<:AbstractVector, WT}
     g::SimpleGraph{Int}
     weights::VT
@@ -109,7 +127,11 @@ function ReductionResult(g::SimpleGraph{Int}, r::Int, vmap::Vector{Int}) where V
     ReductionResult(g, UnitWeight(nv(g)), r, vmap)
 end
 
-function reduce_graph(g::SimpleGraph{Int}, ::UnitWeight, ::MISReducer)
+function reduce_graph(g::SimpleGraph{Int}, weights::AbstractVector{WT}, ::NoReducer) where WT
+    return ReductionResult(g, weights, 0, collect(1:nv(g)))
+end
+
+function reduce_graph(g::SimpleGraph{Int}, ::UnitWeight, ::BasicReducer)
     if nv(g) == 0
         return ReductionResult(SimpleGraph(0), 0, Int[])
     elseif nv(g) == 1
@@ -135,7 +157,7 @@ function reduce_graph(g::SimpleGraph{Int}, ::UnitWeight, ::MISReducer)
     return ReductionResult(g, 0, collect(1:nv(g)))
 end
 
-function reduce_graph(g::SimpleGraph{Int}, weights::Vector{WT}, ::MISReducer) where WT
+function reduce_graph(g::SimpleGraph{Int}, weights::Vector{WT}, ::BasicReducer) where WT
     if nv(g) == 0
         return ReductionResult(SimpleGraph(0), WT[], 0, Int[])
     elseif nv(g) == 1
@@ -183,7 +205,7 @@ end
 function reduce_graph(g::SimpleGraph{Int}, weights::UnitWeight, ::XiaoReducer)
     nv(g) == 0 && return ReductionResult(SimpleGraph(0), 0, Int[])
 
-    res = reduce_graph(g, weights, MISReducer())
+    res = reduce_graph(g, weights, BasicReducer())
     (res.g != g) && return res
 
     unconfined_vs = unconfined_vertices(g)
@@ -231,7 +253,7 @@ function select_region_mincut(args...)
 end
 
 # in this function, vmap_0 is from the late step to the current step, the out put vmap is from the current step to next step, which means it is not coupled with the vmap_0
-function reduce_graph(g::SimpleGraph{Int}, weights::Union{Vector{WT}, UnitWeight}, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing) where WT
+function reduce_graph(g::SimpleGraph{Int}, weights::AbstractVector{WT}, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing) where WT
     nv(g) == 0 && return ReductionResult(SimpleGraph(0), weights, 0, Int[])
 
     # if the vmap_0 is not specified, the region_list will not be updated, otherwise udpate the region_list

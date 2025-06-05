@@ -42,26 +42,25 @@ function is_line_graph(g::SimpleGraph)
 end
 
 # For a subset `vertex_set` of vertices, find its children, who has only one neighbor in the subset.
-# If `with_parents` is true, also return the only one parent of each child.
-function find_children(g::SimpleGraph, vertex_set::Vector{Int}, with_parents::Bool = false)
-    if !with_parents
-        u_vertices = Int[]
-        for v in open_neighbors(g, vertex_set)
-            length(intersect(neighbors(g, v), vertex_set)) == 1 && push!(u_vertices, v)
-        end
-
-        return u_vertices
-    else
-        u_vertices = Int[]
-        v_vertices = Int[]
-        for v in open_neighbors(g, vertex_set)
-            if length(intersect(neighbors(g, v), vertex_set)) == 1
-                push!(u_vertices, v)
-                push!(v_vertices, intersect(neighbors(g, v), vertex_set)[1])
-            end
-        end
-        return u_vertices, v_vertices
+function find_children(g::SimpleGraph, vertex_set::Vector{Int})
+    u_vertices = Int[]
+    for v in open_neighbors(g, vertex_set)
+        length(intersect(neighbors(g, v), vertex_set)) == 1 && push!(u_vertices, v)
     end
+    return u_vertices
+end
+
+# For a subset `vertex_set` of vertices, find its children and the corresponding parent.
+function find_family(g::SimpleGraph, vertex_set::Vector{Int})
+    u_vertices = Int[]
+    v_vertices = Int[]
+    for v in open_neighbors(g, vertex_set)
+        if length(intersect(neighbors(g, v), vertex_set)) == 1
+            push!(u_vertices, v)
+            push!(v_vertices, intersect(neighbors(g, v), vertex_set)[1])
+        end
+    end
+    return u_vertices, v_vertices
 end
 
 function is_independent(g::SimpleGraph, vertex_set::Vector{Int})
@@ -81,7 +80,6 @@ end
 
 function unconfined_vertices(g::SimpleGraph, weights::Vector{WT}) where WT
     u_vertices = Int[]
-    local confinedset
     for v in 1:nv(g)
         confinedset = confined_set(g, weights, [v])
         isempty(confinedset) && push!(u_vertices, v)
@@ -89,6 +87,8 @@ function unconfined_vertices(g::SimpleGraph, weights::Vector{WT}) where WT
     return u_vertices
 end
 
+# `Confined_set` is defined by Xiao in [https://www.sciencedirect.com/science/article/pii/S0304397512008729]. 
+# If `S` is contained in any maximum independent set of `G`, then `confined_set(G, S)` is contained in any maximum independent set of `G`.
 function confined_set(g::SimpleGraph, S::Vector{Int})
     N_S = closed_neighbors(g, S)
     us = find_children(g, S)
@@ -114,7 +114,7 @@ end
 
 function confined_set(g::SimpleGraph, weights::Vector{WT}, S::Vector{Int}) where WT
     N_S = closed_neighbors(g, S)
-    us, vs = find_children(g, S, true)
+    us, vs = find_family(g, S)
     isempty(us) && return S
 
     ws = Vector{Int}[]
