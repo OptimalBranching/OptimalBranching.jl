@@ -7,19 +7,21 @@ using Test, Random, GenericTensorNetworks
 @testset "branch_and_reduce" begin
     @info "branch_and_reduce"
     Random.seed!(1234)
-    g = random_regular_graph(30, 3)
+    g_rrg = random_regular_graph(30, 3)
+    g_ksg = SimpleGraph(GenericTensorNetworks.random_diagonal_coupled_graph(6, 6, 0.8))
+    for g in [g_rrg, g_ksg]
+        mis_exact = mis2(EliminateGraph(g))
+        mis_xiao = counting_xiao2013(g).size
+        p = MISProblem(g)
 
-    mis_exact = mis2(EliminateGraph(g))
-    mis_xiao = counting_xiao2013(g).size
-    p = MISProblem(g)
+        for set_cover_solver in [IPSolver(max_itr = 10, verbose = false), LPSolver(max_itr = 10, verbose = false)], measure in [D3Measure(), NumOfVertices()], reducer in [NoReducer(), BasicReducer(), XiaoReducer(), TensorNetworkReducer(sub_reducer=NoReducer()), TensorNetworkReducer()], prune_by_env in [true, false], selector in [MinBoundarySelector(2), MinBoundaryHighDegreeSelector(2, 6, 0), MinBoundaryHighDegreeSelector(2, 6, 1)]
+            @info "set_cover_solver = $set_cover_solver, measure = $measure, reducer = $reducer, prune_by_env = $prune_by_env, selector = $selector"
+            branching_strategy = BranchingStrategy(; set_cover_solver, table_solver=TensorNetworkSolver(; prune_by_env), selector=selector, measure)
+            res = branch_and_reduce(p, branching_strategy, reducer, MaxSize)
+            res_count = branch_and_reduce(p, branching_strategy, reducer, MaxSizeBranchCount)
 
-    for set_cover_solver in [IPSolver(max_itr = 10, verbose = false), LPSolver(max_itr = 10, verbose = false)], measure in [D3Measure(), NumOfVertices()], reducer in [NoReducer(), BasicReducer(), XiaoReducer(), TensorNetworkReducer(sub_reducer=NoReducer()), TensorNetworkReducer()], prune_by_env in [true, false], selector in [MinBoundarySelector(2), MinBoundaryHighDegreeSelector(2, 6, 0), MinBoundaryHighDegreeSelector(2, 6, 1)]
-        @info "set_cover_solver = $set_cover_solver, measure = $measure, reducer = $reducer, prune_by_env = $prune_by_env, selector = $selector"
-        branching_strategy = BranchingStrategy(; set_cover_solver, table_solver=TensorNetworkSolver(; prune_by_env), selector=selector, measure)
-        res = branch_and_reduce(p, branching_strategy, reducer, MaxSize)
-        res_count = branch_and_reduce(p, branching_strategy, reducer, MaxSizeBranchCount)
-
-        @test res.size == res_count.size == mis_exact == mis_xiao
+            @test res.size == res_count.size == mis_exact == mis_xiao
+        end
     end
 end
 
@@ -43,40 +45,41 @@ end
 end
 
 @testset "branch_and_reduce for mwis" begin
-    @info "branch_and_reduce, weights = ones"
     Random.seed!(1234)
-    g = random_regular_graph(30, 3)
-    weights = ones(Float64, nv(g))
-    problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())
-    mwis_exact = solve(problem, SizeMax())[1].n
-    p = MISProblem(g, weights)
+    g_rrg = random_regular_graph(30, 3)
+    g_ksg = SimpleGraph(GenericTensorNetworks.random_diagonal_coupled_graph(6, 6, 0.8))
+    for g in [g_rrg, g_ksg]
+        @info "branch_and_reduce, weights = ones"
+        weights = ones(Float64, nv(g))
+        problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())
+        mwis_exact = solve(problem, SizeMax())[1].n
+        p = MISProblem(g, weights)
 
-    for set_cover_solver in [IPSolver(max_itr = 10, verbose = false), LPSolver(max_itr = 10, verbose = false)], measure in [D3Measure(), NumOfVertices()], reducer in [NoReducer(), BasicReducer(), TensorNetworkReducer(sub_reducer=NoReducer()), TensorNetworkReducer()], prune_by_env in [true, false], selector in [MinBoundarySelector(2), MinBoundaryHighDegreeSelector(2, 6, 0), MinBoundaryHighDegreeSelector(2, 6, 1)]
-        @info "set_cover_solver = $set_cover_solver, measure = $measure, reducer = $reducer, prune_by_env = $prune_by_env, selector = $selector"
-        branching_strategy = BranchingStrategy(; set_cover_solver, table_solver=TensorNetworkSolver(; prune_by_env), selector=selector, measure)
-        res = branch_and_reduce(p, branching_strategy, reducer, MaxSize)
-        res_count = branch_and_reduce(p, branching_strategy, reducer, MaxSizeBranchCount)
+        for set_cover_solver in [IPSolver(max_itr = 10, verbose = false), LPSolver(max_itr = 10, verbose = false)], measure in [D3Measure(), NumOfVertices()], reducer in [NoReducer(), BasicReducer(), TensorNetworkReducer(sub_reducer=NoReducer()), TensorNetworkReducer()], prune_by_env in [true, false], selector in [MinBoundarySelector(2), MinBoundaryHighDegreeSelector(2, 6, 0), MinBoundaryHighDegreeSelector(2, 6, 1)]
+            @info "set_cover_solver = $set_cover_solver, measure = $measure, reducer = $reducer, prune_by_env = $prune_by_env, selector = $selector"
+            branching_strategy = BranchingStrategy(; set_cover_solver, table_solver=TensorNetworkSolver(; prune_by_env), selector=selector, measure)
+            res = branch_and_reduce(p, branching_strategy, reducer, MaxSize)
+            res_count = branch_and_reduce(p, branching_strategy, reducer, MaxSizeBranchCount)
 
-        @test isapprox(res.size, mwis_exact)
-        @test isapprox(res_count.size, mwis_exact)
-    end
+            @test isapprox(res.size, mwis_exact)
+            @test isapprox(res_count.size, mwis_exact)
+        end
 
-    @info "branch_and_reduce, weights = random"
-    Random.seed!(1234)
-    g = random_regular_graph(30, 3)
-    weights = ones(Float64, nv(g))
-    problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())
-    mwis_exact = solve(problem, SizeMax())[1].n
-    p = MISProblem(g, weights)
+        @info "branch_and_reduce, weights = random"
+        weights = rand(Float64, nv(g))
+        problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())
+        mwis_exact = solve(problem, SizeMax())[1].n
+        p = MISProblem(g, weights)
 
-    for set_cover_solver in [IPSolver(max_itr = 10, verbose = false), LPSolver(max_itr = 10, verbose = false)], measure in [D3Measure(), NumOfVertices()], reducer in [NoReducer(), BasicReducer(), TensorNetworkReducer(sub_reducer=NoReducer()), TensorNetworkReducer()], prune_by_env in [true, false], selector in [MinBoundarySelector(2), MinBoundaryHighDegreeSelector(2, 6, 0), MinBoundaryHighDegreeSelector(2, 6, 1)]
-        @info "set_cover_solver = $set_cover_solver, measure = $measure, reducer = $reducer, prune_by_env = $prune_by_env, selector = $selector"
-        branching_strategy = BranchingStrategy(; set_cover_solver, table_solver=TensorNetworkSolver(; prune_by_env), selector=selector, measure)
-        res = branch_and_reduce(p, branching_strategy, reducer, MaxSize)
-        res_count = branch_and_reduce(p, branching_strategy, reducer, MaxSizeBranchCount)
+        for set_cover_solver in [IPSolver(max_itr = 10, verbose = false), LPSolver(max_itr = 10, verbose = false)], measure in [D3Measure(), NumOfVertices()], reducer in [NoReducer(), BasicReducer(), TensorNetworkReducer(sub_reducer=NoReducer()), TensorNetworkReducer()], prune_by_env in [true, false], selector in [MinBoundarySelector(2), MinBoundaryHighDegreeSelector(2, 6, 0), MinBoundaryHighDegreeSelector(2, 6, 1)]
+            @info "set_cover_solver = $set_cover_solver, measure = $measure, reducer = $reducer, prune_by_env = $prune_by_env, selector = $selector"
+            branching_strategy = BranchingStrategy(; set_cover_solver, table_solver=TensorNetworkSolver(; prune_by_env), selector=selector, measure)
+            res = branch_and_reduce(p, branching_strategy, reducer, MaxSize)
+            res_count = branch_and_reduce(p, branching_strategy, reducer, MaxSizeBranchCount)
 
-        @test isapprox(res.size, mwis_exact)
-        @test isapprox(res_count.size, mwis_exact)
+            @test isapprox(res.size, mwis_exact)
+            @test isapprox(res_count.size, mwis_exact)
+        end
     end
 end
 

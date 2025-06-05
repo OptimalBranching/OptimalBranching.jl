@@ -240,9 +240,10 @@ end
 function select_region_neighbor(g::AbstractGraph, i::Int, n_max::Int)
     n_max = min(n_max, nv(g))
     vs = [i]
-    while length(vs) < n_max
+    while length(vs) < n_max 
         nbrs = OptimalBranchingMIS.open_neighbors(g, vs)
         (length(vs) + length(nbrs) > n_max) && break
+        (isempty(nbrs)) && break
         append!(vs, nbrs)
     end
     return vs
