@@ -2,7 +2,7 @@ using OptimalBranchingMIS, EliminateGraphs, EliminateGraphs.Graphs
 using OptimalBranchingMIS: graph_from_tuples
 using KaHyPar
 using OptimalBranchingCore
-using Test, Random, GenericTensorNetworks, Graphs
+using Test, Random, GenericTensorNetworks
 
 @testset "branch_and_reduce" begin
     @info "branch_and_reduce"
