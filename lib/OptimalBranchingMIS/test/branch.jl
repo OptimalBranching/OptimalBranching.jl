@@ -1,5 +1,5 @@
 using OptimalBranchingMIS, EliminateGraphs, EliminateGraphs.Graphs
-using OptimalBranchingMIS: graph_from_tuples
+using OptimalBranchingMIS: graph_from_tuples, reduce_graph
 using KaHyPar
 using OptimalBranchingCore
 using Test, Random, GenericTensorNetworks
@@ -69,7 +69,7 @@ end
     mwis_exact = solve(problem, SizeMax())[1].n
     p = MISProblem(g, weights)
 
-    for set_cover_solver in [IPSolver(max_itr = 10, verbose = false), LPSolver(max_itr = 10, verbose = false)], measure in [D3Measure(), NumOfVertices()], reducer in [NoReducer(), BasicReducer(), TensorNetworkReducer()], prune_by_env in [true, false], selector in [MinBoundarySelector(2), MinBoundaryHighDegreeSelector(2, 6, 0), MinBoundaryHighDegreeSelector(2, 6, 1)]
+    for set_cover_solver in [IPSolver(max_itr = 10, verbose = false), LPSolver(max_itr = 10, verbose = false)], measure in [D3Measure(), NumOfVertices()], reducer in [NoReducer(), BasicReducer(), TensorNetworkReducer(sub_reducer=NoReducer()), TensorNetworkReducer()], prune_by_env in [true, false], selector in [MinBoundarySelector(2), MinBoundaryHighDegreeSelector(2, 6, 0), MinBoundaryHighDegreeSelector(2, 6, 1)]
         @info "set_cover_solver = $set_cover_solver, measure = $measure, reducer = $reducer, prune_by_env = $prune_by_env, selector = $selector"
         branching_strategy = BranchingStrategy(; set_cover_solver, table_solver=TensorNetworkSolver(; prune_by_env), selector=selector, measure)
         res = branch_and_reduce(p, branching_strategy, reducer, MaxSize)
@@ -88,11 +88,13 @@ end
     
     for g in [g0, g1, g2]
         problem = GenericTensorNetwork(IndependentSet(g); optimizer = TreeSA())
-        mwis_exact = solve(problem, SizeMax())[1].n
+        mis_exact = solve(problem, SizeMax())[1].n
         p = MISProblem(g)
         res = branch_and_reduce(p, branching_strategy, BasicReducer(), MaxSize)
         res_count = branch_and_reduce(p, branching_strategy, BasicReducer(), MaxSizeBranchCount)
-        @test res.size == res_count.size == mwis_exact
+        res_reduction = reduce_graph(p.g, p.weights, BasicReducer())
+        @test res.size == res_count.size == mis_exact
+        @test res_reduction.r == mis_exact
 
         weights = rand(Float64, nv(g))
         problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())
@@ -100,6 +102,8 @@ end
         p = MISProblem(g, weights)
         res = branch_and_reduce(p, branching_strategy, BasicReducer(), MaxSize)
         res_count = branch_and_reduce(p, branching_strategy, BasicReducer(), MaxSizeBranchCount)
+        res_reduction = reduce_graph(p.g, p.weights, BasicReducer())
         @test res.size == res_count.size == mwis_exact
+        @test res_reduction.r == mwis_exact
     end   
 end
