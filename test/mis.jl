@@ -8,7 +8,7 @@ using Test
     g = random_regular_graph(40, 3)
     p = MISProblem(g)
     bs = BranchingStrategy(; table_solver=TensorNetworkSolver(; prune_by_env=true), set_cover_solver=IPSolver(), selector=MinBoundarySelector(2), measure=D3Measure())
-    res = branch_and_reduce(p, bs, MISReducer(), MaxSize)
+    res = branch_and_reduce(p, bs, BasicReducer(), MaxSize)
     res_xiao = branch_and_reduce(p, bs, XiaoReducer(), MaxSize)
     res_no = branch_and_reduce(p, bs, NoReducer(), MaxSize)
     mis_size = mis2(EliminateGraph(g))
@@ -22,7 +22,7 @@ end
     weights = rand(Float64, nv(g))
     p = OptimalBranchingMIS.MISProblem(g, weights)
     bs = BranchingStrategy(; table_solver=TensorNetworkSolver(; prune_by_env=true), set_cover_solver=IPSolver(), selector=MinBoundarySelector(2), measure=D3Measure())
-    res = branch_and_reduce(p, bs, MISReducer(), MaxSize)
+    res = branch_and_reduce(p, bs, BasicReducer(), MaxSize)
     res_no = branch_and_reduce(p, bs, NoReducer(), MaxSize)
     problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())
     mwis = solve(problem, SizeMax())[1].n
