@@ -1,4 +1,4 @@
 [deps]
 OptimalBranching = "96e750e4-2b4b-404e-96bc-6769eb2ae924"
 OptimalBranchingCore = "c76e7b22-e1d2-40e8-b0f1-f659837787b8"
-SCIP = "82193955-e24f-5292-bf16-6f2c5261a85f"
+ProblemReductions = "899c297d-f7d2-4ebf-8815-a35996def416"

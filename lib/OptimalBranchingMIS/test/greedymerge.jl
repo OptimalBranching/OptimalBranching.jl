@@ -30,7 +30,7 @@ end
 @testset "GreedyMerge" begin
     g = random_regular_graph(20, 3)
     mis_num, count2 = mis_branch_count(g)
-    for reducer in [NoReducer(), MISReducer()]
+    for reducer in [NoReducer(), BasicReducer()]
         for measure in [D3Measure(), NumOfVertices()]
             bs = BranchingStrategy(table_solver = TensorNetworkSolver(), selector = MinBoundaryHighDegreeSelector(2, 6, 0), measure = measure, set_cover_solver = OptimalBranchingCore.GreedyMerge())
             mis1, count1 = mis_branch_count(g; branching_strategy = bs, reducer)

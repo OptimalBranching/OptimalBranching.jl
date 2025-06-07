@@ -11,7 +11,7 @@ struct MinBoundarySelector <: AbstractSelector
     k::Int # select the subgraph with minimum open vertices by k-layers of neighbors
 end
 
-function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::MinBoundarySelector) where{M<:AbstractMeasure}
+function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::MinBoundarySelector) where{M<:AbstractMeasure, INT<:Integer}
     g = p.g
     @assert nv(g) > 0
     kneighbor = selector.k
@@ -49,7 +49,7 @@ struct MinBoundaryHighDegreeSelector <: AbstractSelector
     kd::Int # k-degree
 end
 
-function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::MinBoundaryHighDegreeSelector) where{M<:AbstractMeasure}
+function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::MinBoundaryHighDegreeSelector) where{M<:AbstractMeasure, INT<:Integer}
     g = p.g
     @assert nv(g) > 0
     local vs_min
@@ -78,6 +78,19 @@ struct KaHyParSelector <: AbstractSelector
 end
 
 edge2vertex(p::MISProblem) = edge2vertex(p.g)
+
+"""
+    edge2vertex(g::SimpleGraph)
+
+Connectivity between edges and vertices.
+
+# Arguments
+- `g::SimpleGraph`: The input graph.
+
+# Returns
+- A sparse matrix where the i-th row and j-th column is 1.0 if there is edge j had an end at vertex i.
+
+"""
 function edge2vertex(g::SimpleGraph)
     I = Int[]
     J = Int[]

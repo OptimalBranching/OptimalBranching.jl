@@ -1,3 +1,15 @@
+"""
+    graph_from_tuples(n::Int, edgs)
+
+Create a graph from a list of tuples.
+
+# Arguments
+- `n::Int`: The number of vertices.
+- `edgs`: The list of tuples.
+
+# Returns
+- The generated `SimpleGraph` g.
+"""
 function graph_from_tuples(n::Int, edgs)
     g = SimpleGraph(n)
     for (i, j) in edgs
@@ -173,6 +185,11 @@ function Graphs.neighbors(g::SimpleGraph, vs::Vector{Int})
     return set_neighbors
 end
 
+function folding(g::SimpleGraph, v::Int)
+    g_new, n, _ = folding_vmap(g, v)
+    return g_new, n
+end
+
 function folding_vmap(g::SimpleGraph, v::Int)
     @debug "Folding vertex $(v)"
     @assert degree(g, v) == 2
@@ -192,7 +209,28 @@ function folding_vmap(g::SimpleGraph, v::Int)
     end
 end
 
-function folding(g::SimpleGraph, v::Int)
-    g_new, n, _ = folding_vmap(g, v)
-    return g_new, n
+# If weights[v] >= mwis_size(neighbors(g, v)), v must be in the mwis
+# If neighbors(g, v) = [a, b], a is not connected to b, weights[a] + weights[b] > weights[v] but maximum(weights[a], weights[b]) <= weights[v], then a and b can be folded into one vertex
+function folding_vmap(g::SimpleGraph, weights::Vector{WT}, v::Int) where WT
+    @debug "Folding vertex $(v)"
+    v_neighbors = collect(neighbors(g, v))
+    problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,v_neighbors)[1], weights[v_neighbors]); optimizer = GreedyMethod(nrepeat=1))
+    mis_vneighbors = solve(problem_sg, SizeMax())[].n
+    if mis_vneighbors <= weights[v]
+        removing_vertices = vcat(v_neighbors,[v])
+        g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), removing_vertices))
+        return g_new, weights[vmap], weights[v], vmap
+    elseif degree(g, v) == 2 && maximum(weights[v_neighbors]) <= weights[v]
+        a, b = neighbors(g, v)
+         # apply the graph rewrite rule
+        nn = open_neighbors(g, [v, a, b])
+        for n in nn
+            add_edge!(g, v, n)
+        end
+        mwis_diff = weights[v]
+        weights[v] = weights[a] + weights[b] - weights[v]
+        g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), [a, b]))
+        return g_new, weights[vmap], mwis_diff, vmap
+    end
+    return g, weights, 0, collect(1:nv(g))
 end

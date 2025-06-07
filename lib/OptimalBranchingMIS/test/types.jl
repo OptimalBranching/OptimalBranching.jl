@@ -5,14 +5,15 @@ using Random
 using OptimalBranchingCore
 using OptimalBranchingCore.BitBasis
 using GenericTensorNetworks
-using OptimalBranchingCore: size_reduction, apply_branch
+using ProblemReductions
+using OptimalBranchingCore: size_reduction, apply_branch, Clause
 
 @testset "size_reduction" begin
     for m in [NumOfVertices(), D3Measure()]
         g = random_regular_graph(60, 3)
         vs = collect(1:20)
         cl = Clause(bit"1111111111", bit"1011010111")
-        p = MISProblem(g)
+        p = MISProblem(g)  
         m = D3Measure()
         @test size_reduction(p, m, cl, vs) == measure(p, m) - measure(first(apply_branch(p, cl, vs)), m)
 

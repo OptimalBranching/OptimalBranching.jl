@@ -1,9 +1,10 @@
 module OptimalBranching
 
 using Reexport
-@reexport using OptimalBranchingMIS
 
 using OptimalBranchingCore
+using OptimalBranchingMIS
+
 
 export BranchingStrategy, IPSolver, LPSolver
 export NoReducer

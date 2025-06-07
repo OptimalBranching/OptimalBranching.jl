@@ -14,7 +14,7 @@ function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::Ka
     zero_num = count(x-> x ≈ 0,parts)
     one_num = length(parts)-zero_num
     @debug "Selecting vertices by KaHyPar, sizes: $(zero_num), $(one_num)"
-
+    
     return abs(zero_num-selector.app_domain_size) < abs(one_num-selector.app_domain_size) ? findall(iszero,parts) : findall(!iszero,parts)
 end
 
@@ -32,4 +32,3 @@ function OptimalBranchingMIS.select_region_mincut(g::AbstractGraph, i::Int, n_ma
 end
 
 end
-
