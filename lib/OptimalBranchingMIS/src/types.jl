@@ -61,6 +61,20 @@ Calculates the number of vertices in the given `MISProblem`.
 - `Int`: The number of vertices in the graph.
 """
 OptimalBranchingCore.measure(p::MISProblem{INT}, ::NumOfVertices) where {INT} = nv(p.g)
+
+"""
+    size_reduction(p::MISProblem{INT}, ::NumOfVertices, cl::Clause, variables::Vector) where {INT}
+
+Calculates the size reduction for the given `MISProblem` using the number of vertices after applying the clause.
+
+# Arguments
+- `p::MISProblem{INT}`: The problem instance containing the graph.
+- `cl::Clause`: The clause to be applied.
+- `variables::Vector`: The variables included in the clause.
+
+# Returns
+- `sum`: The size reduction value.
+"""
 function OptimalBranchingCore.size_reduction(p::MISProblem{INT}, ::NumOfVertices, cl::Clause, variables::Vector) where {INT}
     return count_ones(removed_mask(INT, variables, p.g, cl))
 end
@@ -97,6 +111,19 @@ function OptimalBranchingCore.measure(p::MISProblem{INT}, ::D3Measure) where {IN
     end
 end
 
+"""
+    size_reduction(p::MISProblem{INT}, ::D3Measure, cl::Clause, variables::Vector) where {INT}
+
+Calculates the size reduction for the given `MISProblem` using the D3 measure after applying the clause.
+
+# Arguments
+- `p::MISProblem{INT}`: The problem instance containing the graph.
+- `cl::Clause`: The clause to be applied.
+- `variables::Vector`: The variables included in the clause.
+
+# Returns
+- `sum`: The size reduction value.
+"""
 function OptimalBranchingCore.size_reduction(p::MISProblem{INT}, ::D3Measure, cl::Clause, variables::Vector) where {INT}
     remove_mask = removed_mask(INT, variables, p.g, cl)
     iszero(remove_mask) && return 0

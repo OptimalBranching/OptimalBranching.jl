@@ -2,16 +2,18 @@ using EliminateGraphs, EliminateGraphs.Graphs
 using Test, Random
 
 using OptimalBranchingMIS
-using OptimalBranchingMIS: find_children, unconfined_vertices, is_line_graph, first_twin, twin_filter!, short_funnel_filter!, desk_filter!, effective_vertex, all_three_funnel, all_four_funnel, rho, optimal_four_cycle, optimal_vertex, has_fine_structure, count_o_path, closed_neighbors, is_complete_graph, twin_filter_vmap, short_funnel_filter_vmap, desk_filter_vmap
+using OptimalBranchingMIS: find_children, find_family, unconfined_vertices, confined_set, is_line_graph, first_twin, twin_filter!, short_funnel_filter!, desk_filter!, effective_vertex, all_three_funnel, all_four_funnel, rho, optimal_four_cycle, optimal_vertex, has_fine_structure, count_o_path, closed_neighbors, is_complete_graph, twin_filter_vmap, short_funnel_filter_vmap, desk_filter_vmap
 
 function graph_from_edges(edges)
     return SimpleGraph(Graphs.SimpleEdge.(edges))
 end
 
-@testset "find_children" begin
+@testset "find_children and find_family" begin
     g = graph_from_edges([(1,2),(2,3), (1,4), (2,5), (3,5)])
     @test find_children(g, [1]) == [2, 4]
     @test find_children(g, [1,2,3]) == [4]
+    @test find_family(g, [1]) == ([2, 4], [1, 1])
+    @test find_family(g, [1,2,3]) == ([4], [1])
 end
 
 @testset "line graph" begin
@@ -26,12 +28,18 @@ end
 
 @testset "confined set and unconfined vertices" begin
     # via dominated rule
-    g = graph_from_edges([(1,2),(1,3),(1, 4), (2, 3), (2, 4), (2, 6), (3, 5), (4, 5)])
+    g = graph_from_edges([(1, 2),(1,3),(1, 4), (2, 3), (2, 4), (2, 6), (3, 5), (4, 5)])
     @test unconfined_vertices(g) == [2]
+    @test unconfined_vertices(g, ones(nv(g))) == [2]
+    @test Set(confined_set(g, [1])) == Set([1, 5, 6])
+    @test Set(confined_set(g, ones(nv(g)), [1])) == Set([1, 5, 6])
     
     # via roof
     g = graph_from_edges([(1, 2), (1, 5), (1, 6), (2, 5), (2, 3), (4, 5), (3, 4), (3, 7), (4, 7)])
     @test in(1, unconfined_vertices(g))
+    @test in(1, unconfined_vertices(g, ones(nv(g))))
+    @test Set(confined_set(g, [6])) == Set([6])
+    @test Set(confined_set(g, ones(nv(g)), [6])) == Set([6])
 end
 
 @testset "twin" begin

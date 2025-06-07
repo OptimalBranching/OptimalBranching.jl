@@ -127,10 +127,39 @@ function ReductionResult(g::SimpleGraph{Int}, r::Int, vmap::Vector{Int}) where V
     ReductionResult(g, UnitWeight(nv(g)), r, vmap)
 end
 
+"""
+    reduce_graph(g::SimpleGraph, weights::AbstractVector, ::NoReducer)
+
+Reduce the graph into a simplified one by reduction rules.
+Actually does nothing, only for comparison with other reducers.
+
+# Arguments
+- `g::SimpleGraph`: The input graph.
+- `weights::AbstractVector`: The weights of the vertices.
+- `::NoReducer`: The reducer to be applied.
+
+# Returns
+- A `ReductionResult` instance containing the reduced graph, weights, mis difference, and vertex map.
+
+"""
 function reduce_graph(g::SimpleGraph{Int}, weights::AbstractVector{WT}, ::NoReducer) where WT
     return ReductionResult(g, weights, 0, collect(1:nv(g)))
 end
 
+"""
+    reduce_graph(g::SimpleGraph, weights::UnitWeight, ::BasicReducer)
+
+Reduce the graph into a simplified one by basic reduction rules used in classical algorithms like mis2.
+
+# Arguments
+- `g::SimpleGraph`: The input graph.
+- `weights::UnitWeight`: The weights of the vertices.
+- `::BasicReducer`: The reducer to be applied.
+
+# Returns
+- A `ReductionResult` instance containing the reduced graph, weights, mis difference, and vertex map.
+
+"""
 function reduce_graph(g::SimpleGraph{Int}, ::UnitWeight, ::BasicReducer)
     if nv(g) == 0
         return ReductionResult(SimpleGraph(0), 0, Int[])
@@ -157,6 +186,20 @@ function reduce_graph(g::SimpleGraph{Int}, ::UnitWeight, ::BasicReducer)
     return ReductionResult(g, 0, collect(1:nv(g)))
 end
 
+"""
+    reduce_graph(g::SimpleGraph, weights::Vector{WT}, ::BasicReducer)
+
+Reduce the graph into a simplified one by basic weighted_version reduction rules.
+
+# Arguments
+- `g::SimpleGraph`: The input graph.
+- `weights::Vector{WT}`: The weights of the vertices.
+- `::BasicReducer`: The reducer to be applied.
+
+# Returns
+- A `ReductionResult` instance containing the reduced graph, weights, mis difference, and vertex map.
+
+"""
 function reduce_graph(g::SimpleGraph{Int}, weights::Vector{WT}, ::BasicReducer) where WT
     if nv(g) == 0
         return ReductionResult(SimpleGraph(0), WT[], 0, Int[])
@@ -202,6 +245,20 @@ function reduce_graph(g::SimpleGraph{Int}, weights::Vector{WT}, ::BasicReducer) 
     return ReductionResult(g, weights, 0, collect(1:nv(g)))
 end
 
+"""
+    reduce_graph(g::SimpleGraph, weights::UnitWeight, ::XiaoReducer)
+
+Reduce the graph into a simplified one by Xiao's reduction rules.
+
+# Arguments
+- `g::SimpleGraph`: The input graph.
+- `weights::UnitWeight`: The weights of the vertices.
+- `::XiaoReducer`: The reducer to be applied.
+
+# Returns
+- A `ReductionResult` instance containing the reduced graph, weights, mis difference, and vertex map.
+
+"""
 function reduce_graph(g::SimpleGraph{Int}, weights::UnitWeight, ::XiaoReducer)
     nv(g) == 0 && return ReductionResult(SimpleGraph(0), 0, Int[])
 
@@ -253,6 +310,21 @@ function select_region_mincut(args...)
     error("Region selection requires `using KaHyPar`, since it is an extension function.")
 end
 
+"""
+    reduce_graph(g::SimpleGraph, weights::AbstractVector{WT}, ::TensorNetworkReducer)
+
+Reduce the graph into a simplified one by tensor-network-generated reduction rules.
+Apply sub-reducer first, then select region to on-the-fly generate reduction rules.
+
+# Arguments
+- `g::SimpleGraph`: The input graph.
+- `weights::AbstractVector{WT}`: The weights of the vertices.
+- `::TensorNetworkReducer`: The reducer to be applied.
+
+# Returns
+- A `ReductionResult` instance containing the reduced graph, weights, mis difference, and vertex map.
+
+"""
 # in this function, vmap_0 is from the late step to the current step, the out put vmap is from the current step to next step, which means it is not coupled with the vmap_0
 function reduce_graph(g::SimpleGraph{Int}, weights::AbstractVector{WT}, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing) where WT
     nv(g) == 0 && return ReductionResult(SimpleGraph(0), weights, 0, Int[])

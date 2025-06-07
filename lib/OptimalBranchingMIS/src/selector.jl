@@ -79,6 +79,18 @@ end
 
 edge2vertex(p::MISProblem) = edge2vertex(p.g)
 
+"""
+    edge2vertex(g::SimpleGraph)
+
+Connectivity between edges and vertices.
+
+# Arguments
+- `g::SimpleGraph`: The input graph.
+
+# Returns
+- A sparse matrix where the i-th row and j-th column is 1.0 if there is edge j had an end at vertex i.
+
+"""
 function edge2vertex(g::SimpleGraph)
     I = Int[]
     J = Int[]

@@ -2,6 +2,7 @@ using Test
 using OptimalBranchingMIS
 using OptimalBranchingCore
 using OptimalBranchingCore: select_variables
+using OptimalBranchingMIS: edge2vertex
 using OptimalBranchingMIS.Graphs
 using KaHyPar
 
@@ -75,4 +76,12 @@ end
     selector = KaHyParSelector(15)
     selected_vertices = select_variables(MISProblem(g), measure, selector)
     @test length(selected_vertices) < nv(g) - length(selected_vertices)
+end
+
+@testset "edge2vertex" begin
+    g = random_regular_graph(3, 2)
+    res = edge2vertex(g)
+    @test res[1,1] == 1.0
+    @test res[1,2] == 1.0   
+    @test res[1,3] == 0.0
 end

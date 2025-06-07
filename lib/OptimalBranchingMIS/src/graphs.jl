@@ -1,3 +1,15 @@
+"""
+    graph_from_tuples(n::Int, edgs)
+
+Create a graph from a list of tuples.
+
+# Arguments
+- `n::Int`: The number of vertices.
+- `edgs`: The list of tuples.
+
+# Returns
+- The generated `SimpleGraph` g.
+"""
 function graph_from_tuples(n::Int, edgs)
     g = SimpleGraph(n)
     for (i, j) in edgs

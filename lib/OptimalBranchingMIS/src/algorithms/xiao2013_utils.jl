@@ -183,7 +183,6 @@ function first_twin(g::SimpleGraph)
     return nothing
 end
 
-
 function is_complete_graph(g::SimpleGraph, vertices::Vector)
     (length(vertices) <= 1) && return false
     for (u, v) in combinations(vertices, 2)
@@ -191,7 +190,6 @@ function is_complete_graph(g::SimpleGraph, vertices::Vector)
     end
     return true
 end
-
 
 function short_funnel_filter!(g::SimpleGraph)
     funnel_pair = first_short_funnel(g)
