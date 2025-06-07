@@ -7,7 +7,7 @@ using Combinatorics
 using EliminateGraphs, EliminateGraphs.Graphs
 using GenericTensorNetworks
 using SparseArrays
-using ProblemReductions
+using ProblemReductions: IndependentSet
 
 export MISProblem
 export MISReducer, BasicReducer, XiaoReducer, TensorNetworkReducer, SubsolverReducer
