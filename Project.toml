@@ -1,7 +1,7 @@
 name = "OptimalBranching"
 uuid = "96e750e4-2b4b-404e-96bc-6769eb2ae924"
 authors = ["Xuanzhao Gao <xz.gao@connect.ust.hk> and Jin-Guo Liu and Yijia Wang and Zhongyi Ni"]
-version = "0.1.1"
+version = "0.2.0"
 
 [deps]
 GenericTensorNetworks = "3521c873-ad32-4bb4-b63d-f4f178f42b49"
@@ -12,11 +12,11 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 
 [compat]
-GenericTensorNetworks = "2.2.0, 3, 4"
+GenericTensorNetworks = "3, 4"
 OptimalBranchingCore = "0.1"
 OptimalBranchingMIS = "0.1"
 ProblemReductions = "0.3.4"
-Reexport = "1.2.2"
+Reexport = "1"
 julia = "1.10"
 
 [extras]
