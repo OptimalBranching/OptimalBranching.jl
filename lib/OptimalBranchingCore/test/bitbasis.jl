@@ -11,6 +11,10 @@ using Test
     @test c1 == c2
     @test c1 !== c3
     @test c1 !== c4
+    @test length(c1) == 3
+    @test length(c2) == 3
+    @test length(c3) == 3
+    @test length(c4) == 2
 
     # literals
     lts1 = literals(c1)
