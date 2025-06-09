@@ -114,7 +114,7 @@ end
 
 function confined_set(g::SimpleGraph, weights::Vector{WT}, S::Vector{Int}) where WT
     N_S = closed_neighbors(g, S)
-    us, vs = find_family(g, S)
+    us, vs = find_family(g, S) #TODO:only one neighbor -> weights(neighbor) <= weights(u)
     isempty(us) && return S
 
     ws = Vector{Int}[]
@@ -125,7 +125,7 @@ function confined_set(g::SimpleGraph, weights::Vector{WT}, S::Vector{Int}) where
             w = setdiff(neighbors(g, u), N_S)
             if isempty(w) 
                 return Int[]
-            elseif sum(weights[collect(w)]) + weights[v] <= weights[u]
+            elseif sum(weights[collect(w)]) + weights[v] <= weights[u]  #TODO:sum -> alpha
                 return Int[]
             elseif length(w) == 1
                 push!(ws, w)
