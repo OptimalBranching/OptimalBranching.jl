@@ -2,7 +2,7 @@
 
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://optimalbranching.github.io/OptimalBranching.jl/dev/)
 [![Build Status](https://github.com/OptimalBranching/OptimalBranching.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/OptimalBranching/OptimalBranching.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/OptimalBranching/OptimalBranching.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/OptimalBranching/OptimalBranching.jl)
+[![codecov](https://codecov.io/gh/OptimalBranching/OptimalBranching.jl/graph/badge.svg?token=GF1R6ZEVVL)](https://codecov.io/gh/OptimalBranching/OptimalBranching.jl)
 
 `OptimalBranching.jl` is a collection of tools for solving combinatorial optimization problems with branch-and-reduce method.
 It is written in Julia and features automatically generated branching rules with provable optimality ([arXiv: 2412.07685](https://arxiv.org/abs/2412.07685)).
