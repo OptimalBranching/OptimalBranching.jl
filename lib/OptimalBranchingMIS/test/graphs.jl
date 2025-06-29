@@ -2,7 +2,7 @@ using OptimalBranchingCore, OptimalBranchingMIS
 using EliminateGraphs, EliminateGraphs.Graphs
 using Test
 using ProblemReductions
-using OptimalBranchingMIS: neighbor_cover, reduced_alpha, reduced_alpha_configs, graph_from_tuples, collect_configs
+using OptimalBranchingMIS: neighbor_cover, reduced_alpha, reduced_alpha_configs, graph_from_tuples, collect_configs, best_folding
 using GenericTensorNetworks
 using Random
 
@@ -68,6 +68,19 @@ end
     res = OptimalBranchingMIS.folding_vmap(g, weights, 3)
     @test nv(res[1]) == length(res[2]) == 3
     @test res[3] == 1.5
+end
+
+@testset "best folding" begin
+    g = graph_from_tuples(5, [(1, 2), (2, 3), (3, 4), (4, 5)])
+    weights = ones(Float64, nv(g))
+    tbl = BranchingTable(5, [
+        [[0, 0, 0, 0, 1], [0, 0, 1, 0, 1]],
+        [[1, 1, 0, 1, 0]]
+    ])
+    problem = MISProblem(g, weights)
+    cl = best_folding(problem, tbl, :bfs)
+    @test count_ones(cl.mask) == 5
+    @test count_ones(cl.val) == 2
 end
 
 @testset "general folding" begin
@@ -194,9 +207,9 @@ end
         end
     end
 
-    g = random_regular_graph(100, 3)
-    weights = rand(Float64, nv(g))
-    reducer = TensorNetworkReducer(folding = true)
+    g = random_regular_graph(60, 3)
+    weights = rand(10:40, nv(g))
+    reducer = TensorNetworkReducer(recheck = true, folding = true)
     gk, weightsk, r, _ = kernelize(g, weights, reducer)
     @test nv(gk) ≤ nv(g)
     @test nv(gk) == length(reducer.region_list)
@@ -207,7 +220,7 @@ end
     mwisk = solve(problemk, SizeMax())[1].n
     @test isapprox(mwisk + r, mwis)
     
-    reducer = TensorNetworkReducer(folding = true)
+    reducer = TensorNetworkReducer(recheck = true, folding = true)
     gkk, weightskk, _, _ = kernelize(gk, weightsk, reducer)
     @test gkk == gk
     @test weightskk == weightsk
@@ -215,7 +228,7 @@ end
     g = GenericTensorNetworks.random_diagonal_coupled_graph(30, 30, 0.8)
     g = SimpleGraph(g)
     weights = ones(Float64, nv(g))
-    reducer = TensorNetworkReducer(folding = true)
+    reducer = TensorNetworkReducer(recheck = true, folding = true)
     gk, weightsk, r, _ = kernelize(g, weights, reducer)
     @test nv(gk) ≤ nv(g)
     @test nv(gk) == length(reducer.region_list)
@@ -226,7 +239,7 @@ end
     mwisk = solve(problemk, SizeMax())[1].n
     @test isapprox(mwisk + r, mwis)
     
-    reducer = TensorNetworkReducer(folding = true)
+    reducer = TensorNetworkReducer(recheck = true, folding = true)
     gkk, weightskk, _, _ = kernelize(gk, weightsk, reducer)
     @test gkk == gk
     @test weightskk == weightsk

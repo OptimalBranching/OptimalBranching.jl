@@ -129,3 +129,19 @@ end
         @test isapprox(mwis_size_tn, mwis_size_xiao)
     end
 end
+
+@testset "mwis_algorithm at branching leaves" begin
+    g = graph_from_edges([(1,2)])
+    weights =  [1,1]
+    problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = GreedyMethod(nrepeat=1))
+    mwis_size_tn = solve(problem, SizeMax())[].n
+    mwis_size_xiao = counting_xiao2021(g, weights).size
+    @test isapprox(mwis_size_tn, mwis_size_xiao)
+
+    g = SimpleGraph(2)
+    weights = [1,1]
+    problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = GreedyMethod(nrepeat=1))
+    mwis_size_tn = solve(problem, SizeMax())[].n
+    mwis_size_xiao = counting_xiao2021(g, weights).size
+    @test isapprox(mwis_size_tn, mwis_size_xiao)
+end

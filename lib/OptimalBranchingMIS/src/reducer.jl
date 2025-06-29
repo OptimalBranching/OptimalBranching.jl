@@ -528,7 +528,7 @@ function tn_reduce_rewrite_graph(g::SimpleGraph{Int}, weights::Vector{WT}, tnred
         return ReductionResult(g_new, weights[vmap], reducedvalue, vmap)
     end
 
-    bc = best_folding(MISProblem(g, weights), truth_table, tnreducer.intersect_strategy, selected_vertices)
+    bc = best_folding(MISProblem(g, weights), truth_table, tnreducer.intersect_strategy)
     group1 = Int[]
     group2 = Int[]
     if !isnothing(bc)
@@ -609,7 +609,7 @@ function best_intersect(p::MISProblem, tbl::BranchingTable, measure::AbstractMea
     end
 end
 
-function best_folding(p::MISProblem, tbl::BranchingTable, intersect_strategy::Symbol, variables::Vector{Int})
+function best_folding(p::MISProblem, tbl::BranchingTable, intersect_strategy::Symbol)
     cl = OptimalBranchingCore.folding_clauses(tbl, intersect_strategy)
     if isempty(cl)
         return nothing
