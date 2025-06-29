@@ -11,6 +11,8 @@ function find_family(g::SimpleGraph, vertex_set::Vector{Int}, weights::Vector{WT
     return u_vertices, vs_vertices
 end
 
+# Delete v from the graph if it is unconfined
+# Corresponding to Rule 5 in Xiao's paper.
 function unconfined_vertices(g::SimpleGraph, weights::Vector{WT}) where WT
     u_vertices = Int[]
     for v in 1:nv(g)
@@ -20,6 +22,8 @@ function unconfined_vertices(g::SimpleGraph, weights::Vector{WT}) where WT
     return u_vertices
 end
 
+# `Confined_set` is defined by Xiao in [https://dl.acm.org/doi/abs/10.1145/3442381.3450130]. 
+# If `S` is contained in any maximum independent set of `G`, then `confined_set(G, S)` is contained in any maximum independent set of `G`.
 function confined_set(g::SimpleGraph, weights::Vector{WT}, S::Vector{Int}) where WT
     N_S = closed_neighbors(g, S)
     us, vss = find_family(g, S, weights) 
@@ -49,6 +53,7 @@ function confined_set(g::SimpleGraph, weights::Vector{WT}, S::Vector{Int}) where
     end
 end
 
+# `Critical_set` is defined by Xiao, which is the subset maximizing w(I) − w(N(I)).
 function find_critical_set(g::SimpleGraph, weights::Vector{WT}) where WT
     model = Model(HiGHS.Optimizer)
     set_silent(model)
@@ -67,6 +72,8 @@ function find_critical_set(g::SimpleGraph, weights::Vector{WT}) where WT
     end
 end
 
+# the maximum independent critical set, consists of isolated vertices in the critical set.
+# Corresponding to Rule 4 in Xiao's paper.
 function find_independent_critical_set(g::SimpleGraph, weights::Vector{WT}) where WT
     critical_set = find_critical_set(g, weights)
     critical_independent_set = Int[]
@@ -78,6 +85,7 @@ function find_independent_critical_set(g::SimpleGraph, weights::Vector{WT}) wher
     return critical_independent_set
 end
 
+# Corresponding to Rule 1 in Xiao's paper.
 function fast_heavy_vertex_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     for v in 1:nv(g)
         v_neighbors = collect(neighbors(g, v))
@@ -90,6 +98,7 @@ function fast_heavy_vertex_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     return g, weights, 0, collect(1:nv(g))
 end
 
+# Corresponding to Rule 2 in Xiao's paper.
 function heavy_vertex_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     for v in 1:nv(g)
         v_neighbors = collect(neighbors(g, v))
@@ -107,7 +116,7 @@ function heavy_vertex_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     return g, weights, 0, collect(1:nv(g))
 end
 
-#pair:(u,v)
+# Corresponding to Rule 3 in Xiao's paper.
 function heavy_pair_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     for v in 1:nv(g)
         for inter_v in neighbors(g, v)
@@ -147,6 +156,7 @@ function heavy_pair_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     return g, weights, 0, collect(1:nv(g))
 end
 
+# Corresponding to Rule 7 in Xiao's paper.
 function module_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     neigh_map = Dict{Vector{Int}, Vector{Int}}()
     for v in 1:nv(g)
@@ -170,6 +180,7 @@ function module_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     return g, weights, 0, collect(1:nv(g))
 end
 
+# Corresponding to Rule 8 in Xiao's paper.
 function confined_pair_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     confinedsets = Vector{Int}[]
     for v in 1:nv(g)
@@ -192,6 +203,7 @@ function confined_pair_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     return g, weights, 0, collect(1:nv(g))
 end
 
+# Corresponding to Lemmas 3.11 in Rule 9 in Xiao's paper.
 function alternative_vertex_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     for v in 1:nv(g)
         v_neighbors = collect(neighbors(g, v))
@@ -214,6 +226,7 @@ function alternative_vertex_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     return g, weights, 0, collect(1:nv(g))
 end
 
+# Corresponding to Lemmas 3.11 in Rule 9 for a given vertex in Xiao's paper.
 function alternative_vertex_vmap(g::SimpleGraph, weights::Vector{WT}, v::Int) where WT
     v_neighbors = collect(neighbors(g, v))
     if is_independent(g, v_neighbors)
@@ -234,6 +247,7 @@ function alternative_vertex_vmap(g::SimpleGraph, weights::Vector{WT}, v::Int) wh
     return g, weights, 0, collect(1:nv(g))
 end
 
+# Corresponding to Lemmas 3.12 and 3.13 in Rule 9 in Xiao's paper.
 function alternative_path_cycle_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     for v2 in 1:nv(g)
         if degree(g, v2) == 2
@@ -276,6 +290,7 @@ function alternative_path_cycle_vmap(g::SimpleGraph, weights::Vector{WT}) where 
     return g, weights, 0, collect(1:nv(g))
 end
 
+# Corresponding to Rule 10 in Xiao's paper.
 function isolated_vertex_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     for v in 1:nv(g)
         if is_complete_graph(g, neighbors(g, v))
@@ -295,6 +310,7 @@ function isolated_vertex_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     return g, weights, 0, collect(1:nv(g))
 end
 
+# Corresponding to Rule 10 for a given vertex in Xiao's paper.
 function isolated_vertex_vmap(g::SimpleGraph, weights::Vector{WT}, v::Int) where WT
     if is_complete_graph(g, neighbors(g, v))
         light_neighbors = Int[]

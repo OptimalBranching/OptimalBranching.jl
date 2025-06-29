@@ -108,10 +108,6 @@ function _xiao2021(g::SimpleGraph, weights::Vector{WT}) where WT
             return MISCount(mwis_diff) + _xiao2021(g_new, weights_new)
         end
 
-        problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = TreeSA())
-        mwis_size_tn = solve(problem, SizeMax())[].n
-        return MISCount(mwis_size_tn)
-
         v_maxdegree = findfirst(==(maximum(degrees)), degrees)
         S_v = confined_set(g, weights, [v_maxdegree])
         mwis_diff1 = sum(weights[S_v])

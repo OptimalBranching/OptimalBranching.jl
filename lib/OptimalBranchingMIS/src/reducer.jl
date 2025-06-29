@@ -31,22 +31,26 @@ A reducer that uses tensor network contraction to find reduction rules.
     - `:neighbor`: Select vertices based on neighborhood
     - `:mincut`: Select vertices based on minimum cut provided by `KaHyPar` (as extension, requires `using KaHyPar`)
       !Note: `KaHyPar` may leads to memory leak!
-- `measure::AbstractMeasure = NumOfVertices()`: Measure used for kernelization. Uses size reduction from OptimalBranchingMIS
+- `measure::AbstractMeasure = NumOfVertices()`: Measure used for kernelization
 - `intersect_strategy::Symbol = :bfs`: Strategy for intersecting clauses. Options are:
     - `:bfs`: Breadth-first search (gives the optimal result)
     - `:dfs`: Depth-first search (gives the first found non-zero intersection)
-- `sub_reducer::MISReducer = BasicReducer()`: Reducer applied to selected vertices before tensor network contraction, default is BasicReducer
+- `sub_reducer::MISReducer = BasicReducer()`: Reducer applied to selected vertices before tensor network contraction
+- `region_list::Dict{Int, Tuple{Vector{Int}, Vector{Int}}}`: Store the selected region
+- `recheck::Bool = false`: Whether to recheck the vertices that have not been modified
+- `folding::Bool = false`: Whether to fold the vertices
 """
 @kwdef mutable struct TensorNetworkReducer <: MISReducer
     n_max::Int = 15
     selector::Symbol = :neighbor # :neighbor or :mincut
-    measure::AbstractMeasure = NumOfVertices() # different measures for kernelization, use the size reduction from OptimalBranchingMIS
+    measure::AbstractMeasure = NumOfVertices() # different measures for kernelization
     intersect_strategy::Symbol = :bfs # :dfs or :bfs
     sub_reducer::AbstractReducer = BasicReducer() # sub reducer for the selected vertices
     region_list::Dict{Int, Tuple{Vector{Int}, Vector{Int}}} = Dict{Int, Tuple{Vector{Int}, Vector{Int}}}() # store the selected region
     recheck::Bool = false # whether to recheck the vertices that have not been modified
     folding::Bool = false # whether to fold the vertices
 end
+
 
 Base.show(io::IO, reducer::TensorNetworkReducer) = print(io,
     """
@@ -387,13 +391,10 @@ function reduce_graph(g::SimpleGraph{Int}, weights::UnitWeight, ::XiaoReducer)
 
     twin_res = twin_filter_vmap(g)
     !isnothing(twin_res) && return ReductionResult(twin_res[1], 2, twin_res[2])
-    
     short_funnel_res = short_funnel_filter_vmap(g)
     !isnothing(short_funnel_res) && return ReductionResult(short_funnel_res[1], 1, short_funnel_res[2])
-
     desk_res = desk_filter_vmap(g)
     !isnothing(desk_res) && return ReductionResult(desk_res[1], 2, desk_res[2])
-
     return ReductionResult(g, 0, collect(1:nv(g)))
 end
 
@@ -441,6 +442,7 @@ Apply sub-reducer first, then select region to on-the-fly generate reduction rul
 # in this function, vmap_0 is from the late step to the current step, the out put vmap is from the current step to next step, which means it is not coupled with the vmap_0
 function reduce_graph(g::SimpleGraph{Int}, weights::AbstractVector{WT}, tnreducer::TensorNetworkReducer; vmap_0::Union{Nothing, Vector{Int}} = nothing) where WT
     nv(g) == 0 && return ReductionResult(SimpleGraph(0), weights, 0, Int[])
+
 
     # if the vmap_0 is not specified, the region_list will not be updated, otherwise udpate the region_list
     !isnothing(vmap_0) && (tnreducer.region_list = update_region_list(tnreducer.region_list, vmap_0))
@@ -496,6 +498,7 @@ function reduce_graph(g::SimpleGraph{Int}, weights::AbstractVector{WT}, tnreduce
     end
     
     return ReductionResult(g, weights, 0, collect(1:nv(g)))
+
 end
 
 #update the region_list accroding to the region list

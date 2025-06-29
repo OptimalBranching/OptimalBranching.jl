@@ -102,7 +102,6 @@ function confined_set(g::SimpleGraph, S::Vector{Int})
         return Int[]
     end
 end
-
 function twin_filter!(g::SimpleGraph)
     twin_pair = first_twin(g)
     isnothing(twin_pair) && return false

@@ -8,7 +8,7 @@ using Combinatorics
 using EliminateGraphs, EliminateGraphs.Graphs
 using GenericTensorNetworks
 using SparseArrays
-using ProblemReductions
+using ProblemReductions: IndependentSet
 
 export MISProblem
 export MISReducer, BasicReducer, XiaoReducer, TensorNetworkReducer, SubsolverReducer
@@ -19,7 +19,7 @@ export NumOfVertices, D3Measure
 
 export mis_size, mis_branch_count
 export ip_mis
-export counting_mis1, counting_mis2, counting_xiao2013
+export counting_mis1, counting_mis2, counting_xiao2013, counting_xiao2021
 
 include("types.jl")
 include("graphs.jl")

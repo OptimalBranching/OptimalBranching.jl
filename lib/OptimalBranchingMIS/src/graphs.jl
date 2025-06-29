@@ -209,12 +209,17 @@ function folding_vmap(g::SimpleGraph, v::Int)
     end
 end
 
+function folding(g::SimpleGraph, v::Int)
+    g_new, n, _ = folding_vmap(g, v)
+    return g_new, n
+end
+
 # If weights[v] >= mwis_size(neighbors(g, v)), v must be in the mwis
 # If neighbors(g, v) = [a, b], a is not connected to b, weights[a] + weights[b] > weights[v] but maximum(weights[a], weights[b]) <= weights[v], then a and b can be folded into one vertex
 function folding_vmap(g::SimpleGraph, weights::Vector{WT}, v::Int) where WT
     @debug "Folding vertex $(v)"
     v_neighbors = collect(neighbors(g, v))
-    problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,v_neighbors)[1], weights[induced_subgraph(g,v_neighbors)[2]]); optimizer = GreedyMethod(nrepeat=1))
+    problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,v_neighbors)[1], weights[v_neighbors]); optimizer = GreedyMethod(nrepeat=1))
     mis_vneighbors = solve(problem_sg, SizeMax())[].n
     if mis_vneighbors <= weights[v]
         removing_vertices = vcat(v_neighbors,[v])

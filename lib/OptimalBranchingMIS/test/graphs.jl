@@ -6,70 +6,69 @@ using OptimalBranchingMIS: neighbor_cover, reduced_alpha, reduced_alpha_configs,
 using GenericTensorNetworks
 using Random
 
-# @testset "graphs from tuple" begin
-#     @testset "graph_from_tuples" begin
-#         g = graph_from_tuples(4, [(1, 2), (2, 3), (3, 4)])
-#         @test nv(g) == 4
-#         @test ne(g) == 3
-#     end
-# end
+@testset "graph_from_tuples" begin
+    g = graph_from_tuples(4, [(1, 2), (2, 3), (3, 4)])
+    @test nv(g) == 4
+    @test ne(g) == 3
+end
 
-# @testset "neighbor cover" begin
-#     g = smallgraph(:petersen)
-#     @test length(neighbor_cover(g, 1, 0)[1]) == 1
-#     @test length(neighbor_cover(g, 1, 0)[2]) == 1
-#     @test length(neighbor_cover(g, 1, 1)[1]) == 4
-#     @test length(neighbor_cover(g, 1, 1)[2]) == 3
-#     @test length(neighbor_cover(g, 1, 2)[1]) == 10
-#     @test length(neighbor_cover(g, 1, 2)[2]) == 0
-# end
 
-# @testset "reduced alpha" begin
-#     g = graph_from_tuples(3, [(1, 2), (2, 3), (3, 1)])
-#     @test reduced_alpha(g, UnitWeight(nv(g)), [1, 2]) == Tropical.([1 -Inf; -Inf -Inf])
+@testset "neighbor cover" begin
+    g = smallgraph(:petersen)
+    @test length(neighbor_cover(g, 1, 0)[1]) == 1
+    @test length(neighbor_cover(g, 1, 0)[2]) == 1
+    @test length(neighbor_cover(g, 1, 1)[1]) == 4
+    @test length(neighbor_cover(g, 1, 1)[2]) == 3
+    @test length(neighbor_cover(g, 1, 2)[1]) == 10
+    @test length(neighbor_cover(g, 1, 2)[2]) == 0
+end
 
-#     cfgs = OptimalBranchingMIS._reduced_alpha_configs(g, UnitWeight(nv(g)), [1, 2], nothing)
-#     @test count(!iszero, cfgs) == 1
-#     @test collect_configs.(cfgs, Ref("abc")) == reshape([["c"], String[], String[], String[]], 2, 2)
-#     @test collect_configs.(cfgs) == reshape([[BitVector((0, 0, 1))], [], [], []], 2, 2)
-#     @test BranchingTable(cfgs) == BranchingTable(3, [[StaticElementVector(2, [0, 0, 1])]])
-# end
+@testset "reduced alpha" begin
+    g = graph_from_tuples(3, [(1, 2), (2, 3), (3, 1)])
+    @test reduced_alpha(g, UnitWeight(nv(g)), [1, 2]) == Tropical.([1 -Inf; -Inf -Inf])
 
-# @testset "update region list via vmap" begin
-#     for g in [random_regular_graph(1000, 3), SimpleGraph(GenericTensorNetworks.random_diagonal_coupled_graph(50, 50, 0.8))]
-#         region_list = Dict{Int, Tuple{Vector{Int}, Vector{Int}}}()
-#         for i in 1:nv(g)
-#             n = OptimalBranchingMIS.closed_neighbors(g, [i])
-#             nn = OptimalBranchingMIS.open_neighbors(g, n)
-#             region_list[i] = (n, nn)
-#         end
+    cfgs = OptimalBranchingMIS._reduced_alpha_configs(g, UnitWeight(nv(g)), [1, 2], nothing)
+    @test count(!iszero, cfgs) == 1
+    @test collect_configs.(cfgs, Ref("abc")) == reshape([["c"], String[], String[], String[]], 2, 2)
+    @test collect_configs.(cfgs) == reshape([[BitVector((0, 0, 1))], [], [], []], 2, 2)
+    @test BranchingTable(cfgs) == BranchingTable(3, [[StaticElementVector(2, [0, 0, 1])]])
+end
 
-#         removed_vertices = unique!(rand(1:nv(g), 10))
-#         sub_g, vmap = OptimalBranchingMIS.remove_vertices_vmap(g, removed_vertices)
+@testset "update region list via vmap" begin
+    for g in [random_regular_graph(1000, 3), SimpleGraph(GenericTensorNetworks.random_diagonal_coupled_graph(50, 50, 0.8))]
+        region_list = Dict{Int, Tuple{Vector{Int}, Vector{Int}}}()
+        for i in 1:nv(g)
+            n = OptimalBranchingMIS.closed_neighbors(g, [i])
+            nn = OptimalBranchingMIS.open_neighbors(g, n)
+            region_list[i] = (n, nn)
+        end
 
-#         mapped_region_list = OptimalBranchingMIS.update_region_list(region_list, vmap)
+        removed_vertices = unique!(rand(1:nv(g), 10))
+        sub_g, vmap = OptimalBranchingMIS.remove_vertices_vmap(g, removed_vertices)
+
+        mapped_region_list = OptimalBranchingMIS.update_region_list(region_list, vmap)
         
-#         for (v, (n, nn)) in mapped_region_list
-#             @test n == OptimalBranchingMIS.closed_neighbors(sub_g, [v])
-#             @test nn == OptimalBranchingMIS.open_neighbors(sub_g, n)
-#         end
-#     end
-# end
+        for (v, (n, nn)) in mapped_region_list
+            @test n == OptimalBranchingMIS.closed_neighbors(sub_g, [v])
+            @test nn == OptimalBranchingMIS.open_neighbors(sub_g, n)
+        end
+    end
+end
 
-# @testset "folding for mwis" begin
-#     g = graph_from_tuples(5, [(1, 2), (2, 3), (3, 4), (4, 5)])
-#     weights = ones(Float64, nv(g))
+@testset "folding for mwis" begin
+    g = graph_from_tuples(5, [(1, 2), (2, 3), (3, 4), (4, 5)])
+    weights = ones(Float64, nv(g))
     
-#     weights[3] = 2.5
-#     res = OptimalBranchingMIS.folding_vmap(g, weights, 3)
-#     @test nv(res[1]) == length(res[2]) == 2
-#     @test res[3] == 2.5
+    weights[3] = 2.5
+    res = OptimalBranchingMIS.folding_vmap(g, weights, 3)
+    @test nv(res[1]) == length(res[2]) == 2
+    @test res[3] == 2.5
    
-#     weights[3] = 1.5
-#     res = OptimalBranchingMIS.folding_vmap(g, weights, 3)
-#     @test nv(res[1]) == length(res[2]) == 3
-#     @test res[3] == 1.5
-# end
+    weights[3] = 1.5
+    res = OptimalBranchingMIS.folding_vmap(g, weights, 3)
+    @test nv(res[1]) == length(res[2]) == 3
+    @test res[3] == 1.5
+end
 
 @testset "general folding" begin
     g = graph_from_tuples(5, [(1, 2), (2, 3), (3, 4), (4, 5)])
@@ -197,7 +196,7 @@ end
 
     g = random_regular_graph(100, 3)
     weights = rand(Float64, nv(g))
-    reducer = TensorNetworkReducer(recheck = true)
+    reducer = TensorNetworkReducer(folding = true)
     gk, weightsk, r, _ = kernelize(g, weights, reducer)
     @test nv(gk) ≤ nv(g)
     @test nv(gk) == length(reducer.region_list)
@@ -216,7 +215,7 @@ end
     g = GenericTensorNetworks.random_diagonal_coupled_graph(30, 30, 0.8)
     g = SimpleGraph(g)
     weights = ones(Float64, nv(g))
-    reducer = TensorNetworkReducer(recheck = true)
+    reducer = TensorNetworkReducer(folding = true)
     gk, weightsk, r, _ = kernelize(g, weights, reducer)
     @test nv(gk) ≤ nv(g)
     @test nv(gk) == length(reducer.region_list)
