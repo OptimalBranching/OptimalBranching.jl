@@ -3,7 +3,6 @@ using Test, Random
 
 using OptimalBranchingMIS
 using OptimalBranchingMIS: find_children, find_family, unconfined_vertices, confined_set, is_line_graph, first_twin, twin_filter!, short_funnel_filter!, desk_filter!, effective_vertex, all_three_funnel, all_four_funnel, rho, optimal_four_cycle, optimal_vertex, has_fine_structure, count_o_path, closed_neighbors, is_complete_graph, twin_filter_vmap, short_funnel_filter_vmap, desk_filter_vmap
-using OptimalBranchingMIS: find_children, find_family, unconfined_vertices, confined_set, is_line_graph, first_twin, twin_filter!, short_funnel_filter!, desk_filter!, effective_vertex, all_three_funnel, all_four_funnel, rho, optimal_four_cycle, optimal_vertex, has_fine_structure, count_o_path, closed_neighbors, is_complete_graph, twin_filter_vmap, short_funnel_filter_vmap, desk_filter_vmap
 
 function graph_from_edges(edges)
     return SimpleGraph(Graphs.SimpleEdge.(edges))
@@ -146,7 +145,7 @@ end
     o_path_num = count_o_path(example_g)
     @test o_path_num == 1
 
-    edges = [(1, 2), (2, 3), (3, 4), (1, 5), (1, 6), (4, 7),(4, 8)]
+    edges = [(1, 2), (2, 3), (3, 4), (1, 5), (1, 6), (4, 7), (4, 8)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
     o_path_num = count_o_path(example_g)
     @test o_path_num == 0
@@ -161,7 +160,7 @@ end
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
     @test has_fine_structure(example_g) == true
 
-    edges = [(1, 2), (2, 3), (3, 4), (1, 5), (1, 6), (4, 7),(4, 8)]
+    edges = [(1, 2), (2, 3), (3, 4), (1, 5), (1, 6), (4, 7), (4, 8)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
     @test has_fine_structure(example_g) == false
 end
