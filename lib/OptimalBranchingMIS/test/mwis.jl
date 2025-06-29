@@ -1,4 +1,4 @@
-using GenericTensorNetworks, Graphs
+using GenericTensorNetworks
 using Test, Random
 
 using OptimalBranchingMIS
