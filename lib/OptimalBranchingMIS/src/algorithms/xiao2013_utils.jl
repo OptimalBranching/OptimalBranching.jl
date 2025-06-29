@@ -78,15 +78,6 @@ function unconfined_vertices(g::SimpleGraph)
     return u_vertices
 end
 
-function unconfined_vertices(g::SimpleGraph, weights::Vector{WT}) where WT
-    u_vertices = Int[]
-    for v in 1:nv(g)
-        confinedset = confined_set(g, weights, [v])
-        isempty(confinedset) && push!(u_vertices, v)
-    end
-    return u_vertices
-end
-
 # `Confined_set` is defined by Xiao in [https://www.sciencedirect.com/science/article/pii/S0304397512008729]. 
 # If `S` is contained in any maximum independent set of `G`, then `confined_set(G, S)` is contained in any maximum independent set of `G`.
 function confined_set(g::SimpleGraph, S::Vector{Int})
@@ -107,37 +98,6 @@ function confined_set(g::SimpleGraph, S::Vector{Int})
     W = [w[1] for w in ws if length(w) == 1]
     if is_independent(g, W)
         return confined_set(g, unique(S ∪ W))
-    else
-        return Int[]
-    end
-end
-
-function confined_set(g::SimpleGraph, weights::Vector{WT}, S::Vector{Int}) where WT
-    N_S = closed_neighbors(g, S)
-    us, vs = find_family(g, S) #TODO:only one neighbor -> weights(neighbor) <= weights(u)
-    isempty(us) && return S
-
-    ws = Vector{Int}[]
-    for u_idx in 1:length(us)
-        u = us[u_idx]
-        v = vs[u_idx]
-        if weights[v] <= weights[u]
-            w = setdiff(neighbors(g, u), N_S)
-            if isempty(w) 
-                return Int[]
-            elseif sum(weights[collect(w)]) + weights[v] <= weights[u]  #TODO:sum -> alpha
-                return Int[]
-            elseif length(w) == 1
-                push!(ws, w)
-            end
-        end
-    end
-
-    (length(ws) == 0) && return S
-
-    W = unique(vcat(ws...))
-    if is_independent(g, W)
-        return confined_set(g, weights,unique(S ∪ W))
     else
         return Int[]
     end

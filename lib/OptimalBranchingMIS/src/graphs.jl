@@ -214,7 +214,7 @@ end
 function folding_vmap(g::SimpleGraph, weights::Vector{WT}, v::Int) where WT
     @debug "Folding vertex $(v)"
     v_neighbors = collect(neighbors(g, v))
-    problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,v_neighbors)[1], weights[v_neighbors]); optimizer = GreedyMethod(nrepeat=1))
+    problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,v_neighbors)[1], weights[induced_subgraph(g,v_neighbors)[2]]); optimizer = GreedyMethod(nrepeat=1))
     mis_vneighbors = solve(problem_sg, SizeMax())[].n
     if mis_vneighbors <= weights[v]
         removing_vertices = vcat(v_neighbors,[v])

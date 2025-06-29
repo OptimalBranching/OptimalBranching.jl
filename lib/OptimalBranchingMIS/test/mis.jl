@@ -16,6 +16,13 @@ end
     @test find_family(g, [1,2,3]) == ([4], [1])
 end
 
+@testset "find_family with weights" begin
+    g = graph_from_edges([(1,4), (2,4), (2,3), (4,5)])
+    weights = [1, 2, 3, 4, 5]
+    @test find_family(g, [1], weights) == ([4], [[1]])
+    @test find_family(g, [1,2,3], weights) == ([4], [[1,2]])
+end
+
 @testset "line graph" begin
     edges = [(1,2),(1,4),(1,5),(2,3),(2,4),(2,5),(3,4),(3,5)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
@@ -40,6 +47,11 @@ end
     @test in(1, unconfined_vertices(g, ones(nv(g))))
     @test Set(confined_set(g, [6])) == Set([6])
     @test Set(confined_set(g, ones(nv(g)), [6])) == Set([6])
+
+    g = graph_from_edges([(1,4), (2,4), (2,3), (4,5)])
+    weights = [1, 2, 3, 4, 1]
+    @test unconfined_vertices(g, weights) == [1, 2, 5]
+    @test Set(confined_set(g, weights, [4])) == Set([4])
 end
 
 @testset "twin" begin

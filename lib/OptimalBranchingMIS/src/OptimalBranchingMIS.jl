@@ -3,6 +3,7 @@ module OptimalBranchingMIS
 using OptimalBranchingCore
 using OptimalBranchingCore: AbstractProblem, intersect_clauses, candidate_clauses
 using OptimalBranchingCore.BitBasis
+using OptimalBranchingCore.JuMP, OptimalBranchingCore.HiGHS
 using Combinatorics
 using EliminateGraphs, EliminateGraphs.Graphs
 using GenericTensorNetworks

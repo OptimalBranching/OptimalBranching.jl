@@ -45,6 +45,7 @@ A reducer that uses tensor network contraction to find reduction rules.
     sub_reducer::AbstractReducer = BasicReducer() # sub reducer for the selected vertices
     region_list::Dict{Int, Tuple{Vector{Int}, Vector{Int}}} = Dict{Int, Tuple{Vector{Int}, Vector{Int}}}() # store the selected region
     recheck::Bool = false # whether to recheck the vertices that have not been modified
+    folding::Bool = false # whether to fold the vertices
 end
 
 Base.show(io::IO, reducer::TensorNetworkReducer) = print(io,
@@ -246,6 +247,118 @@ function reduce_graph(g::SimpleGraph{Int}, weights::Vector{WT}, ::BasicReducer) 
 end
 
 """
+    reduce_graph(g::SimpleGraph, weights::AbstractVector{WT}, ::XiaoReducer)
+
+Reduce the graph into a simplified one by Xiao's reduction rules.
+
+# Arguments
+- `g::SimpleGraph`: The input graph.
+- `weights::AbstractVector{WT}`: The weights of the vertices.
+- `::XiaoReducer`: The reducer to be applied.
+
+# Returns
+- A `ReductionResult` instance containing the reduced graph, weights, mis difference, and vertex map.
+
+"""
+function reduce_graph(g::SimpleGraph{Int}, weights::Vector{WT}, ::XiaoReducer) where WT
+    if nv(g) == 0
+        return ReductionResult(SimpleGraph(0), WT[], 0, Int[])
+    elseif nv(g) == 1
+        return ReductionResult(SimpleGraph(0), WT[], weights[1], Int[]) 
+    elseif nv(g) == 2
+        if !has_edge(g, 1, 2)
+            return ReductionResult(SimpleGraph(0), WT[], weights[1] + weights[2], Int[])
+        else
+            return ReductionResult(SimpleGraph(0), WT[], max(weights[1], weights[2]), Int[])
+        end
+    else
+        degrees = degree(g)
+        degmin = minimum(degrees)
+        vmin = findfirst(==(degmin), degrees)
+        if degmin == 0
+            all_zero_vertices = findall(==(0), degrees)
+            g_new, vmap = remove_vertices_vmap(g, all_zero_vertices)
+            return ReductionResult(g_new, weights[vmap], sum(weights[all_zero_vertices]), vmap) 
+        end
+
+        g_new, weights_new, mwis_diff, vmap = fast_heavy_vertex_vmap(g, weights)
+        if g_new != g 
+            return ReductionResult(g_new, weights_new, mwis_diff, vmap)
+        end
+        
+        if degmin == 1
+            g_new, weights_new, mwis_diff, vmap = isolated_vertex_vmap(g, weights, vmin)
+            if g_new != g 
+                return ReductionResult(g_new, weights_new, mwis_diff, vmap)
+            end
+        end
+
+        if degmin == 2
+            g_new, weights_new, mwis_diff, vmap = alternative_vertex_vmap(g, weights, vmin)
+            if g_new != g 
+                return ReductionResult(g_new, weights_new, mwis_diff, vmap)
+            end
+
+            g_new, weights_new, mwis_diff, vmap = alternative_path_cycle_vmap(g, weights)
+            if g_new != g 
+                return ReductionResult(g_new, weights_new, mwis_diff, vmap)
+            end
+
+            g_new, weights_new, mwis_diff, vmap = isolated_vertex_vmap(g, weights, vmin)
+            if g_new != g 
+                return ReductionResult(g_new, weights_new, mwis_diff, vmap)
+            end
+        end
+
+        g_new, weights_new, mwis_diff, vmap = module_vmap(g, weights)
+        if g_new != g 
+            return ReductionResult(g_new, weights_new, mwis_diff, vmap)
+        end
+
+
+        g_new, weights_new, mwis_diff, vmap = heavy_vertex_vmap(g, weights)
+        if g_new != g 
+            return ReductionResult(g_new, weights_new, mwis_diff, vmap)
+        end
+
+        g_new, weights_new, mwis_diff, vmap = alternative_vertex_vmap(g, weights)
+        if g_new != g 
+            return ReductionResult(g_new, weights_new, mwis_diff, vmap)
+        end
+
+        g_new, weights_new, mwis_diff, vmap = isolated_vertex_vmap(g, weights)
+        if g_new != g 
+            return ReductionResult(g_new, weights_new, mwis_diff, vmap)
+        end
+
+        unconfined_vs = unconfined_vertices(g, weights)
+        if length(unconfined_vs) != 0
+            g_new, vmap = remove_vertices_vmap(g, [unconfined_vs[1]])
+            return ReductionResult(g_new, weights[vmap], 0, vmap)
+        end
+
+        g_new, weights_new, mwis_diff, vmap = confined_pair_vmap(g, weights)
+        if g_new != g 
+            return ReductionResult(g_new, weights_new, mwis_diff, vmap)
+        end
+
+        critical_independent_set = find_independent_critical_set(g, weights)
+        if length(critical_independent_set) != 0
+            mwis_diff = sum(weights[critical_independent_set])
+            g_new, vmap = remove_vertices_vmap(g, union(neighbors(g, critical_independent_set),critical_independent_set))
+            return ReductionResult(g_new, weights[vmap], mwis_diff, vmap)
+        end
+
+        g_new, weights_new, mwis_diff, vmap = heavy_pair_vmap(g, weights)
+        if g_new != g 
+            return ReductionResult(g_new, weights_new, mwis_diff, vmap)
+        end
+    end
+    return ReductionResult(g, weights, 0, collect(1:nv(g)))
+end
+
+
+"""
     reduce_graph(g::SimpleGraph, weights::UnitWeight, ::XiaoReducer)
 
 Reduce the graph into a simplified one by Xiao's reduction rules.
@@ -339,10 +452,16 @@ function reduce_graph(g::SimpleGraph{Int}, weights::AbstractVector{WT}, tnreduce
     p = MISProblem(g, weights)
 
     # first consider the vertices with region removed (not a key in region_list)
-    for i in 1:nv(p.g)
+    is = collect(1:nv(p.g))
+    is = sort(is, by=i -> degree(p.g, i), rev=true)
+    for i in is
         haskey(tnreducer.region_list, i) && continue
         selected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
-        res = tn_reduce_graph(p, tnreducer, selected_vertices)
+        if tnreducer.folding
+            res = tn_reduce_rewrite_graph(p.g, p.weights, tnreducer, selected_vertices)
+        else
+            res = tn_reduce_graph(p.g, p.weights, tnreducer, selected_vertices)
+        end
         if isnothing(res)
             # if the region selected by i can not be reduced, add it to the region_list
             tnreducer.region_list[i] = (selected_vertices, open_neighbors(p.g, selected_vertices))
@@ -353,14 +472,20 @@ function reduce_graph(g::SimpleGraph{Int}, weights::AbstractVector{WT}, tnreduce
 
     # if all the vertices that have been modified can not be reduced, try other vertices
     if tnreducer.recheck
-        for (i, value) in tnreducer.region_list
-            selected_vertices, nn = value
+        is = keys(tnreducer.region_list)
+        is = sort(collect(is), by=i -> degree(p.g, i), rev=true)
+        for i in is
+            selected_vertices, nn = tnreducer.region_list[i]
             reselected_vertices = select_region(p.g, i, tnreducer.n_max, tnreducer.selector)
             reselected_nn = open_neighbors(p.g, reselected_vertices)
             if (sort!(selected_vertices) == sort!(reselected_vertices)) && (sort!(nn) == sort!(reselected_nn))
                 continue
             else
-                res = tn_reduce_graph(p, tnreducer, selected_vertices) 
+                if tnreducer.folding
+                    res = tn_reduce_rewrite_graph(p.g, p.weights, tnreducer, reselected_vertices) 
+                else
+                    res = tn_reduce_graph(p.g, p.weights, tnreducer, reselected_vertices) 
+                end
                 if isnothing(res)
                     tnreducer.region_list[i] = (reselected_vertices, reselected_nn)
                 else
@@ -390,16 +515,75 @@ function update_region_list(region_list::Dict{Int, Tuple{Vector{Int}, Vector{Int
     return mapped_region_list
 end
 
-function tn_reduce_graph(p::MISProblem, tnreducer::TensorNetworkReducer, selected_vertices::Vector{Int})
-    truth_table = branching_table(p, TensorNetworkSolver(), selected_vertices)
-    bc = best_intersect(p, truth_table, tnreducer.measure, tnreducer.intersect_strategy, selected_vertices)
+function tn_reduce_rewrite_graph(g::SimpleGraph{Int}, weights::Vector{WT}, tnreducer::TensorNetworkReducer, selected_vertices::Vector{Int}) where WT
+    truth_table = branching_table(MISProblem(g, weights), TensorNetworkSolver(), selected_vertices)
+    bc = best_intersect(MISProblem(g, weights), truth_table, tnreducer.measure, tnreducer.intersect_strategy, selected_vertices)
     if !isnothing(bc)
-        vertices_removed = removed_vertices(selected_vertices, p.g, bc)
-        g_new, vmap = remove_vertices_vmap(p.g, vertices_removed)
-        reducedvalue = clause_size(p.weights, bc.val, selected_vertices)
-        return ReductionResult(g_new, p.weights[vmap], reducedvalue, vmap)
+        vertices_removed = removed_vertices(selected_vertices, g, bc)
+        g_new, vmap = remove_vertices_vmap(g, vertices_removed)
+        reducedvalue = clause_size(weights, bc.val, selected_vertices)
+        return ReductionResult(g_new, weights[vmap], reducedvalue, vmap)
+    end
+
+    bc = best_folding(MISProblem(g, weights), truth_table, tnreducer.intersect_strategy, selected_vertices)
+    group1 = Int[]
+    group2 = Int[]
+    if !isnothing(bc)
+        for bit_pos in 1:length(selected_vertices)
+            if readbit(bc.mask, bit_pos) == 1 && readbit(bc.val, bit_pos) == 1
+                push!(group1, selected_vertices[bit_pos])
+            elseif readbit(bc.mask, bit_pos) == 1 && readbit(bc.val, bit_pos) == 0
+                push!(group2, selected_vertices[bit_pos])
+            end
+        end
+        if length(group2) <= 1
+            g_new, weights_new, vmap = folding_one_node(g, weights, group1)
+        else
+            g_new, weights_new, vmap = folding_two_nodes(g, weights, group1, group2)
+        end
+        return ReductionResult(g_new, weights_new, 0, vmap)
     end
     return nothing
+end
+
+function tn_reduce_graph(g::SimpleGraph{Int}, weights::AbstractVector{WT}, tnreducer::TensorNetworkReducer, selected_vertices::Vector{Int}) where WT
+    truth_table = branching_table(MISProblem(g, weights), TensorNetworkSolver(), selected_vertices)
+    bc = best_intersect(MISProblem(g, weights), truth_table, tnreducer.measure, tnreducer.intersect_strategy, selected_vertices)
+    if !isnothing(bc)
+        vertices_removed = removed_vertices(selected_vertices, g, bc)
+        g_new, vmap = remove_vertices_vmap(g, vertices_removed)
+        reducedvalue = clause_size(weights, bc.val, selected_vertices)
+        return ReductionResult(g_new, weights[vmap], reducedvalue, vmap)
+    end
+    return nothing
+end
+
+# fold the vertices in group1 into one vertex, and weights[new_vertex] = sum(weights[group1])
+function folding_one_node(g::SimpleGraph{Int}, weights::Vector{WT}, group1::Vector{Int}) where WT
+    for n in neighbors(g, group1)
+        add_edge!(g, group1[1], n)
+    end
+    weights_new = copy(weights)
+    weights_new[group1[1]] = sum(weights[group1])
+    g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), group1[2:end]))
+    return g_new, weights_new[vmap], vmap
+end
+
+# fold the vertices in group1 and group2 into two vertices, and weights[new_vertex1] = sum(weights[group1]), weights[new_vertex2] = sum(weights[group2])
+# add an edge between the two new vertices
+function folding_two_nodes(g::SimpleGraph{Int}, weights::Vector{WT}, group1::Vector{Int}, group2::Vector{Int}) where WT
+    for n in neighbors(g, group1)
+        add_edge!(g, group1[1], n)
+    end
+    weights_new = copy(weights)
+    weights_new[group1[1]] = sum(weights[group1])
+    for n in neighbors(g, group2)
+        add_edge!(g, group2[1], n)
+    end 
+    weights_new[group2[1]] = sum(weights[group2])
+    add_edge!(g, group1[1], group2[1])
+    g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), union(group1[2:end], group2[2:end])))
+    return g_new, weights_new[vmap], vmap
 end
 
 function best_intersect(p::MISProblem, tbl::BranchingTable, measure::AbstractMeasure, intersect_strategy::Symbol, variables::Vector{Int})
@@ -413,7 +597,27 @@ function best_intersect(p::MISProblem, tbl::BranchingTable, measure::AbstractMea
         best_cl = cl[1]
         for c in cl[2:end]
             loss = OptimalBranchingCore.size_reduction(p, measure, c, variables)
-            if loss < best_loss
+            if loss > best_loss
+                best_loss = loss
+                best_cl = c
+            end
+        end
+        return best_cl
+    end
+end
+
+function best_folding(p::MISProblem, tbl::BranchingTable, intersect_strategy::Symbol, variables::Vector{Int})
+    cl = OptimalBranchingCore.folding_clauses(tbl, intersect_strategy)
+    if isempty(cl)
+        return nothing
+    elseif length(cl) == 1
+        return cl[1]
+    else
+        best_loss = count_ones(cl[1].mask) - (count_ones(cl[1].mask) == count_ones(cl[1].val) ? 1 : 2.1)
+        best_cl = cl[1]
+        for c in cl[2:end]
+            loss = count_ones(c.mask) - (count_ones(c.mask) == count_ones(c.val) ? 1 : 2.1)
+            if loss > best_loss
                 best_loss = loss
                 best_cl = c
             end
