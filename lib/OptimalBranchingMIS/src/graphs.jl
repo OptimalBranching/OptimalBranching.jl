@@ -209,11 +209,6 @@ function folding_vmap(g::SimpleGraph, v::Int)
     end
 end
 
-function folding(g::SimpleGraph, v::Int)
-    g_new, n, _ = folding_vmap(g, v)
-    return g_new, n
-end
-
 # If weights[v] >= mwis_size(neighbors(g, v)), v must be in the mwis
 # If neighbors(g, v) = [a, b], a is not connected to b, weights[a] + weights[b] > weights[v] but maximum(weights[a], weights[b]) <= weights[v], then a and b can be folded into one vertex
 function folding_vmap(g::SimpleGraph, weights::Vector{WT}, v::Int) where WT
