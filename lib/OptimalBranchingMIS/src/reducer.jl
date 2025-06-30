@@ -584,7 +584,6 @@ function folding_two_nodes(g::SimpleGraph{Int}, weights::Vector{WT}, group1::Vec
         add_edge!(g, group2[1], n)
     end 
     weights_new[group2[1]] = sum(weights[group2])
-    add_edge!(g, group1[1], group2[1])
     g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), union(group1[2:end], group2[2:end])))
     return g_new, weights_new[vmap], vmap
 end
@@ -616,10 +615,10 @@ function best_folding(p::MISProblem, tbl::BranchingTable, intersect_strategy::Sy
     elseif length(cl) == 1
         return cl[1]
     else
-        best_loss = count_ones(cl[1].mask) - (count_ones(cl[1].mask) == count_ones(cl[1].val) ? 1 : 2.1)
+        best_loss = count_ones(cl[1].mask) - (count_ones(cl[1].mask) == count_ones(cl[1].val) ? 1.0 : 2.1)
         best_cl = cl[1]
         for c in cl[2:end]
-            loss = count_ones(c.mask) - (count_ones(c.mask) == count_ones(c.val) ? 1 : 2.1)
+            loss = count_ones(c.mask) - (count_ones(c.mask) == count_ones(c.val) ? 1.0 : 2.1)
             if loss > best_loss
                 best_loss = loss
                 best_cl = c
