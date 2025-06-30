@@ -28,6 +28,33 @@ end
     @test count_ones(ct_bfs[1].mask) == 1
 end
 
+@testset "folding clauses" begin
+    tbl = BranchingTable(5, [
+        [[0, 1, 1, 0, 1], [0, 1, 0, 0, 1]],
+        [[0, 1, 0, 1, 1]],
+        [[1, 0, 1, 1, 1]],
+        [[0, 1, 0, 1, 0]]
+    ])
+    ct_dfs = OptimalBranchingCore.folding_clauses(tbl, :dfs)
+    ct_bfs = OptimalBranchingCore.folding_clauses(tbl, :bfs)
+    @test count_ones(ct_dfs[1].mask) == 3
+    @test count_ones(ct_bfs[1].mask) == 3
+    @test count_ones(ct_dfs[1].val) == 2
+    @test count_ones(ct_bfs[1].val) == 2
+
+    tbl = BranchingTable(5, [
+        [[0, 1, 1, 0, 1], [0, 1, 0, 0, 1]],
+        [[0, 1, 0, 1, 1]],
+        [[1, 0, 1, 1, 1]],
+        [[0, 1, 0, 1, 0]],
+        [[1, 1, 0, 1, 0]]
+    ])
+    ct_dfs = OptimalBranchingCore.folding_clauses(tbl, :dfs)
+    ct_bfs = OptimalBranchingCore.folding_clauses(tbl, :bfs)
+    @test isempty(ct_dfs)
+    @test isempty(ct_bfs)
+end
+
 @testset "setcover by JuMP - StaticBitVector type" begin
     tbl = BranchingTable(5, [
         [StaticBitVector([0, 0, 1, 0, 0]), StaticBitVector([0, 1, 0, 0, 0])],

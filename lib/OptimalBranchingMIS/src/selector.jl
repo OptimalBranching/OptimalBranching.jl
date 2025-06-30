@@ -11,7 +11,7 @@ struct MinBoundarySelector <: AbstractSelector
     k::Int # select the subgraph with minimum open vertices by k-layers of neighbors
 end
 
-function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::MinBoundarySelector) where{M<:AbstractMeasure}
+function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::MinBoundarySelector) where{M<:AbstractMeasure, INT<:Integer}
     g = p.g
     @assert nv(g) > 0
     kneighbor = selector.k
@@ -49,7 +49,7 @@ struct MinBoundaryHighDegreeSelector <: AbstractSelector
     kd::Int # k-degree
 end
 
-function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::MinBoundaryHighDegreeSelector) where{M<:AbstractMeasure}
+function OptimalBranchingCore.select_variables(p::MISProblem, m::M, selector::MinBoundaryHighDegreeSelector) where{M<:AbstractMeasure, INT<:Integer}
     g = p.g
     @assert nv(g) > 0
     local vs_min

@@ -12,11 +12,11 @@ Represents the count of Maximum Independent Sets (MIS).
 - `MISCount(mis_size::Int, mis_count::Int)`: Creates a `MISCount` with the specified size and count.
 
 """
-struct MISCount
-    size::Int
+struct MISCount{T}
+    size::T
     count::Int
-    MISCount(size::Int) = new(size, 1)
-    MISCount(size::Int, count::Int) = new(size, count)
+    MISCount(size::T) where {T} = new{T}(size, 1)
+    MISCount(size::T, count::Int) where {T} = new{T}(size, count)
 end
 
 Base.:+(a::MISCount, b::MISCount) = MISCount(a.size + b.size, a.count + b.count)
@@ -30,4 +30,6 @@ include("mis1.jl")
 include("mis2.jl")
 include("xiao2013.jl")
 include("xiao2013_utils.jl")
+include("xiao2021.jl")
+include("xiao2021_utils.jl")
 include("ip.jl")
