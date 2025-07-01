@@ -16,6 +16,13 @@ end
     @test find_family(g, [1,2,3]) == ([4], [1])
 end
 
+@testset "find_family with weights" begin
+    g = graph_from_edges([(1,4), (2,4), (2,3), (4,5)])
+    weights = [1, 2, 3, 4, 5]
+    @test find_family(g, [1], weights) == ([4], [[1]])
+    @test find_family(g, [1,2,3], weights) == ([4], [[1,2]])
+end
+
 @testset "line graph" begin
     edges = [(1,2),(1,4),(1,5),(2,3),(2,4),(2,5),(3,4),(3,5)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
@@ -33,13 +40,18 @@ end
     @test unconfined_vertices(g, ones(nv(g))) == [2]
     @test Set(confined_set(g, [1])) == Set([1, 5, 6])
     @test Set(confined_set(g, ones(nv(g)), [1])) == Set([1, 5, 6])
-    
+   
     # via roof
     g = graph_from_edges([(1, 2), (1, 5), (1, 6), (2, 5), (2, 3), (4, 5), (3, 4), (3, 7), (4, 7)])
     @test in(1, unconfined_vertices(g))
     @test in(1, unconfined_vertices(g, ones(nv(g))))
     @test Set(confined_set(g, [6])) == Set([6])
     @test Set(confined_set(g, ones(nv(g)), [6])) == Set([6])
+
+    g = graph_from_edges([(1,4), (2,4), (2,3), (4,5)])
+    weights = [1, 2, 3, 4, 1]
+    @test unconfined_vertices(g, weights) == [1, 2, 5]
+    @test Set(confined_set(g, weights, [4])) == Set([4])
 end
 
 @testset "twin" begin
@@ -133,7 +145,7 @@ end
     o_path_num = count_o_path(example_g)
     @test o_path_num == 1
 
-    edges = [(1, 2), (2, 3), (3, 4), (1, 5), (1, 6), (4, 7),(4, 8)]
+    edges = [(1, 2), (2, 3), (3, 4), (1, 5), (1, 6), (4, 7), (4, 8)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
     o_path_num = count_o_path(example_g)
     @test o_path_num == 0
@@ -148,7 +160,7 @@ end
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
     @test has_fine_structure(example_g) == true
 
-    edges = [(1, 2), (2, 3), (3, 4), (1, 5), (1, 6), (4, 7),(4, 8)]
+    edges = [(1, 2), (2, 3), (3, 4), (1, 5), (1, 6), (4, 7), (4, 8)]
     example_g = SimpleGraph(Graphs.SimpleEdge.(edges))
     @test has_fine_structure(example_g) == false
 end

@@ -78,7 +78,7 @@ function collect_configs(cfg::CountingTropical{<:Real, <:ConfigEnumerator}, symb
     symbols === nothing ? cs : [String([symbols[i] for (i, v) in enumerate(x) if v == 1]) for x in cs]
 end
 
-function OptimalBranchingCore.branching_table(p::MISProblem, solver::TensorNetworkSolver, vs::Vector{Int})
+function OptimalBranchingCore.branching_table(p::MISProblem, solver::TensorNetworkSolver, vs::Vector{Int}) where INT<:Integer
     ovs = open_vertices(p.g, vs)
     subg, vmap = induced_subgraph(p.g, vs)
 	potential = [sum(p.weights[collect(setdiff(neighbors(p.g, v), vs))]) for v in ovs]

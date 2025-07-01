@@ -13,6 +13,10 @@ end
     include("mis.jl")
 end
 
+@testset "mwis" begin
+    include("mwis.jl")
+end
+
 @testset "table solver" begin
     include("table_solver.jl")
 end
