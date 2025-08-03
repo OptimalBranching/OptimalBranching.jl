@@ -20,8 +20,8 @@ struct MISCount{T}
 end
 
 Base.:+(a::MISCount, b::MISCount) = MISCount(a.size + b.size, a.count + b.count)
-Base.:+(a::MISCount, b::Int) = MISCount(a.size + b, a.count)
-Base.:+(a::Int, b::MISCount) = MISCount(a + b.size, b.count)
+Base.:+(a::MISCount{T}, b::T) where {T} = MISCount(a.size + b, a.count)
+Base.:+(a::T, b::MISCount{T}) where {T} = MISCount(a + b.size, b.count)
 Base.max(a::MISCount, b::MISCount) = MISCount(max(a.size, b.size), (a.count + b.count))
 Base.zero(::MISCount) = MISCount(0, 1)
 Base.zero(::Type{MISCount}) = MISCount(0, 1)
