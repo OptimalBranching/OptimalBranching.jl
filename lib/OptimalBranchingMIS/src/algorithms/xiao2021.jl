@@ -17,7 +17,7 @@ end
 
 function _xiao2021(g::SimpleGraph, weights::Vector{WT}) where WT
     if nv(g) == 0
-        return MISCount(0)
+        return MISCount(0.0)
     elseif nv(g) == 1
         return MISCount(weights[1])
     elseif nv(g) == 2
