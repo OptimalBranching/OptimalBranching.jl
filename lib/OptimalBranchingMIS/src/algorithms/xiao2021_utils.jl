@@ -103,7 +103,7 @@ function heavy_vertex_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
     for v in 1:nv(g)
         v_neighbors = collect(neighbors(g, v))
         if length(v_neighbors) <= 8
-            problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,v_neighbors)[1], weights[induced_subgraph(g,v_neighbors)[2]]); optimizer = GreedyMethod(nrepeat=1))
+            problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,v_neighbors)[1], weights[induced_subgraph(g,v_neighbors)[2]]); optimizer = GreedyMethod())
             mis_vneighbors = solve(problem_sg, SizeMax())[].n
         else
             continue
@@ -126,17 +126,17 @@ function heavy_pair_vmap(g::SimpleGraph, weights::Vector{WT}) where WT
                     only_v_neighbors = setdiff(collect(neighbors(g, v)), collect(neighbors(g, u)))
                     only_u_neighbors = setdiff(collect(neighbors(g, u)), collect(neighbors(g, v)))
                     if length(vu_neighbors) <= 8
-                        problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,only_v_neighbors)[1], weights[induced_subgraph(g,only_v_neighbors)[2]]); optimizer = GreedyMethod(nrepeat=1))
+                        problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,only_v_neighbors)[1], weights[induced_subgraph(g,only_v_neighbors)[2]]); optimizer = GreedyMethod())
                         mis_only_v_neighbors = solve(problem_sg, SizeMax())[].n
                         if mis_only_v_neighbors > weights[v]
                             continue
                         end
-                        problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,only_u_neighbors)[1], weights[induced_subgraph(g,only_u_neighbors)[2]]); optimizer = GreedyMethod(nrepeat=1))
+                        problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,only_u_neighbors)[1], weights[induced_subgraph(g,only_u_neighbors)[2]]); optimizer = GreedyMethod())
                         mis_only_u_neighbors = solve(problem_sg, SizeMax())[].n
                         if mis_only_u_neighbors > weights[u]
                             continue
                         end
-                        problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,vu_neighbors)[1], weights[induced_subgraph(g,vu_neighbors)[2]]); optimizer = GreedyMethod(nrepeat=1))
+                        problem_sg = GenericTensorNetwork(IndependentSet(induced_subgraph(g,vu_neighbors)[1], weights[induced_subgraph(g,vu_neighbors)[2]]); optimizer = GreedyMethod())
                         mis_vu_neighbors = solve(problem_sg, SizeMax())[].n
                         if mis_vu_neighbors <= weights[v] + weights[u]
                             g_new, vmap = induced_subgraph(g, setdiff(1:nv(g), [v, u] ∪ vu_neighbors))

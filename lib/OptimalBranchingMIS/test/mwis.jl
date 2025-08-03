@@ -116,14 +116,14 @@ end
     for seed in 10:10:60
         g = random_regular_graph(seed, 3)
         weights = rand(nv(g))
-        problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = GreedyMethod(nrepeat=1))
+        problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = GreedyMethod())
         mwis_size_tn = solve(problem, SizeMax())[].n
         mwis_size_xiao = counting_xiao2021(g, weights).size
         @test isapprox(mwis_size_tn, mwis_size_xiao)
 
         g = random_regular_graph(seed, 3)
         weights = ones(nv(g))
-        problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = GreedyMethod(nrepeat=1))
+        problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = GreedyMethod())
         mwis_size_tn = solve(problem, SizeMax())[].n
         mwis_size_xiao = counting_xiao2021(g, weights).size
         @test isapprox(mwis_size_tn, mwis_size_xiao)
@@ -133,14 +133,14 @@ end
 @testset "mwis_algorithm at branching leaves" begin
     g = graph_from_edges([(1,2)])
     weights =  [1,1]
-    problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = GreedyMethod(nrepeat=1))
+    problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = GreedyMethod())
     mwis_size_tn = solve(problem, SizeMax())[].n
     mwis_size_xiao = counting_xiao2021(g, weights).size
     @test isapprox(mwis_size_tn, mwis_size_xiao)
 
     g = SimpleGraph(2)
     weights = [1,1]
-    problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = GreedyMethod(nrepeat=1))
+    problem = GenericTensorNetwork(IndependentSet(g, weights); optimizer = GreedyMethod())
     mwis_size_tn = solve(problem, SizeMax())[].n
     mwis_size_xiao = counting_xiao2021(g, weights).size
     @test isapprox(mwis_size_tn, mwis_size_xiao)
