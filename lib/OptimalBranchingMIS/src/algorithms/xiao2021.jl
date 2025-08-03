@@ -17,7 +17,7 @@ end
 
 function _xiao2021(g::SimpleGraph, weights::Vector{WT}) where WT
     if nv(g) == 0
-        return MISCount(0)
+        return MISCount(0.0)
     elseif nv(g) == 1
         return MISCount(weights[1])
     elseif nv(g) == 2
@@ -33,56 +33,56 @@ function _xiao2021(g::SimpleGraph, weights::Vector{WT}) where WT
         if degmin == 0
             all_zero_vertices = findall(==(0), degrees)
             g_new, vmap = remove_vertices_vmap(g, all_zero_vertices)
-            return MISCount(sum(weights[all_zero_vertices])) + _xiao2021(g_new, weights[vmap])
+            return (sum(weights[all_zero_vertices])) + _xiao2021(g_new, weights[vmap])
         end
 
         g_new, weights_new, mwis_diff, _ = fast_heavy_vertex_vmap(g, weights)
         if g_new != g 
-            return MISCount(mwis_diff) + _xiao2021(g_new, weights_new)
+            return WT(mwis_diff) + _xiao2021(g_new, weights_new)
         end
         
         if degmin == 1
             g_new, weights_new, mwis_diff, _ = isolated_vertex_vmap(g, weights, vmin)
             if g_new != g 
-                return MISCount(mwis_diff) + _xiao2021(g_new, weights_new)
+                return WT(mwis_diff) + _xiao2021(g_new, weights_new)
             end
         end
 
         if degmin == 2
             g_new, weights_new, mwis_diff, _ = alternative_vertex_vmap(g, weights, vmin)
             if g_new != g 
-                return MISCount(mwis_diff) + _xiao2021(g_new, weights_new)
+                return WT(mwis_diff) + _xiao2021(g_new, weights_new)
             end
 
             g_new, weights_new, mwis_diff, _ = alternative_path_cycle_vmap(g, weights)
             if g_new != g 
-                return MISCount(mwis_diff) + _xiao2021(g_new, weights_new)
+                return WT(mwis_diff) + _xiao2021(g_new, weights_new)
             end
 
             g_new, weights_new, mwis_diff, _ = isolated_vertex_vmap(g, weights, vmin)
             if g_new != g 
-                return MISCount(mwis_diff) + _xiao2021(g_new, weights_new)
+                return WT(mwis_diff) + _xiao2021(g_new, weights_new)
             end
         end
 
         g_new, weights_new, mwis_diff, _ = module_vmap(g, weights)
         if g_new != g 
-            return MISCount(mwis_diff) + _xiao2021(g_new, weights_new)
+            return WT(mwis_diff) + _xiao2021(g_new, weights_new)
         end
 
         g_new, weights_new, mwis_diff, _ = heavy_vertex_vmap(g, weights)
         if g_new != g 
-            return MISCount(mwis_diff) + _xiao2021(g_new, weights_new)
+            return WT(mwis_diff) + _xiao2021(g_new, weights_new)
         end
 
         g_new, weights_new, mwis_diff, _ = alternative_vertex_vmap(g, weights)
         if g_new != g 
-            return MISCount(mwis_diff) + _xiao2021(g_new, weights_new)
+            return WT(mwis_diff) + _xiao2021(g_new, weights_new)
         end
 
         g_new, weights_new, mwis_diff, _ = isolated_vertex_vmap(g, weights)
         if g_new != g 
-            return MISCount(mwis_diff) + _xiao2021(g_new, weights_new)
+            return WT(mwis_diff) + _xiao2021(g_new, weights_new)
         end
 
         unconfined_vs = unconfined_vertices(g, weights)
@@ -93,19 +93,19 @@ function _xiao2021(g::SimpleGraph, weights::Vector{WT}) where WT
 
         g_new, weights_new, mwis_diff, _ = confined_pair_vmap(g, weights)
         if g_new != g 
-            return MISCount(mwis_diff) + _xiao2021(g_new, weights_new)
+            return WT(mwis_diff) + _xiao2021(g_new, weights_new)
         end
 
         critical_independent_set = find_independent_critical_set(g, weights)
         if length(critical_independent_set) != 0
             mwis_diff = sum(weights[critical_independent_set])
             g_new, vmap = remove_vertices_vmap(g, union(neighbors(g, critical_independent_set),critical_independent_set))
-            return MISCount(mwis_diff) + _xiao2021(g_new, weights[vmap])
+            return WT(mwis_diff) + _xiao2021(g_new, weights[vmap])
         end
 
         g_new, weights_new, mwis_diff, _ = heavy_pair_vmap(g, weights)
         if g_new != g 
-            return MISCount(mwis_diff) + _xiao2021(g_new, weights_new)
+            return WT(mwis_diff) + _xiao2021(g_new, weights_new)
         end
 
         v_maxdegree = findfirst(==(maximum(degrees)), degrees)
@@ -114,6 +114,6 @@ function _xiao2021(g::SimpleGraph, weights::Vector{WT}) where WT
         g_new_1, vmap_1 = remove_vertices_vmap(g, closed_neighbors(g, S_v))
         mwis_diff2 = 0
         g_new_2, vmap_2 = remove_vertices_vmap(g, [v_maxdegree])
-        return max(MISCount(mwis_diff1) + _xiao2021(g_new_1, weights[vmap_1]), MISCount(mwis_diff2) + _xiao2021(g_new_2, weights[vmap_2]))
+        return max(WT(mwis_diff1) + _xiao2021(g_new_1, weights[vmap_1]), WT(mwis_diff2) + _xiao2021(g_new_2, weights[vmap_2]))
     end
 end

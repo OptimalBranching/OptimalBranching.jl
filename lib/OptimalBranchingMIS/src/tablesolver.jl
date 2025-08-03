@@ -12,7 +12,7 @@ Compute the alpha tensor for a given weighted sub-graph.
 - The alpha tensor.
 """
 function alpha(g::SimpleGraph, weights::AbstractVector{WT}, openvertices::Vector{Int}) where WT
-	problem = GenericTensorNetwork(IndependentSet(g, weights); openvertices, optimizer = GreedyMethod(nrepeat=1))
+	problem = GenericTensorNetwork(IndependentSet(g, weights); openvertices, optimizer = GreedyMethod())
 	alpha_tensor = solve(problem, SizeMax())
     return alpha_tensor
 end
@@ -31,13 +31,13 @@ Compute the reduced alpha tensor for a given weighted sub-graph.
 - The reduced alpha tensor.
 """
 function reduced_alpha(g::SimpleGraph, weights::AbstractVector{WT}, openvertices::Vector{Int}) where WT
-	problem = GenericTensorNetwork(IndependentSet(g, weights); openvertices, optimizer = GreedyMethod(nrepeat=1))
+	problem = GenericTensorNetwork(IndependentSet(g, weights); openvertices, optimizer = GreedyMethod())
 	alpha_tensor = solve(problem, SizeMax())
 	return mis_compactify!(alpha_tensor)
 end
 
 function _reduced_alpha_configs(g::SimpleGraph, weights::AbstractVector{WT}, openvertices::Vector{Int}, potential) where WT
-	problem = GenericTensorNetwork(IndependentSet(g, weights); openvertices, optimizer = GreedyMethod(nrepeat=1))
+	problem = GenericTensorNetwork(IndependentSet(g, weights); openvertices, optimizer = GreedyMethod())
 	alpha_tensor = solve(problem, SizeMax())
 	alpha_configs = solve(problem, ConfigsMax(; bounded=false))
 	reduced_alpha_tensor = mis_compactify!(alpha_tensor; potential)
@@ -78,7 +78,7 @@ function collect_configs(cfg::CountingTropical{<:Real, <:ConfigEnumerator}, symb
     symbols === nothing ? cs : [String([symbols[i] for (i, v) in enumerate(x) if v == 1]) for x in cs]
 end
 
-function OptimalBranchingCore.branching_table(p::MISProblem, solver::TensorNetworkSolver, vs::Vector{Int}) where INT<:Integer
+function OptimalBranchingCore.branching_table(p::MISProblem, solver::TensorNetworkSolver, vs::Vector{Int})
     ovs = open_vertices(p.g, vs)
     subg, vmap = induced_subgraph(p.g, vs)
 	potential = [sum(p.weights[collect(setdiff(neighbors(p.g, v), vs))]) for v in ovs]
@@ -144,7 +144,7 @@ function prune_by_env(tbl::BranchingTable{INT}, p::MISProblem, vertices) where{I
             if i != j
                 pink_block = setdiff(neibs_0[i], neibs_0[j])
                 sg_pink, sg_vec = induced_subgraph(g, collect(pink_block))
-                problem_pink = GenericTensorNetwork(IndependentSet(sg_pink, p.weights[collect(pink_block)]); optimizer = GreedyMethod(nrepeat=1))
+                problem_pink = GenericTensorNetwork(IndependentSet(sg_pink, p.weights[collect(pink_block)]); optimizer = GreedyMethod())
                 mis_pink = solve(problem_pink, SizeMax())[].n
                 if (clause_size(p.weights, tbl.table[i][1], vertices) + mis_pink ≤ clause_size(p.weights, tbl.table[j][1], vertices)) && (!iszero(mis_pink))
                     flag = false
