@@ -128,7 +128,7 @@ struct ReductionResult{VT<:AbstractVector, WT}
     vmap::Vector{Int}
 end
 
-function ReductionResult(g::SimpleGraph{Int}, r::Int, vmap::Vector{Int}) where VT
+function ReductionResult(g::SimpleGraph{Int}, r::Int, vmap::Vector{Int})
     ReductionResult(g, UnitWeight(nv(g)), r, vmap)
 end
 
