@@ -142,7 +142,7 @@ function first_twin(g::SimpleGraph)
     return nothing
 end
 
-function is_complete_graph(g::SimpleGraph, vertices::Vector)
+function is_complete_graph(g::SimpleGraph, vertices::AbstractVector)
     (length(vertices) <= 1) && return false
     for (u, v) in combinations(vertices, 2)
         (!has_edge(g, u, v)) && return false
