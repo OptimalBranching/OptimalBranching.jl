@@ -8,6 +8,7 @@ using Combinatorics
 using EliminateGraphs, EliminateGraphs.Graphs
 using GenericTensorNetworks
 using SparseArrays
+using PrecompileTools: @setup_workload, @compile_workload
 using ProblemReductions: IndependentSet
 
 export MISProblem
@@ -31,5 +32,6 @@ include("tablesolver.jl")
 include("branch.jl")
 
 include("interfaces.jl")
+include("precompile.jl")
 
 end
