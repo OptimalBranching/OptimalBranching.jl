@@ -11,7 +11,7 @@ JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 
 [compat]
 BitBasis = "0.9"
-DataStructures = "0.18.20"
+DataStructures = "0.18.20, 0.19"
 HiGHS = "1.12"
 JuMP = "1.23"
 julia = "1.10"
