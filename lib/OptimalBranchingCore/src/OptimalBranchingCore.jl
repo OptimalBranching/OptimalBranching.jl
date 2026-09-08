@@ -7,7 +7,7 @@ using DataStructures
 # logic expressions
 export Clause, BranchingTable, DNF, booleans, ∨, ∧, ¬, covered_by, literals, is_true_literal, is_false_literal
 # weighted minimum set cover solvers and optimal branching rule
-export weighted_minimum_set_cover, AbstractSetCoverSolver, LPSolver, IPSolver
+export weighted_minimum_set_cover, weighted_minimum_signed_exact_cover, AbstractSetCoverSolver, LPSolver, IPSolver
 export minimize_γ, optimal_branching_rule, OptimalBranchingResult
 
 ##### interfaces #####
