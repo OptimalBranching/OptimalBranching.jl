@@ -32,6 +32,11 @@ struct Clause{INT <: Integer}
     end
 end
 
+# BitBasis integer types define explicit value-based one-argument hashes.
+# Combine those field hashes so a Clause hash does not depend on this package's
+# build identity through its inherited generic structural hash.
+Base.hash(c::Clause, h::UInt) = hash(hash(c.val), hash(hash(c.mask), h))
+
 function clause_string(c::Clause{INT}) where INT
     join([iszero(readbit(c.val, i)) ? "¬#$i" : "#$i" for i = 1:bsizeof(INT) if readbit(c.mask, i) == 1], " ∧ ")
 end

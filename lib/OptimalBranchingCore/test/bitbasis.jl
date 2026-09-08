@@ -49,6 +49,19 @@ end
     c3 = OptimalBranchingCore.gather2(5, c1, c2)
     @test c3 == Clause(LongLongUInt{1}((0b10100,)), LongLongUInt{1}((0b0,)))
     @test length(c3) == 2
+
+    # Equal clauses must behave as the same key independently of object identity.
+    c3_copy = Clause(LongLongUInt{1}((0b10100,)), LongLongUInt{1}((0b0,)))
+    @test hash(c3, UInt(0)) == hash(c3_copy, UInt(0))
+    @test length(Dict(c3 => :first, c3_copy => :second)) == 1
+
+    # Hashing also respects constructor normalization for multiword values.
+    multi_mask = LongLongUInt{2}((0x0f, 0xf0))
+    multi_raw = Clause(multi_mask, LongLongUInt{2}((0xff, 0xff)))
+    multi_normalized = Clause(multi_mask, LongLongUInt{2}((0x0f, 0xf0)))
+    @test multi_raw == multi_normalized
+    @test hash(multi_raw, UInt(0)) == hash(multi_normalized, UInt(0))
+    @test length(Dict(multi_raw => :first, multi_normalized => :second)) == 1
 end
 
 @testset "satellite" begin
