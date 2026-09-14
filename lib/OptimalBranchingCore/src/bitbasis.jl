@@ -31,6 +31,7 @@ struct Clause{INT <: Integer}
         new{INT}(mask, val & mask)
     end
 end
+Base.length(c::Clause) = count_ones(c.mask)
 
 # BitBasis integer types define explicit value-based one-argument hashes.
 # Combine those field hashes so a Clause hash does not depend on this package's
